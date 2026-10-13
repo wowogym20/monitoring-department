@@ -16,10 +16,9 @@ test.describe("Fitur Collapsible Sidebar & Persistensi Cookie", () => {
     })
   })
 
-  test("1. Sidebar desktop default terbuka, dapat di-collapse dan di-expand dengan toggle button", async ({
+  test("1. Sidebar desktop default terbuka, toggle buka/tutup hanya ada di header app", async ({
     page,
   }) => {
-    // 1. Login
     await page.goto("/login")
     await page.fill('input[type="email"]', ADMIN_ACCOUNT.email)
     await page.fill('input[type="password"]', ADMIN_ACCOUNT.password)
@@ -31,28 +30,35 @@ test.describe("Fitur Collapsible Sidebar & Persistensi Cookie", () => {
     await expect(sidebar).toBeVisible()
     await expect(sidebar).toHaveClass(/w-64/)
 
-    // Tombol toggle harus punya aria-expanded="true" dan aria-label
-    const toggleCollapseBtn = sidebar.locator('button[aria-label="Tutup sidebar"]').first()
+    // Pastikan di sidebar TIDAK ADA tombol toggle tutup maupun buka
+    await expect(sidebar.locator('button[aria-label="Tutup sidebar"]')).toHaveCount(0)
+    await expect(sidebar.locator('button[aria-label="Buka sidebar"]')).toHaveCount(0)
+
+    // Tombol toggle harus ada di header app, punya aria-expanded="true" dan aria-label="Tutup sidebar"
+    const toggleCollapseBtn = page.locator('header button[aria-label="Tutup sidebar"]').first()
     await expect(toggleCollapseBtn).toBeVisible()
     await expect(toggleCollapseBtn).toHaveAttribute("aria-expanded", "true")
 
-    // 2. Klik tombol toggle untuk menutup sidebar
+    // 2. Klik tombol toggle di header app untuk menutup sidebar
     await toggleCollapseBtn.click()
 
     // Sidebar harus mengecil menjadi icon-only (w-16)
     await expect(sidebar).toHaveClass(/w-16/)
 
-    // Tombol toggle bawah/atas harus berubah aria-expanded="false" dan aria-label="Buka sidebar"
-    const toggleExpandBtn = sidebar.locator('button[aria-label="Buka sidebar"]').first()
+    // Tombol toggle di header app harus berubah aria-expanded="false" dan aria-label="Buka sidebar"
+    const toggleExpandBtn = page.locator('header button[aria-label="Buka sidebar"]').first()
     await expect(toggleExpandBtn).toBeVisible()
     await expect(toggleExpandBtn).toHaveAttribute("aria-expanded", "false")
+
+    // Di sidebar tetap tidak ada tombol toggle
+    await expect(sidebar.locator('button[aria-label="Buka sidebar"]')).toHaveCount(0)
 
     // Cek bahwa cookie sidebar_state telah diset ke "collapsed"
     const cookies = await page.context().cookies()
     const sidebarCookie = cookies.find((c) => c.name === "sidebar_state")
     expect(sidebarCookie?.value).toBe("collapsed")
 
-    // 3. Klik tombol toggle untuk membuka kembali
+    // 3. Klik tombol toggle di header app untuk membuka kembali
     await toggleExpandBtn.click()
     await expect(sidebar).toHaveClass(/w-64/)
 
@@ -73,8 +79,8 @@ test.describe("Fitur Collapsible Sidebar & Persistensi Cookie", () => {
     await page.waitForURL("**/dashboard")
 
     const sidebar = page.locator("aside")
-    // Tutup sidebar
-    const toggleCollapseBtn = sidebar.locator('button[aria-label="Tutup sidebar"]').first()
+    // Tutup sidebar via tombol di header app
+    const toggleCollapseBtn = page.locator('header button[aria-label="Tutup sidebar"]').first()
     await toggleCollapseBtn.click()
     await expect(sidebar).toHaveClass(/w-16/)
 
@@ -115,31 +121,33 @@ test.describe("Fitur Collapsible Sidebar & Persistensi Cookie", () => {
 
   test("4. Responsif: Tablet portrait mengutamakan preferensi pengguna jika sudah ada", async ({
     page,
-    context,
   }) => {
-    // Set cookie secara eksplisit bahwa pengguna menginginkan sidebar "expanded"
-    await context.addCookies([
-      {
-        name: "sidebar_state",
-        value: "expanded",
-        domain: "localhost",
-        path: "/",
-      },
-      {
-        name: "sidebar_custom_pref",
-        value: "true",
-        domain: "localhost",
-        path: "/",
-      },
-    ])
+    // 1. Login terlebih dahulu di desktop
+    await page.goto("/login")
+    await page.fill('input[type="email"]', ADMIN_ACCOUNT.email)
+    await page.fill('input[type="password"]', ADMIN_ACCOUNT.password)
+    await page.click('button[type="submit"]')
+    await page.waitForURL("**/dashboard")
 
-    // Set viewport tablet portrait (820 x 1180)
-    await page.setViewportSize({ width: 820, height: 1180 })
-
-    await page.goto("/dashboard")
     const sidebar = page.locator("aside")
+    await expect(sidebar).toHaveClass(/w-64/)
+
+    // Jika user secara manual memastikan sidebar terbuka (atau klik toggle tutup lalu buka di header app)
+    const toggleCollapseBtn = page.locator('header button[aria-label="Tutup sidebar"]').first()
+    await toggleCollapseBtn.click()
+    await expect(sidebar).toHaveClass(/w-16/)
+
+    const toggleExpandBtn = page.locator('header button[aria-label="Buka sidebar"]').first()
+    await toggleExpandBtn.click()
+    await expect(sidebar).toHaveClass(/w-64/)
+
+    // Sekarang resize viewport ke tablet portrait (820 x 1180)
+    await page.setViewportSize({ width: 820, height: 1180 })
+    await page.reload()
+    await page.waitForLoadState("domcontentloaded")
+
+    // Karena preferensi pengguna adalah terbuka (expanded), preferensi pengguna diutamakan
     await expect(sidebar).toBeVisible()
-    // Karena preferensi pengguna diutamakan, sidebar tetap terbuka (w-64)
     await expect(sidebar).toHaveClass(/w-64/)
   })
 
@@ -149,9 +157,13 @@ test.describe("Fitur Collapsible Sidebar & Persistensi Cookie", () => {
     // Set viewport mobile iPhone
     await page.setViewportSize({ width: 390, height: 844 })
 
-    await page.goto("/dashboard")
+    await page.goto("/login")
+    await page.fill('input[type="email"]', ADMIN_ACCOUNT.email)
+    await page.fill('input[type="password"]', ADMIN_ACCOUNT.password)
+    await page.click('button[type="submit"]')
+    await page.waitForURL("**/dashboard")
 
-    // Desktop sidebar harus hidden
+    // Desktop sidebar harus hidden di mobile
     const desktopSidebar = page.locator("aside")
     await expect(desktopSidebar).toBeHidden()
 

@@ -1,47 +1,62 @@
 import { requireRole } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ClipboardCheck } from "lucide-react"
+import { getAssessmentDetailServer, PenilaianDetailData } from "@/lib/actions/penilaian"
+import { AssessmentForm } from "./assessment-form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { ShieldAlert, ArrowLeft } from "lucide-react"
+
+interface FormPenilaianAnggotaPageProps {
+  params: Promise<{ anggotaId: string }>
+  searchParams: Promise<{ periodeId?: string }>
+}
 
 export default async function FormPenilaianAnggotaPage({
   params,
-}: {
-  params: Promise<{ anggotaId: string }>
-}) {
-  // Hanya super_admin dan ketua departemen (user) yang boleh mengakses form penilaian ini
+  searchParams,
+}: FormPenilaianAnggotaPageProps) {
+  // Hanya super_admin dan ketua departemen (user) yang boleh mengakses formulir penilaian
+  // Admin SDM dilarang membuka form ini sesuai PRD Bagian 10 tabel matriks akses
   await requireRole("super_admin", "user")
+
   const { anggotaId } = await params
+  const { periodeId } = await searchParams
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Formulir Penilaian Anggota
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Evaluasi kinerja 7 aspek untuk anggota dengan ID: <span className="font-mono text-foreground">{anggotaId}</span>
-        </p>
-      </div>
+  let detailData: PenilaianDetailData | null = null
+  let errorMsg: string | null = null
 
-      <Card className="border border-border shadow-xs">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <ClipboardCheck className="h-5 w-5 text-primary" />
-              Lembar Penilaian Kinerja Anggota
+  try {
+    detailData = await getAssessmentDetailServer(anggotaId, periodeId)
+  } catch (error: unknown) {
+    errorMsg = error instanceof Error ? error.message : "Gagal memuat formulir penilaian."
+  }
+
+  if (errorMsg || !detailData) {
+    return (
+      <div className="max-w-xl mx-auto py-12 px-4">
+        <Card className="border-destructive/40 shadow-sm text-center">
+          <CardHeader>
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive mb-2">
+              <ShieldAlert className="size-6" />
+            </div>
+            <CardTitle className="text-lg font-bold text-foreground">
+              Akses Ditolak atau Data Tidak Ditemukan
             </CardTitle>
-            <Badge variant="secondary">Fase 3</Badge>
-          </div>
-          <CardDescription>
-            Input nilai skala Likert 1–5 untuk 7 aspek kompetensi, catatan evaluasi, draf dan submit.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Form penilaian interaktif dan kalkulasi skor otomatis rata-rata akan diimplementasikan pada Fase 3 sesuai PRD.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  )
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-xs text-muted-foreground leading-relaxed" data-testid="error-message">
+              {errorMsg}
+            </p>
+            <Button asChild variant="outline" size="sm" className="text-xs h-9">
+              <Link href="/penilaian">
+                <ArrowLeft className="size-3.5 mr-1.5" /> Kembali ke Daftar Penilaian
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  return <AssessmentForm initialData={detailData} />
 }

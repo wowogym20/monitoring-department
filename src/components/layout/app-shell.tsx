@@ -8,9 +8,7 @@ import { navigationItems } from "@/components/layout/nav-items"
 import { UserRole } from "@/types/database"
 import Image from "next/image"
 import { Header } from "@/components/layout/header"
-import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/layout/sidebar-context"
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -31,7 +29,7 @@ interface AppShellProps {
 
 export function AppShell({ children, user }: AppShellProps) {
   const pathname = usePathname()
-  const { isCollapsed, toggleSidebar, mobileOpen, setMobileOpen } = useSidebar()
+  const { isCollapsed, mobileOpen, setMobileOpen } = useSidebar()
 
   const filteredNavItems = navigationItems.filter((item) =>
     item.roles.includes(user.role)
@@ -105,57 +103,39 @@ export function AppShell({ children, user }: AppShellProps) {
         <div
           className={cn(
             "h-16 border-b border-border flex items-center shrink-0 transition-all duration-300",
-            isCollapsed ? "justify-center px-2" : "justify-between px-4"
+            isCollapsed ? "justify-center px-2" : "px-4"
           )}
         >
-          {isCollapsed ? (
-            <Link
-              href="/dashboard"
-              className="flex items-center justify-center p-1 rounded-md hover:bg-muted transition-colors"
-              title="Monitoring Departemen - Halaman Utama"
-            >
-              <Image
-                src="/logo.png"
-                alt="Logo Tazakka"
-                width={32}
-                height={32}
-                className="size-8 object-contain shrink-0"
-                priority
-              />
-            </Link>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 min-w-0">
-                <Image
-                  src="/logo.png"
-                  alt="Logo Tazakka"
-                  width={36}
-                  height={36}
-                  className="size-9 object-contain shrink-0"
-                  priority
-                />
-                <div className="flex flex-col min-w-0 overflow-hidden">
-                  <h1 className="font-bold text-sm tracking-tight leading-tight truncate">
-                    Monitoring Departemen
-                  </h1>
-                  <p className="text-[11px] text-muted-foreground leading-tight truncate">
-                    Sistem Penilaian Kinerja
-                  </p>
-                </div>
+          <Link
+            href="/dashboard"
+            className={cn(
+              "flex items-center gap-3 min-w-0 rounded-md transition-colors",
+              isCollapsed ? "justify-center p-1 hover:bg-muted" : "w-full"
+            )}
+            title="Monitoring Departemen"
+          >
+            <Image
+              src="/logo.png"
+              alt="Logo Tazakka"
+              width={isCollapsed ? 32 : 36}
+              height={isCollapsed ? 32 : 36}
+              className={cn(
+                "object-contain shrink-0",
+                isCollapsed ? "size-8" : "size-9"
+              )}
+              priority
+            />
+            {!isCollapsed && (
+              <div className="flex flex-col min-w-0 overflow-hidden">
+                <h1 className="font-bold text-sm tracking-tight leading-tight truncate text-foreground">
+                  Monitoring Departemen
+                </h1>
+                <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                  Sistem Penilaian Kinerja
+                </p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                className="size-8 text-muted-foreground hover:text-foreground shrink-0 rounded-md"
-                aria-label="Tutup sidebar"
-                aria-expanded={true}
-                title="Tutup sidebar"
-              >
-                <PanelLeftClose className="size-4" />
-              </Button>
-            </>
-          )}
+            )}
+          </Link>
         </div>
 
         {/* Daftar Tautan Menu Desktop */}
@@ -205,32 +185,6 @@ export function AppShell({ children, user }: AppShellProps) {
             )
           })}
         </nav>
-
-        {/* Footer Sidebar: Tombol Toggle Collapse Bawah */}
-        <div className="border-t border-border p-2 shrink-0">
-          <Button
-            variant="ghost"
-            onClick={toggleSidebar}
-            className={cn(
-              "w-full text-muted-foreground hover:text-foreground transition-all rounded-md",
-              isCollapsed
-                ? "justify-center size-10 mx-auto px-0"
-                : "justify-start gap-3 px-3 h-9"
-            )}
-            aria-label={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
-            aria-expanded={!isCollapsed}
-            title={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
-          >
-            {isCollapsed ? (
-              <PanelLeftOpen className="size-4 shrink-0" />
-            ) : (
-              <>
-                <PanelLeftClose className="size-4 shrink-0" />
-                <span className="text-xs font-medium truncate">Ciutkan Sidebar</span>
-              </>
-            )}
-          </Button>
-        </div>
       </aside>
 
       {/* Area Kanan: Header Global di Bagian Atas + Konten Halaman */}

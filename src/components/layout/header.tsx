@@ -28,7 +28,8 @@ import {
   User as UserIcon,
   ChevronDown,
   Building2,
-  PanelLeft,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react"
 
 import Image from "next/image"
@@ -117,7 +118,11 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           aria-expanded={!isCollapsed}
           title={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
         >
-          <PanelLeft className="size-5" />
+          {isCollapsed ? (
+            <PanelLeftOpen className="size-5" />
+          ) : (
+            <PanelLeftClose className="size-5" />
+          )}
         </Button>
 
         {/* Brand Ringkas (Mobile) */}

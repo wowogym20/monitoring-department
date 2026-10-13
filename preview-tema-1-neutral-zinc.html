@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Opsi 1: Neutral Zinc (Abu-abu Murni Bebas Biru) - Monitoring Departemen</title>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    /* OPSI 1: NEUTRAL ZINC (Abu-abu Bersih 0% Nada Biru) */
+    :root {
+      --background: hsl(0 0% 98%);         /* #fafafa - Bersih netral tanpa tint biru */
+      --foreground: hsl(0 0% 12%);         /* #1f1f1f - Charcoal netral pekat */
+      --card: hsl(0 0% 100%);              /* #ffffff - Putih bersih murni */
+      --card-foreground: hsl(0 0% 12%);
+      --sidebar: hsl(0 0% 100%);
+      --border: hsl(0 0% 88%);             /* #e0e0e0 - Garis abu-abu netral */
+      --muted: hsl(0 0% 94%);              /* #f0f0f0 */
+      --muted-foreground: hsl(0 0% 45%);   /* #737373 */
+      --primary: hsl(160 84% 39%);         /* Hijau Emerald Tazakka */
+      --primary-foreground: #ffffff;
+      --secondary: hsl(25 95% 53%);        /* Oren Amber Tazakka */
+      --radius: 10px;
+    }
+
+    .dark {
+      --background: hsl(0 0% 7%);          /* #121212 - Hitam arang sejati (bukan navy) */
+      --foreground: hsl(0 0% 95%);         /* #f2f2f2 */
+      --card: hsl(0 0% 11%);               /* #1c1c1c - Zinc gelap netral */
+      --card-foreground: hsl(0 0% 95%);
+      --sidebar: hsl(0 0% 10%);            /* #1a1a1a */
+      --border: hsl(0 0% 18%);             /* #2e2e2e */
+      --muted: hsl(0 0% 16%);              /* #292929 */
+      --muted-foreground: hsl(0 0% 65%);   /* #a6a6a6 */
+      --primary: hsl(158 64% 52%);
+      --primary-foreground: #000000;
+      --secondary: hsl(27 96% 61%);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--background); color: var(--foreground); min-height: 100vh; display: flex; transition: background-color 0.2s, color 0.2s; }
+    
+    /* Layout */
+    .sidebar { width: 260px; height: 100vh; background-color: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: width 0.3s ease; position: sticky; top: 0; shrink: 0; }
+    .sidebar.collapsed { width: 68px; }
+    .sidebar-header { height: 64px; border-bottom: 1px solid var(--border); display: flex; items-center; padding: 0 16px; gap: 12px; align-items: center; overflow: hidden; }
+    .logo-box { width: 36px; height: 36px; border-radius: 8px; background: linear-gradient(135deg, #059669, #10b981); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; flex-shrink: 0; }
+    .brand-title { font-size: 14px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+    .brand-sub { font-size: 11px; color: var(--muted-foreground); white-space: nowrap; }
+
+    .nav-list { padding: 12px 8px; flex: 1; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius); color: var(--muted-foreground); text-decoration: none; font-size: 13.5px; font-weight: 500; transition: all 0.15s; white-space: nowrap; }
+    .nav-item:hover { background-color: var(--muted); color: var(--foreground); }
+    .nav-item.active { background-color: rgba(5, 150, 105, 0.12); color: var(--primary); font-weight: 600; border-left: 3px solid var(--primary); }
+    .sidebar.collapsed .nav-item { justify-content: center; padding: 10px 0; }
+    .sidebar.collapsed .hide-collapsed { display: none; }
+
+    .content-area { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 100vh; }
+    .app-header { height: 64px; border-bottom: 1px solid var(--border); background-color: var(--card); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .icon-btn { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); color: var(--foreground); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.15s; }
+    .icon-btn:hover { background: var(--muted); }
+
+    .main-body { padding: 28px; flex: 1; overflow-y: auto; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+    .badge-emerald { background: rgba(5, 150, 105, 0.15); color: var(--primary); border: 1px solid rgba(5, 150, 105, 0.3); }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    
+    .code-box { background: var(--muted); padding: 14px; border-radius: 8px; font-family: monospace; font-size: 12px; margin-top: 16px; border: 1px solid var(--border); line-height: 1.6; }
+    .color-swatch { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: middle; margin-right: 6px; border: 1px solid #666; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); color: var(--muted-foreground); font-weight: 600; }
+    td { padding: 12px; border-bottom: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-box">TZ</div>
+      <div class="hide-collapsed">
+        <div class="brand-title">Monitoring Dept</div>
+        <div class="brand-sub">Sistem Kinerja Tazakka</div>
+      </div>
+    </div>
+    <nav class="nav-list">
+      <a href="#" class="nav-item active"><i data-lucide="layout-dashboard"></i><span class="hide-collapsed">Dashboard</span></a>
+      <a href="#" class="nav-item"><i data-lucide="users"></i><span class="hide-collapsed">Data Anggota</span></a>
+      <a href="#" class="nav-item"><i data-lucide="clipboard-check"></i><span class="hide-collapsed">Penilaian</span></a>
+      <a href="#" class="nav-item"><i data-lucide="building-2"></i><span class="hide-collapsed">Departemen</span></a>
+      <a href="#" class="nav-item"><i data-lucide="file-bar-chart"></i><span class="hide-collapsed">Rekap Laporan</span></a>
+    </nav>
+  </aside>
+
+  <!-- Area Konten -->
+  <div class="content-area">
+    <header class="app-header">
+      <div class="header-left">
+        <!-- Tombol Toggle Buka/Tutup Sidebar di Header App -->
+        <button class="icon-btn" id="toggleSidebarBtn" title="Buka/Tutup Sidebar" aria-label="Toggle Sidebar">
+          <i data-lucide="panel-left" id="toggleIcon"></i>
+        </button>
+        <h2 style="font-size: 16px; font-weight: 700;">Dashboard Monitoring</h2>
+        <span class="badge badge-emerald">Opsi 1: Neutral Zinc (Abu-Abu Arang)</span>
+      </div>
+      <div class="header-right">
+        <!-- Tombol Ganti Tema Light/Dark -->
+        <button class="icon-btn" id="themeToggleBtn" title="Ganti Mode Light / Dark">
+          <i data-lucide="moon" id="themeIcon"></i>
+        </button>
+        <div style="font-size: 13px; font-weight: 600;">Super-Admin</div>
+      </div>
+    </header>
+
+    <main class="main-body">
+      <!-- Penjelasan Palet Warna -->
+      <div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--primary);">
+        <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">Karakter Palet 1: Neutral Zinc (Netral Murni)</h3>
+        <p style="font-size: 13.5px; color: var(--muted-foreground); line-height: 1.5;">
+          Warna abu-abu murni tanpa saturasi biru (Hue 0°). Memberikan kesan <strong>clean, modern, tajam, dan minimalis</strong> seperti gaya antarmuka Vercel Geist / Linear. Bebas dari nada biru gelap <code>hsl(222 47% 11%)</code>.
+        </p>
+        <div class="code-box">
+          <strong>Light Mode:</strong> --background: <span class="color-swatch" style="background: hsl(0 0% 98%)"></span>hsl(0 0% 98%); | --card: hsl(0 0% 100%); | --foreground: hsl(0 0% 12%);<br>
+          <strong>Dark Mode:</strong> --background: <span class="color-swatch" style="background: hsl(0 0% 7%)"></span>hsl(0 0% 7%); | --card: <span class="color-swatch" style="background: hsl(0 0% 11%)"></span>hsl(0 0% 11%); | --border: hsl(0 0% 18%);
+        </div>
+      </div>
+
+      <!-- Kartu Statistik -->
+      <div class="grid-3">
+        <div class="card">
+          <div style="font-size: 12px; color: var(--muted-foreground); margin-bottom: 4px;">Total Departemen</div>
+          <div style="font-size: 26px; font-weight: 800; color: var(--primary);">14 Departemen</div>
+          <div style="font-size: 11px; color: var(--muted-foreground); margin-top: 4px;">100% aktif dan terdaftar</div>
+        </div>
+        <div class="card">
+          <div style="font-size: 12px; color: var(--muted-foreground); margin-bottom: 4px;">Rata-rata Capaian Kinerja</div>
+          <div style="font-size: 26px; font-weight: 800; color: var(--secondary);">4.82 / 5.0</div>
+          <div style="font-size: 11px; color: var(--muted-foreground); margin-top: 4px;">Skala Likert Sangat Baik</div>
+        </div>
+        <div class="card">
+          <div style="font-size: 12px; color: var(--muted-foreground); margin-bottom: 4px;">Status Periode</div>
+          <div style="font-size: 26px; font-weight: 800; color: var(--foreground);">Periode Aktif</div>
+          <div style="font-size: 11px; color: var(--muted-foreground); margin-top: 4px;">Semester Ganjil 1447 H</div>
+        </div>
+      </div>
+
+      <!-- Tabel Contoh -->
+      <div class="card">
+        <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 14px;">Contoh Tampilan Rekap Departemen</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Nama Departemen</th>
+              <th>Ketua</th>
+              <th>Anggota</th>
+              <th>Status Penilaian</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Departemen Pendidikan & Pengajaran</strong></td>
+              <td>Ust. H. Ahmad Farhan</td>
+              <td>28 Orang</td>
+              <td><span class="badge badge-emerald">Sudah Lengkap</span></td>
+            </tr>
+            <tr>
+              <td><strong>Departemen Pengasuhan Santri</strong></td>
+              <td>Ust. M. Ridwan Hakim</td>
+              <td>42 Orang</td>
+              <td><span class="badge badge-emerald">Sudah Lengkap</span></td>
+            </tr>
+            <tr>
+              <td><strong>Departemen Sarana & Prasarana</strong></td>
+              <td>Ust. Bambang Irawan</td>
+              <td>19 Orang</td>
+              <td><span class="badge badge-emerald">Sudah Lengkap</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    // Toggle Sidebar
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleSidebarBtn');
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+
+    // Toggle Light / Dark Mode
+    const themeBtn = document.getElementById('themeToggleBtn');
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      themeBtn.innerHTML = isDark ? '<i data-lucide="sun"></i>' : '<i data-lucide="moon"></i>';
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
