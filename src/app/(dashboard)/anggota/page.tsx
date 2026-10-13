@@ -1,8 +1,11 @@
+import { requireRole } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Users } from "lucide-react"
 
-export default function AnggotaPage() {
+export default async function AnggotaPage() {
+  await requireRole("super_admin", "admin", "user")
+
   return (
     <div className="space-y-6">
       <div>

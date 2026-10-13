@@ -4,6 +4,7 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { toast } from "sonner"
 import { loginSchema, LoginInput } from "@/lib/validations/auth"
 import { loginAction } from "@/lib/actions/auth"
@@ -102,9 +103,17 @@ function LoginForm() {
 
           {/* Field Password */}
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-xs sm:text-sm">
-              Kata Sandi
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" className="text-xs sm:text-sm">
+                Kata Sandi
+              </Label>
+              <Link
+                href="/lupa-password"
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                Lupa kata sandi?
+              </Link>
+            </div>
             <div className="relative">
               <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
               <Input

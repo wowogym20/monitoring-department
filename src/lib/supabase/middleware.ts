@@ -47,17 +47,20 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // auth.getUser() memvalidasi token dan memperbarui sesi cookie
+  // auth.getUser() memvalidasi token dan menyegarkan sesi cookie
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   const pathname = request.nextUrl.pathname
 
-  // 1. Jika belum login dan mengakses rute terlindungi
-  const isAuthRoute = pathname === "/login"
+  const isAuthRoute =
+    pathname === "/login" ||
+    pathname === "/lupa-password" ||
+    pathname === "/reset-password"
   const isPublicRoute = isAuthRoute || pathname === "/"
 
+  // 1. Jika belum login dan mengakses rute terlindungi
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
@@ -65,8 +68,8 @@ export async function updateSession(request: NextRequest) {
     return { supabaseResponse: NextResponse.redirect(url), user: null, role: null }
   }
 
-  // 2. Jika sudah login dan mengakses /login atau /
-  if (user && isPublicRoute) {
+  // 2. Jika sudah login dan mengakses halaman auth (/login, /lupa-password) atau landing (/)
+  if (user && isPublicRoute && pathname !== "/reset-password") {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     url.searchParams.delete("redirect")
@@ -93,8 +96,9 @@ export async function updateSession(request: NextRequest) {
       return { supabaseResponse: NextResponse.redirect(url), user: null, role: null }
     }
 
-    // Role-based route guard:
-    // /ketua dan /aspek: hanya super_admin
+    // Role-based route guard sesuai matriks PRD bagian 10:
+
+    // A. Khusus Super Admin: /ketua dan /aspek
     if (
       (pathname.startsWith("/ketua") || pathname.startsWith("/aspek")) &&
       role !== "super_admin"
@@ -104,7 +108,7 @@ export async function updateSession(request: NextRequest) {
       return { supabaseResponse: NextResponse.redirect(url), user, role }
     }
 
-    // /departemen, /periode, /ekspor: super_admin dan admin
+    // B. Super Admin & Admin: /departemen, /periode, /ekspor (Ditolak untuk Ketua / user)
     if (
       (pathname.startsWith("/departemen") ||
         pathname.startsWith("/periode") ||
@@ -113,6 +117,16 @@ export async function updateSession(request: NextRequest) {
     ) {
       const url = request.nextUrl.clone()
       url.pathname = "/dashboard"
+      return { supabaseResponse: NextResponse.redirect(url), user, role }
+    }
+
+    // C. Form input penilaian anggota (/penilaian/[anggotaId]):
+    // Super-admin Ya, Ketua Ya, Admin TIDAK BISA (PRD baris 316: Admin Tidak)
+    const isPenilaianForm =
+      pathname.startsWith("/penilaian/") && pathname !== "/penilaian"
+    if (isPenilaianForm && role === "admin") {
+      const url = request.nextUrl.clone()
+      url.pathname = "/penilaian"
       return { supabaseResponse: NextResponse.redirect(url), user, role }
     }
 

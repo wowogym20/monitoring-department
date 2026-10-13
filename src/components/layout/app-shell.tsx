@@ -10,7 +10,15 @@ import { logoutAction } from "@/lib/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Sheet,
   SheetContent,
@@ -19,7 +27,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Menu, LogOut, ShieldCheck, UserCheck, Award } from "lucide-react"
+import {
+  Menu,
+  LogOut,
+  ShieldCheck,
+  UserCheck,
+  Award,
+  User as UserIcon,
+  ChevronDown,
+} from "lucide-react"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -28,6 +44,7 @@ interface AppShellProps {
     email: string
     role: UserRole
     departmentName?: string | null
+    fotoUrl?: string | null
   }
 }
 
@@ -46,9 +63,15 @@ export function AppShell({ children, user }: AppShellProps) {
   }[user.role]
 
   const roleIcon = {
-    super_admin: <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />,
-    admin: <UserCheck className="size-3.5 text-blue-600 dark:text-blue-400" />,
-    user: <Award className="size-3.5 text-amber-600 dark:text-amber-400" />,
+    super_admin: (
+      <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+    ),
+    admin: (
+      <UserCheck className="size-3.5 text-blue-600 dark:text-blue-400" />
+    ),
+    user: (
+      <Award className="size-3.5 text-amber-600 dark:text-amber-400" />
+    ),
   }[user.role]
 
   const initials = user.nama
@@ -106,7 +129,12 @@ export function AppShell({ children, user }: AppShellProps) {
                       )}
                     >
                       <Icon className="size-4 shrink-0" />
-                      <span>{item.title}</span>
+                      <span className="flex-1 truncate">{item.title}</span>
+                      {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
+                        <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                          {item.unreadCount}
+                        </span>
+                      )}
                     </Link>
                   )
                 })}
@@ -144,13 +172,47 @@ export function AppShell({ children, user }: AppShellProps) {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Link href="/profil">
-            <Avatar className="size-8 cursor-pointer ring-1 ring-border">
-              <AvatarFallback className="text-xs font-semibold bg-primary text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full size-8 p-0">
+                <Avatar className="size-8 cursor-pointer ring-1 ring-border">
+                  {user.fotoUrl && (
+                    <AvatarImage src={user.fotoUrl} alt={user.nama} />
+                  )}
+                  <AvatarFallback className="text-xs font-semibold bg-primary text-primary-foreground">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-semibold truncate">{user.nama}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/profil" className="cursor-pointer flex items-center gap-2">
+                  <UserIcon className="size-4" />
+                  <span>Profil Saya</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <form action={logoutAction}>
+                <button
+                  type="submit"
+                  className="w-full text-left px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <LogOut className="size-4" />
+                  <span>Keluar</span>
+                </button>
+              </form>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 
@@ -174,6 +236,9 @@ export function AppShell({ children, user }: AppShellProps) {
         <div className="p-4 border-b border-border bg-muted/30">
           <div className="flex items-center gap-3">
             <Avatar className="size-9 ring-1 ring-border">
+              {user.fotoUrl && (
+                <AvatarImage src={user.fotoUrl} alt={user.nama} />
+              )}
               <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
                 {initials}
               </AvatarFallback>
@@ -217,7 +282,12 @@ export function AppShell({ children, user }: AppShellProps) {
                 )}
               >
                 <Icon className="size-4 shrink-0" />
-                <span className="truncate">{item.title}</span>
+                <span className="flex-1 truncate">{item.title}</span>
+                {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
+                  <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                    {item.unreadCount}
+                  </span>
+                )}
               </Link>
             )
           })}
@@ -230,17 +300,39 @@ export function AppShell({ children, user }: AppShellProps) {
             <ThemeToggle />
           </div>
           <Separator />
-          <form action={logoutAction}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-destructive border-destructive/20 hover:bg-destructive/10 justify-start"
-              type="submit"
-            >
-              <LogOut className="size-4 mr-2" />
-              Keluar
-            </Button>
-          </form>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-between px-2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <UserIcon className="size-3.5" />
+                  <span className="truncate">Pengaturan Akun</span>
+                </div>
+                <ChevronDown className="size-3.5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem asChild>
+                <Link href="/profil" className="cursor-pointer flex items-center gap-2">
+                  <UserIcon className="size-4" />
+                  <span>Profil Saya</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <form action={logoutAction}>
+                <button
+                  type="submit"
+                  className="w-full text-left px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <LogOut className="size-4" />
+                  <span>Keluar</span>
+                </button>
+              </form>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </aside>
 

@@ -4,11 +4,12 @@ import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { Loader2, Camera, Upload } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Card,
   CardContent,
@@ -24,6 +25,120 @@ import {
   UpdatePasswordInput,
 } from "@/lib/validations/auth"
 import { updateProfileAction, updatePasswordAction } from "@/lib/actions/auth"
+import { uploadAvatarAction } from "@/lib/actions/avatar"
+
+interface AvatarUploadFormProps {
+  initialFotoUrl: string | null
+  nama: string
+}
+
+export function AvatarUploadForm({
+  initialFotoUrl,
+  nama,
+}: AvatarUploadFormProps) {
+  const [isPending, startTransition] = React.useTransition()
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(
+    initialFotoUrl
+  )
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+
+  const initials = nama
+    ? nama
+        .split(" ")
+        .slice(0, 2)
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+    : "U"
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Ukuran berkas maksimal 2MB")
+      return
+    }
+
+    const formData = new FormData()
+    formData.append("file", file)
+
+    startTransition(async () => {
+      try {
+        const result = await uploadAvatarAction(formData)
+        if (result.success && result.fotoUrl) {
+          setPreviewUrl(result.fotoUrl)
+          toast.success(result.message || "Foto profil berhasil diperbarui")
+        } else {
+          toast.error(result.error || "Gagal mengunggah foto profil")
+        }
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : "Terjadi kesalahan saat mengunggah foto"
+        )
+      }
+    })
+  }
+
+  return (
+    <Card className="border border-border shadow-xs">
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold text-foreground">
+          Foto Profil
+        </CardTitle>
+        <CardDescription>
+          Unggah foto profil Anda (format JPG, PNG, atau WebP, maks 2MB).
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col sm:flex-row items-center gap-6">
+        <div className="relative group">
+          <Avatar className="size-24 ring-2 ring-primary/20">
+            {previewUrl && <AvatarImage src={previewUrl} alt={nama} />}
+            <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white"
+          >
+            <Camera className="size-6" />
+          </div>
+        </div>
+
+        <div className="space-y-2 text-center sm:text-left">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            disabled={isPending}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isPending}
+          >
+            {isPending ? (
+              <Loader2 className="mr-2 size-4 animate-spin" />
+            ) : (
+              <Upload className="mr-2 size-4" />
+            )}
+            Pilih Foto Baru
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Disimpan secara privat pada Supabase Storage.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 interface EditProfileFormProps {
   initialNama: string
@@ -71,7 +186,7 @@ export function EditProfileForm({
     <Card className="border border-border shadow-xs">
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-foreground">
-          Perbarui Informasi Profil
+          Informasi Personal
         </CardTitle>
         <CardDescription>
           Ubah nama lengkap dan nomor kontak Anda.
@@ -156,16 +271,16 @@ export function UpdatePasswordForm() {
     <Card className="border border-border shadow-xs">
       <CardHeader>
         <CardTitle className="text-lg font-semibold text-foreground">
-          Ganti Password
+          Ganti Kata Sandi
         </CardTitle>
         <CardDescription>
-          Gunakan password baru yang kuat minimal 8 karakter.
+          Gunakan kata sandi baru yang kuat minimal 8 karakter.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit(onSubmit)}>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="passwordBaru">Password Baru</Label>
+            <Label htmlFor="passwordBaru">Kata Sandi Baru</Label>
             <Input
               id="passwordBaru"
               type="password"
@@ -181,11 +296,11 @@ export function UpdatePasswordForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="konfirmasiPassword">Konfirmasi Password Baru</Label>
+            <Label htmlFor="konfirmasiPassword">Konfirmasi Kata Sandi Baru</Label>
             <Input
               id="konfirmasiPassword"
               type="password"
-              placeholder="Ulangi password baru"
+              placeholder="Ulangi kata sandi baru"
               disabled={isPending}
               {...register("konfirmasiPassword")}
             />
@@ -199,7 +314,7 @@ export function UpdatePasswordForm() {
         <CardFooter className="flex justify-end pt-2">
           <Button type="submit" variant="secondary" disabled={isPending}>
             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Perbarui Password
+            Perbarui Kata Sandi
           </Button>
         </CardFooter>
       </form>

@@ -22,6 +22,11 @@ export const updateProfileSchema = z.object({
     .trim()
     .optional()
     .nullable(),
+  foto_url: z
+    .string()
+    .trim()
+    .optional()
+    .nullable(),
 })
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
@@ -41,3 +46,28 @@ export const updatePasswordSchema = z
   })
 
 export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string({ required_error: "Email wajib diisi" })
+    .email({ message: "Format email tidak valid" })
+    .trim(),
+})
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+
+export const resetPasswordSchema = z
+  .object({
+    passwordBaru: z
+      .string({ required_error: "Password baru wajib diisi" })
+      .min(8, { message: "Password baru minimal 8 karakter" }),
+    konfirmasiPassword: z
+      .string({ required_error: "Konfirmasi password wajib diisi" })
+      .min(8, { message: "Konfirmasi password minimal 8 karakter" }),
+  })
+  .refine((data) => data.passwordBaru === data.konfirmasiPassword, {
+    message: "Konfirmasi password tidak cocok dengan password baru",
+    path: ["konfirmasiPassword"],
+  })
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

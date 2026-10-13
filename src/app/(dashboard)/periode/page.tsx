@@ -1,8 +1,11 @@
+import { requireRole } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { CalendarDays } from "lucide-react"
 
-export default function PeriodePage() {
+export default async function PeriodePage() {
+  await requireRole("super_admin", "admin")
+
   return (
     <div className="space-y-6">
       <div>

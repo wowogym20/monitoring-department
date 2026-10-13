@@ -427,3 +427,13 @@ export interface Database {
     }
   }
 }
+
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"]
+export type Department = Database["public"]["Tables"]["departments"]["Row"]
+export type Member = Database["public"]["Tables"]["members"]["Row"]
+export type AssessmentAspect = Database["public"]["Tables"]["assessment_aspects"]["Row"]
+export type AssessmentPeriod = Database["public"]["Tables"]["assessment_periods"]["Row"]
+export type Assessment = Database["public"]["Tables"]["assessments"]["Row"]
+export type AssessmentScore = Database["public"]["Tables"]["assessment_scores"]["Row"]
+export type AssessmentComment = Database["public"]["Tables"]["assessment_comments"]["Row"]
+export type AuditLog = Database["public"]["Tables"]["audit_logs"]["Row"]

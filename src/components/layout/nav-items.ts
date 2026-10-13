@@ -18,7 +18,7 @@ export interface NavItem {
   href: string
   icon: LucideIcon
   roles: UserRole[]
-  badge?: string
+  unreadCount?: number
 }
 
 export const navigationItems: NavItem[] = [
@@ -39,6 +39,7 @@ export const navigationItems: NavItem[] = [
     href: "/penilaian",
     icon: ClipboardCheck,
     roles: ["super_admin", "admin", "user"],
+    unreadCount: 0, // Slot badge counter komentar baru (PRD 10.1.D)
   },
   {
     title: "Rekap Penilaian",

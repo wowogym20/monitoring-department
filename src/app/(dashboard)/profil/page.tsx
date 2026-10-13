@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
+import { requireRole } from "@/lib/auth"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -8,44 +7,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { EditProfileForm, UpdatePasswordForm } from "./profile-forms"
+import {
+  EditProfileForm,
+  UpdatePasswordForm,
+  AvatarUploadForm,
+} from "./profile-forms"
 import { UserRole } from "@/types/database"
 
 export default async function ProfilPage() {
-  const supabase = await createClient()
+  const currentUser = await requireRole()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect("/login")
-  }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("nama, role, no_hp, is_active, created_at")
-    .eq("id", user.id)
-    .single()
-
-  const role: UserRole = profile?.role || "user"
-
-  let departmentName: string | null = null
-  if (role === "user") {
-    const { data: dept } = await supabase
-      .from("departments")
-      .select("nama")
-      .eq("ketua_id", user.id)
-      .single()
-
-    if (dept) {
-      departmentName = dept.nama
-    }
-  }
-
-  const roleLabels: Record<UserRole, { label: string; variant: "default" | "secondary" | "outline" }> = {
-    super_admin: { label: "Super Admin", variant: "default" },
-    admin: { label: "Admin Pengurus", variant: "secondary" },
+  const roleLabels: Record<
+    UserRole,
+    { label: string; variant: "default" | "secondary" | "outline" }
+  > = {
+    super_admin: { label: "Super-Admin (Pimpinan)", variant: "default" },
+    admin: { label: "Admin (SDM)", variant: "secondary" },
     user: { label: "Ketua Departemen", variant: "outline" },
   }
 
@@ -56,49 +33,52 @@ export default async function ProfilPage() {
           Profil Pengguna
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Kelola informasi akun, kontak, dan keamanan kredensial login Anda.
+          Kelola informasi personal, foto profil, dan keamanan akun Anda.
         </p>
       </div>
 
-      {/* Ringkasan Akun */}
+      {/* Ringkasan Akun (Informasi Baca-Saja) */}
       <Card className="border border-border shadow-xs">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-foreground">
             Informasi Akun
           </CardTitle>
           <CardDescription>
-            Detail akun yang terdaftar pada sistem Monitoring Departemen.
+            Peran dan atribusi departemen bersifat baca-saja dan ditetapkan oleh pimpinan.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1">
               <span className="text-xs font-medium text-muted-foreground">
-                Email Terdaftar
+                Email Akun
               </span>
-              <p className="text-sm font-medium text-foreground">
-                {user.email || "-"}
+              <p className="text-sm font-semibold text-foreground">
+                {currentUser.email}
               </p>
             </div>
 
             <div className="space-y-1">
               <span className="text-xs font-medium text-muted-foreground">
-                Peran (Role)
+                Peran Pengguna (Role)
               </span>
               <div>
-                <Badge variant={roleLabels[role].variant} className="font-medium">
-                  {roleLabels[role].label}
+                <Badge
+                  variant={roleLabels[currentUser.role].variant}
+                  className="font-medium"
+                >
+                  {roleLabels[currentUser.role].label}
                 </Badge>
               </div>
             </div>
 
-            {role === "user" && (
+            {currentUser.role === "user" && (
               <div className="space-y-1 sm:col-span-2">
                 <span className="text-xs font-medium text-muted-foreground">
                   Departemen yang Dipimpin
                 </span>
-                <p className="text-sm font-medium text-foreground">
-                  {departmentName || "Belum ditugaskan ke departemen"}
+                <p className="text-sm font-semibold text-foreground">
+                  {currentUser.department?.nama || "Belum ditugaskan ke departemen"}
                 </p>
               </div>
             )}
@@ -109,10 +89,10 @@ export default async function ProfilPage() {
               </span>
               <div>
                 <Badge
-                  variant={profile?.is_active ? "default" : "destructive"}
+                  variant={currentUser.is_active ? "default" : "destructive"}
                   className="font-medium"
                 >
-                  {profile?.is_active ? "Aktif" : "Nonaktif"}
+                  {currentUser.is_active ? "Aktif" : "Nonaktif"}
                 </Badge>
               </div>
             </div>
@@ -120,11 +100,17 @@ export default async function ProfilPage() {
         </CardContent>
       </Card>
 
+      {/* Upload Foto Profil */}
+      <AvatarUploadForm
+        initialFotoUrl={currentUser.foto_url}
+        nama={currentUser.nama}
+      />
+
       {/* Form Edit Profil & Ganti Password */}
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <EditProfileForm
-          initialNama={profile?.nama || ""}
-          initialNoHp={profile?.no_hp || null}
+          initialNama={currentUser.nama}
+          initialNoHp={currentUser.no_hp}
         />
         <UpdatePasswordForm />
       </div>

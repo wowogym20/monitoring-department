@@ -1,8 +1,11 @@
+import { requireRole } from "@/lib/auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Building2 } from "lucide-react"
 
-export default function DepartemenPage() {
+export default async function DepartemenPage() {
+  await requireRole("super_admin", "admin")
+
   return (
     <div className="space-y-6">
       <div>
