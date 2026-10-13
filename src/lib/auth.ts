@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { UserRole, Department } from "@/types/database"
+import { UserRole, Department, Profile } from "@/types/database"
 
 export interface CurrentUser {
   id: string
@@ -15,7 +15,9 @@ export interface CurrentUser {
 
 /**
  * Mengambil informasi pengguna yang sedang login beserta profil dan departemennya.
- * Mengembalikan null jika pengguna belum terautentikasi atau data profil tidak ditemukan.
+ * Mengembalikan null HANYA jika pengguna benar-benar belum login di Supabase Auth.
+ * Jika akun valid di auth.users namun baris di public.profiles belum ada,
+ * fungsi ini akan otomatis menginisialisasi profil default agar tidak terjadi redirect loop.
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
   const supabase = await createClient()
@@ -28,14 +30,43 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     return null
   }
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from("profiles")
     .select("nama, role, no_hp, foto_url, is_active")
     .eq("id", user.id)
     .single()
 
+  let profile: Pick<Profile, "nama" | "role" | "no_hp" | "foto_url" | "is_active"> | null = profileData
+
+  // Jika user auth ada namun baris public.profiles belum dibuat di database:
+  // Buat profil default otomatis agar sesi valid dan tidak memicu redirect loop
   if (!profile) {
-    return null
+    const fallbackNama =
+      user.user_metadata?.nama || user.email?.split("@")[0] || "Pengguna"
+
+    const { data: createdProfile } = await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        nama: fallbackNama,
+        role: "user",
+        is_active: true,
+      })
+      .select("nama, role, no_hp, foto_url, is_active")
+      .single()
+
+    if (createdProfile) {
+      profile = createdProfile
+    } else {
+      // Fallback in-memory yang aman jika query database terkendala
+      profile = {
+        nama: fallbackNama,
+        role: "user",
+        no_hp: null,
+        foto_url: null,
+        is_active: true,
+      }
+    }
   }
 
   let department: Department | null = null
@@ -68,7 +99,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 /**
  * Memastikan pengguna memiliki salah satu role yang diizinkan.
  * Jika belum login -> diarahkan ke /login.
- * Jika akun nonaktif -> diarahkan ke /login dengan pesan error.
+ * Jika akun nonaktif -> signOut dan diarahkan ke /login dengan pesan error.
  * Jika role tidak cocok -> diarahkan ke /dashboard.
  */
 export async function requireRole(...roles: UserRole[]): Promise<CurrentUser> {
@@ -79,6 +110,8 @@ export async function requireRole(...roles: UserRole[]): Promise<CurrentUser> {
   }
 
   if (!currentUser.is_active) {
+    const supabase = await createClient()
+    await supabase.auth.signOut()
     redirect("/login?error=Akun+Anda+telah+dinonaktifkan")
   }
 
