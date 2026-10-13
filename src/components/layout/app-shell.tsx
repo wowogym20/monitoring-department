@@ -6,36 +6,14 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { navigationItems } from "@/components/layout/nav-items"
 import { UserRole } from "@/types/database"
-import { logoutAction } from "@/lib/actions/auth"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import Image from "next/image"
+import { Header } from "@/components/layout/header"
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
-import { ThemeToggle } from "@/components/theme-toggle"
-import {
-  Menu,
-  LogOut,
-  ShieldCheck,
-  UserCheck,
-  Award,
-  User as UserIcon,
-  ChevronDown,
-} from "lucide-react"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -56,214 +34,86 @@ export function AppShell({ children, user }: AppShellProps) {
     item.roles.includes(user.role)
   )
 
-  const roleLabel = {
-    super_admin: "Super-Admin (Pimpinan)",
-    admin: "Admin (SDM)",
-    user: "Ketua Departemen",
-  }[user.role]
-
-  const roleIcon = {
-    super_admin: (
-      <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400" />
-    ),
-    admin: (
-      <UserCheck className="size-3.5 text-blue-600 dark:text-blue-400" />
-    ),
-    user: (
-      <Award className="size-3.5 text-amber-600 dark:text-amber-400" />
-    ),
-  }[user.role]
-
-  const initials = user.nama
-    ? user.nama
-        .split(" ")
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-    : "U"
-
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground">
-      {/* Mobile Topbar */}
-      <header className="md:hidden flex items-center justify-between px-4 py-3 border-b border-border bg-card sticky top-0 z-40">
-        <div className="flex items-center gap-2.5">
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Buka navigasi menu">
-                <Menu className="size-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 flex flex-col">
-              <SheetHeader className="p-4 border-b border-border text-left">
-                <div className="flex items-center gap-2">
-                  <span className="size-2.5 rounded-full bg-primary" />
-                  <span className="size-2.5 rounded-full bg-secondary" />
-                  <SheetTitle className="text-base font-bold">
-                    Monitoring Dept
-                  </SheetTitle>
-                </div>
-                <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
-                  {roleIcon}
-                  <span>{roleLabel}</span>
-                </div>
-              </SheetHeader>
+      {/* Mobile Navigation Sheet (Dapat dibuka via tombol hamburger di Header) */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="w-72 p-0 flex flex-col">
+          <SheetHeader className="h-16 px-4 border-b border-border flex flex-row items-center gap-3 space-y-0 text-left shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Logo Tazakka"
+              width={36}
+              height={36}
+              className="size-9 object-contain shrink-0"
+              priority
+            />
+            <div className="flex flex-col min-w-0">
+              <SheetTitle className="text-sm font-bold tracking-tight leading-tight">
+                Monitoring Departemen
+              </SheetTitle>
+              <p className="text-[11px] text-muted-foreground leading-tight truncate">
+                Sistem Penilaian Kinerja
+              </p>
+            </div>
+          </SheetHeader>
 
-              {/* Mobile Nav Links */}
-              <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-                {filteredNavItems.map((item) => {
-                  const isActive =
-                    pathname === item.href ||
-                    (item.href !== "/dashboard" && pathname.startsWith(item.href))
-                  const Icon = item.icon
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-l-4 border-emerald-600 font-semibold"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="size-4 shrink-0" />
-                      <span className="flex-1 truncate">{item.title}</span>
-                      {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
-                        <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                          {item.unreadCount}
-                        </span>
-                      )}
-                    </Link>
-                  )
-                })}
-              </nav>
-
-              {/* Mobile Footer */}
-              <div className="p-4 border-t border-border space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">Tema Tampilan</span>
-                  <ThemeToggle />
-                </div>
-                <form action={logoutAction}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-destructive border-destructive/20 hover:bg-destructive/10"
-                    type="submit"
-                  >
-                    <LogOut className="size-4 mr-2" />
-                    Keluar (Logout)
-                  </Button>
-                </form>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <div className="flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-primary" />
-            <span className="size-2 rounded-full bg-secondary" />
-            <span className="font-bold text-sm tracking-tight">
-              Monitoring Departemen
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full size-8 p-0">
-                <Avatar className="size-8 cursor-pointer ring-1 ring-border">
-                  {user.fotoUrl && (
-                    <AvatarImage src={user.fotoUrl} alt={user.nama} />
+          {/* Daftar Tautan Menu Mobile */}
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+            {filteredNavItems.map((item) => {
+              const isActive =
+                pathname === item.href ||
+                (item.href !== "/dashboard" && pathname.startsWith(item.href))
+              const Icon = item.icon
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-l-4 border-emerald-600 font-semibold"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
-                  <AvatarFallback className="text-xs font-semibold bg-primary text-primary-foreground">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-semibold truncate">{user.nama}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {user.email}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/profil" className="cursor-pointer flex items-center gap-2">
-                  <UserIcon className="size-4" />
-                  <span>Profil Saya</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className="w-full text-left px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm flex items-center gap-2 transition-colors cursor-pointer"
                 >
-                  <LogOut className="size-4" />
-                  <span>Keluar</span>
-                </button>
-              </form>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </header>
+                  <Icon className="size-4 shrink-0" />
+                  <span className="flex-1 truncate">{item.title}</span>
+                  {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
+                    <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
+                      {item.unreadCount}
+                    </span>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+        </SheetContent>
+      </Sheet>
 
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar (Khusus Brand & Menu Navigasi) */}
       <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card shrink-0 h-screen sticky top-0">
-        {/* Brand Header */}
-        <div className="p-5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <span className="size-3 rounded-full bg-primary" />
-            <span className="size-3 rounded-full bg-secondary" />
-            <h1 className="font-bold text-base tracking-tight">
+        {/* Brand Header (Tinggi h-16 sejajar dengan list bottom header app) */}
+        <div className="h-16 px-4 border-b border-border flex items-center gap-3 shrink-0">
+          <Image
+            src="/logo.png"
+            alt="Logo Tazakka"
+            width={36}
+            height={36}
+            className="size-9 object-contain shrink-0"
+            priority
+          />
+          <div className="flex flex-col min-w-0">
+            <h1 className="font-bold text-sm tracking-tight leading-tight truncate">
               Monitoring Departemen
             </h1>
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Sistem Penilaian Kinerja
-          </p>
-        </div>
-
-        {/* User Card */}
-        <div className="p-4 border-b border-border bg-muted/30">
-          <div className="flex items-center gap-3">
-            <Avatar className="size-9 ring-1 ring-border">
-              {user.fotoUrl && (
-                <AvatarImage src={user.fotoUrl} alt={user.nama} />
-              )}
-              <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate">{user.nama}</p>
-              <div className="flex items-center gap-1 mt-0.5">
-                <Badge
-                  variant="outline"
-                  className="text-[10px] px-1.5 py-0 h-4 font-normal bg-card border-border"
-                >
-                  {roleIcon}
-                  <span className="ml-1 truncate">{user.role}</span>
-                </Badge>
-              </div>
-            </div>
-          </div>
-          {user.departmentName && (
-            <p className="text-xs text-muted-foreground mt-2 truncate bg-card p-1.5 rounded border border-border">
-              🏢 {user.departmentName}
+            <p className="text-[11px] text-muted-foreground leading-tight truncate">
+              Sistem Penilaian Kinerja
             </p>
-          )}
+          </div>
         </div>
 
-        {/* Desktop Nav Items */}
+        {/* Daftar Tautan Menu Desktop */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-1">
           {filteredNavItems.map((item) => {
             const isActive =
@@ -292,56 +142,21 @@ export function AppShell({ children, user }: AppShellProps) {
             )
           })}
         </nav>
-
-        {/* Sidebar Footer */}
-        <div className="p-4 border-t border-border space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Mode Tampilan</span>
-            <ThemeToggle />
-          </div>
-          <Separator />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-between px-2 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <div className="flex items-center gap-2 truncate">
-                  <UserIcon className="size-3.5" />
-                  <span className="truncate">Pengaturan Akun</span>
-                </div>
-                <ChevronDown className="size-3.5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem asChild>
-                <Link href="/profil" className="cursor-pointer flex items-center gap-2">
-                  <UserIcon className="size-4" />
-                  <span>Profil Saya</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className="w-full text-left px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 rounded-sm flex items-center gap-2 transition-colors cursor-pointer"
-                >
-                  <LogOut className="size-4" />
-                  <span>Keluar</span>
-                </button>
-              </form>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 min-w-0 overflow-y-auto">
-        <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
-          {children}
-        </div>
-      </main>
+      {/* Area Kanan: Header Global di Bagian Atas + Konten Halaman */}
+      <div className="flex-1 min-w-0 flex flex-col min-h-screen">
+        <Header
+          user={user}
+          onMobileMenuToggle={() => setMobileOpen(true)}
+        />
+
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

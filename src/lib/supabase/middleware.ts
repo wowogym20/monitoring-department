@@ -161,11 +161,19 @@ export async function updateSession(request: NextRequest) {
 
     // Role-based route guard sesuai matriks PRD bagian 10:
 
-    // A. Khusus Super Admin: /ketua dan /aspek
-    if (
-      (pathname.startsWith("/ketua") || pathname.startsWith("/aspek")) &&
-      role !== "super_admin"
-    ) {
+    // A. Khusus Super Admin: /ketua
+    if (pathname.startsWith("/ketua") && role !== "super_admin") {
+      const url = request.nextUrl.clone()
+      url.pathname = "/dashboard"
+      return {
+        supabaseResponse: createSafeRedirect(url, request, supabaseResponse),
+        user,
+        role,
+      }
+    }
+
+    // B. Super Admin & Admin: /aspek (Ketua / user ditolak)
+    if (pathname.startsWith("/aspek") && role === "user") {
       const url = request.nextUrl.clone()
       url.pathname = "/dashboard"
       return {

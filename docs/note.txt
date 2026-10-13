@@ -1,0 +1,29 @@
+Login:
+const DEV_USERS: DevUserSeed[] = [
+  {
+    email: "superadmin@tazakka.id",
+    password: "Password123!",
+    nama: "KH. Anang Rikza Masyhadi, M.A.",
+    role: "super_admin",
+  },
+  {
+    email: "admin.sdm@tazakka.id",
+    password: "Password123!",
+    nama: "Ustadz Haris (SDM)",
+    role: "admin",
+  },
+  {
+    email: "ketua.pendidikan@tazakka.id",
+    password: "Password123!",
+    nama: "Ustadz Hakim (Ketua Pendidikan)",
+    role: "user",
+    deptKode: "PEND-AJAR",
+  },
+  {
+    email: "ketua.ti@tazakka.id",
+    password: "Password123!",
+    nama: "Ustadz Fajar (Ketua TI)",
+    role: "user",
+    deptKode: "TI",
+  },
+]

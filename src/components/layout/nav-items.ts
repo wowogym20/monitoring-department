@@ -69,7 +69,7 @@ export const navigationItems: NavItem[] = [
     title: "Aspek Penilaian",
     href: "/aspek",
     icon: ListOrdered,
-    roles: ["super_admin"],
+    roles: ["super_admin", "admin"],
   },
   {
     title: "Ekspor Laporan",

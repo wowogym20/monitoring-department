@@ -1,10 +1,14 @@
+import { Suspense } from "react"
 import { requireRole } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ListOrdered } from "lucide-react"
+import { getAspekListServer } from "@/lib/actions/aspek"
+import { AspekManager } from "./aspek-manager"
+import { Card } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
 
 export default async function AspekPage() {
-  await requireRole("super_admin")
+  const currentUser = await requireRole("super_admin", "admin")
+
+  const aspects = await getAspekListServer()
 
   return (
     <div className="space-y-6">
@@ -13,29 +17,24 @@ export default async function AspekPage() {
           Aspek Penilaian
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Konfigurasi 7 aspek penilaian kinerja (Khusus Super Admin).
+          {currentUser.role === "super_admin"
+            ? "Kelola aspek penilaian kinerja, urutan formulir, dan panduan rubrik skala 1–5."
+            : "Daftar aspek penilaian kinerja dan pedoman skala Likert 1–5 (Mode Baca SDM)."}
         </p>
       </div>
 
-      <Card className="border border-border shadow-xs">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <ListOrdered className="h-5 w-5 text-primary" />
-              Modul Aspek Penilaian
-            </CardTitle>
-            <Badge variant="secondary">Fase 2</Badge>
-          </div>
-          <CardDescription>
-            Pengaturan nama aspek, deskripsi panduan skala Likert 1-5, dan urutan.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Fitur konfigurasi aspek penilaian akan diimplementasikan pada Fase 2.
-          </p>
-        </CardContent>
-      </Card>
+      <Suspense
+        fallback={
+          <Card className="p-8 flex items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </Card>
+        }
+      >
+        <AspekManager
+          initialAspects={aspects}
+          currentUserRole={currentUser.role}
+        />
+      </Suspense>
     </div>
   )
 }

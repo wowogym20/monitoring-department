@@ -33,7 +33,7 @@ test.describe("Proteksi Otorisasi & Menu Navigasi Berbasis Role", () => {
     await page.click('button[type="submit"]')
 
     await page.waitForURL("**/dashboard")
-    await expect(page.locator("text=Super-Admin")).toBeVisible()
+    await expect(page.locator("text=Super-Admin").first()).toBeVisible()
 
     // Menu khusus Super Admin harus muncul di sidebar
     await expect(page.locator('aside a[href="/ketua"]')).toBeVisible()
@@ -52,16 +52,16 @@ test.describe("Proteksi Otorisasi & Menu Navigasi Berbasis Role", () => {
     await page.click('button[type="submit"]')
 
     await page.waitForURL("**/dashboard")
-    await expect(page.locator("text=Admin SDM")).toBeVisible()
+    await expect(page.locator("text=Admin SDM").first()).toBeVisible()
 
     // Menu admin diizinkan di sidebar
     await expect(page.locator('aside a[href="/departemen"]')).toBeVisible()
     await expect(page.locator('aside a[href="/periode"]')).toBeVisible()
+    await expect(page.locator('aside a[href="/aspek"]')).toBeVisible()
     await expect(page.locator('aside a[href="/ekspor"]')).toBeVisible()
 
     // Menu khusus super admin TIDAK boleh terlihat oleh admin di sidebar
     await expect(page.locator('aside a[href="/ketua"]')).toHaveCount(0)
-    await expect(page.locator('aside a[href="/aspek"]')).toHaveCount(0)
 
     // Akses URL terlarang (/ketua) harus dialihkan ke /dashboard
     await page.goto("/ketua")
@@ -81,7 +81,7 @@ test.describe("Proteksi Otorisasi & Menu Navigasi Berbasis Role", () => {
     await page.click('button[type="submit"]')
 
     await page.waitForURL("**/dashboard")
-    await expect(page.locator("text=Ketua Departemen")).toBeVisible()
+    await expect(page.locator("text=Ketua Departemen").first()).toBeVisible()
 
     // Menu ketua yang diizinkan di sidebar
     await expect(page.locator('aside a[href="/anggota"]')).toBeVisible()

@@ -1,41 +1,74 @@
+import { Suspense } from "react"
 import { requireRole } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Building2 } from "lucide-react"
+import {
+  getDepartmentsServer,
+  getEligibleKetuaList,
+} from "@/lib/actions/department"
+import { DepartmentTable } from "./department-table"
+import { Card } from "@/components/ui/card"
+import { Loader2 } from "lucide-react"
 
-export default async function DepartemenPage() {
-  await requireRole("super_admin", "admin")
+interface DepartemenPageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function DepartemenPage({
+  searchParams,
+}: DepartemenPageProps) {
+  const currentUser = await requireRole("super_admin", "admin")
+
+  const resolvedParams = await searchParams
+  const search =
+    typeof resolvedParams.search === "string" ? resolvedParams.search : ""
+  const statusParam =
+    typeof resolvedParams.status === "string" ? resolvedParams.status : "all"
+  const status =
+    statusParam === "active" || statusParam === "inactive"
+      ? statusParam
+      : "all"
+  const page =
+    typeof resolvedParams.page === "string"
+      ? Math.max(1, parseInt(resolvedParams.page, 10) || 1)
+      : 1
+  const pageSize = 10
+
+  const [departmentsResult, eligibleKetua] = await Promise.all([
+    getDepartmentsServer({ search, status, page, pageSize }),
+    getEligibleKetuaList(),
+  ])
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Departemen
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Daftar dan struktur departemen organisasi.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+            Departemen
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {currentUser.role === "super_admin"
+              ? "Kelola struktur 14 departemen, status keaktifan, dan penugasan ketua departemen."
+              : "Daftar struktur 14 departemen dan ketua yang bertugas (Mode Baca)."}
+          </p>
+        </div>
       </div>
 
-      <Card className="border border-border shadow-xs">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-primary" />
-              Modul Manajemen Departemen
-            </CardTitle>
-            <Badge variant="secondary">Fase 2</Badge>
-          </div>
-          <CardDescription>
-            Pengelolaan 14 departemen dan penetapan ketua departemen.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Fitur pemetaan ketua departemen dan konfigurasi departemen akan diimplementasikan pada Fase 2.
-          </p>
-        </CardContent>
-      </Card>
+      <Suspense
+        fallback={
+          <Card className="p-8 flex items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </Card>
+        }
+      >
+        <DepartmentTable
+          initialData={departmentsResult.data}
+          total={departmentsResult.total}
+          page={departmentsResult.page}
+          pageSize={departmentsResult.pageSize}
+          totalPages={departmentsResult.totalPages}
+          currentUserRole={currentUser.role}
+          eligibleKetua={eligibleKetua}
+        />
+      </Suspense>
     </div>
   )
 }
