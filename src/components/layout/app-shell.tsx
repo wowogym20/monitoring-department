@@ -16,6 +16,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 
+import { useUnreadComments } from "@/hooks/use-unread-comments"
+
 interface AppShellProps {
   children: React.ReactNode
   user: {
@@ -30,10 +32,19 @@ interface AppShellProps {
 export function AppShell({ children, user }: AppShellProps) {
   const pathname = usePathname()
   const { isCollapsed, mobileOpen, setMobileOpen } = useSidebar()
+  const { data: unreadCommentsCount = 0 } = useUnreadComments(user.role)
 
-  const filteredNavItems = navigationItems.filter((item) =>
-    item.roles.includes(user.role)
-  )
+  const filteredNavItems = navigationItems
+    .filter((item) => item.roles.includes(user.role))
+    .map((item) => {
+      if (user.role === "user" && (item.href === "/penilaian" || item.href === "/rekap")) {
+        return {
+          ...item,
+          unreadCount: unreadCommentsCount,
+        }
+      }
+      return item
+    })
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground">
@@ -72,9 +83,9 @@ export function AppShell({ children, user }: AppShellProps) {
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all",
                     isActive
-                      ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-l-4 border-emerald-600 font-semibold"
+                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
@@ -151,12 +162,12 @@ export function AppShell({ children, user }: AppShellProps) {
                 href={item.href}
                 title={item.title}
                 className={cn(
-                  "flex items-center rounded-md text-sm font-medium transition-colors relative",
+                  "flex items-center rounded-md text-sm font-medium transition-all relative",
                   isCollapsed
                     ? "justify-center size-10 mx-auto"
                     : "gap-3 px-3 py-2",
                   isActive
-                    ? "bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border-l-4 border-emerald-600 font-semibold"
+                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >

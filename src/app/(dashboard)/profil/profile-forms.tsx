@@ -95,7 +95,13 @@ export function AvatarUploadForm({
       <CardContent className="flex flex-col sm:flex-row items-center gap-6">
         <div className="relative group">
           <Avatar className="size-24 ring-2 ring-primary/20">
-            {previewUrl && <AvatarImage src={previewUrl} alt={nama} />}
+            {previewUrl && (
+              <AvatarImage
+                src={previewUrl}
+                alt={nama}
+                className="object-cover"
+              />
+            )}
             <AvatarFallback className="text-xl font-bold bg-primary text-primary-foreground">
               {initials}
             </AvatarFallback>

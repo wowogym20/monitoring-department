@@ -1,41 +1,69 @@
 import { requireRole } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { getRekapDataServer } from "@/lib/actions/rekap"
+import { RekapSummaryCards } from "./rekap-summary-cards"
+import { RekapTable } from "./rekap-table"
 import { BarChart3 } from "lucide-react"
 
-export default async function RekapPage() {
+export default async function RekapPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    periodeId?: string
+    departmentId?: string
+    status?: "all" | "draft" | "submitted" | "revision_requested" | "approved"
+    search?: string
+    page?: string
+    pageSize?: string
+  }>
+}) {
   await requireRole("super_admin", "admin", "user")
+  const params = await searchParams
+
+  const page = params.page ? parseInt(params.page, 10) : 1
+  const pageSize = params.pageSize ? parseInt(params.pageSize, 10) : 10
+
+  const rekapData = await getRekapDataServer({
+    periodeId: params.periodeId,
+    departmentId: params.departmentId,
+    status: params.status,
+    search: params.search,
+    page: isNaN(page) ? 1 : page,
+    pageSize: isNaN(pageSize) ? 10 : pageSize,
+  })
 
   return (
     <div className="space-y-6">
+      {/* Header Halaman */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Rekap Penilaian
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
+          <BarChart3 className="size-7 text-primary" />
+          Rekap Penilaian Kinerja
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Ringkasan dan visualisasi statistik nilai kinerja per departemen dan periode.
+          {rekapData.userRole === "user"
+            ? "Rekapitulasi penilaian anggota departemen Anda beserta status dan skor evaluasi."
+            : "Monitoring capaian evaluasi kinerja lintas departemen, status approval, dan ringkasan skor."}
         </p>
       </div>
 
-      <Card className="border border-border shadow-xs">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              Modul Rekapitulasi & Statistik
-            </CardTitle>
-            <Badge variant="secondary">Fase 4</Badge>
-          </div>
-          <CardDescription>
-            Grafik distribusi nilai, rata-rata departemen, dan komparasi periode.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Fitur visualisasi statistik interaktif berbasis Recharts akan diimplementasikan pada Fase 4.
-          </p>
-        </CardContent>
-      </Card>
+      {/* 2. Ringkasan per Departemen di atas tabel (US-10 penanda oren bila belum selesai) */}
+      <RekapSummaryCards summaries={rekapData.summaries} />
+
+      {/* 1. Tabel TanStack Table Lintas Departemen / Departemen Sendiri */}
+      <RekapTable
+        data={rekapData.items}
+        totalCount={rekapData.totalCount}
+        pageCount={rekapData.pageCount}
+        currentPage={rekapData.currentPage}
+        pageSize={rekapData.pageSize}
+        periods={rekapData.periods}
+        selectedPeriodId={rekapData.selectedPeriod?.id || null}
+        departments={rekapData.departments}
+        selectedDepartmentId={rekapData.selectedDepartmentId}
+        currentStatus={params.status || "all"}
+        currentSearch={params.search || ""}
+        userRole={rekapData.userRole}
+      />
     </div>
   )
 }

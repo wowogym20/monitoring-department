@@ -1,6 +1,6 @@
 /**
  * Helper pemformatan tanggal dengan zona waktu Asia/Jakarta.
- * Format standar: "dd MMM yyyy" (contoh: "13 Okt 2026").
+ * Format standar: "dd MMM yyyy" (contoh: "13 Okt 2026") dan "dd MMM yyyy, HH:mm".
  */
 
 const JAKARTA_FORMATTER = new Intl.DateTimeFormat("id-ID", {
@@ -8,6 +8,16 @@ const JAKARTA_FORMATTER = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "short",
   year: "numeric",
+})
+
+const JAKARTA_DATETIME_FORMATTER = new Intl.DateTimeFormat("id-ID", {
+  timeZone: "Asia/Jakarta",
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
 })
 
 /**
@@ -45,3 +55,26 @@ export function formatDateJakarta(
     return fallback
   }
 }
+
+/**
+ * Format string ISO / Date ke format "dd MMM yyyy, HH:mm" (Asia/Jakarta)
+ */
+export function formatDateTimeJakarta(
+  dateInput: string | Date | null | undefined,
+  fallback = "-"
+): string {
+  if (!dateInput) return fallback
+
+  try {
+    const dateObj = typeof dateInput === "string" ? new Date(dateInput) : dateInput
+    if (isNaN(dateObj.getTime())) return fallback
+
+    return JAKARTA_DATETIME_FORMATTER.format(dateObj).replace(/\./g, "").replace(/\./g, ":")
+  } catch {
+    return fallback
+  }
+}
+
+// Alias untuk kemudahan penamaan lokalisasi ID
+export const formatDateId = formatDateJakarta
+export const formatDateTimeId = formatDateTimeJakarta

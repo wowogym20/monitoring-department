@@ -223,7 +223,11 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                       <div className="flex items-center gap-3">
                         <Avatar className="size-8">
                           {account.foto_url && (
-                            <AvatarImage src={account.foto_url} alt={account.nama} />
+                            <AvatarImage
+                              src={account.foto_url}
+                              alt={account.nama}
+                              className="object-cover"
+                            />
                           )}
                           <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
                             {initials}

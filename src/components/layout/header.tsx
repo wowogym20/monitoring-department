@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { cn } from "@/lib/utils"
 import { navigationItems } from "@/components/layout/nav-items"
 import { UserRole } from "@/types/database"
 import { logoutAction } from "@/lib/actions/auth"
@@ -49,7 +50,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
   const pathname = usePathname()
   const { isCollapsed, toggleSidebar, toggleMobile } = useSidebar()
 
-  // Dapatkan judul halaman aktif untuk breadcrumb desktop
+  // Dapatkan judul halaman aktif untuk breadcrumb desktop & konteks mobile
   const currentNavItem = navigationItems.find(
     (item) =>
       item.href === pathname ||
@@ -68,7 +69,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
       <ShieldCheck className="size-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
     ),
     admin: (
-      <UserCheck className="size-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+      <UserCheck className="size-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
     ),
     user: (
       <Award className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -79,7 +80,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
     super_admin:
       "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300",
     admin:
-      "bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-950/60 dark:text-blue-300",
+      "bg-teal-50 text-teal-800 border-teal-300 dark:bg-teal-950/60 dark:text-teal-300",
     user:
       "bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/60 dark:text-amber-300",
   }[user.role]
@@ -94,15 +95,15 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
     : "U"
 
   return (
-    <header className="sticky top-0 z-30 w-full h-16 border-b border-border bg-card/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between shadow-2xs shrink-0">
-      {/* Sisi Kiri Header: Mobile Hamburger & Brand atau Desktop Breadcrumb Title */}
-      <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 w-full h-16 border-b border-border bg-card/95 backdrop-blur-md px-3 sm:px-5 lg:px-6 flex items-center justify-between gap-2 sm:gap-4 shadow-2xs shrink-0">
+      {/* Sisi Kiri Header: Navigasi, Toggle, Brand & Breadcrumb */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         {/* Tombol Hamburger Menu (Hanya Tampil di Mobile < md) */}
         <Button
           variant="ghost"
           size="icon"
           onClick={onMobileMenuToggle || toggleMobile}
-          className="md:hidden size-9"
+          className="md:hidden size-9 shrink-0 text-muted-foreground hover:text-foreground"
           aria-label="Buka navigasi menu"
         >
           <Menu className="size-5" />
@@ -113,7 +114,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="hidden md:flex size-9 text-muted-foreground hover:text-foreground"
+          className="hidden md:flex size-9 shrink-0 text-muted-foreground hover:text-foreground rounded-md"
           aria-label={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
           aria-expanded={!isCollapsed}
           title={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
@@ -125,8 +126,15 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           )}
         </Button>
 
-        {/* Brand Ringkas (Mobile) */}
-        <div className="flex md:hidden items-center gap-2">
+        {/* Pemisah Vertikal Halus (Desktop >= md) */}
+        <div className="hidden md:block h-4 w-px bg-border shrink-0" />
+
+        {/* Brand Ringkas & Konteks Halaman (Mobile < md) */}
+        <Link
+          href="/dashboard"
+          className="flex md:hidden items-center gap-2 min-w-0 hover:opacity-90 transition-opacity"
+          title="Monitoring Departemen - Halaman Utama"
+        >
           <Image
             src="/logo.png"
             alt="Logo Tazakka"
@@ -135,37 +143,50 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
             className="size-7 object-contain shrink-0"
             priority
           />
-          <span className="font-bold text-sm tracking-tight">
-            Monitoring Dept
-          </span>
-        </div>
+          <div className="flex flex-col min-w-0">
+            <span className="font-bold text-xs sm:text-sm tracking-tight leading-tight truncate">
+              Monitoring Dept
+            </span>
+            <span className="text-[10px] text-muted-foreground leading-tight truncate sm:hidden">
+              {pageTitle}
+            </span>
+          </div>
+        </Link>
 
         {/* Judul Halaman & Info Konteks (Desktop >= md) */}
-        <div className="hidden md:flex items-center gap-3">
-          <h2 className="text-base font-bold tracking-tight text-foreground">
+        <div className="hidden md:flex items-center gap-2.5 min-w-0 overflow-hidden">
+          <h2 className="text-sm lg:text-base font-bold tracking-tight text-foreground truncate shrink-0">
             {pageTitle}
           </h2>
           {user.departmentName && (
-            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted/60 text-muted-foreground border border-border">
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted/80 text-muted-foreground border border-border min-w-0 max-w-[160px] md:max-w-[200px] lg:max-w-[280px] truncate"
+              title={`Departemen: ${user.departmentName}`}
+            >
               <Building2 className="size-3 text-primary shrink-0" />
-              <span className="truncate max-w-[240px]">{user.departmentName}</span>
+              <span className="truncate">{user.departmentName}</span>
             </div>
           )}
         </div>
       </div>
 
       {/* Sisi Kanan Header: Mode Tampilan, Role Badge, Profile Avatar & Logout */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         {/* 1. Mode Tampilan (Theme Toggle) */}
-        <ThemeToggle />
+        <div className="shrink-0">
+          <ThemeToggle />
+        </div>
 
-        {/* 2. Role Badge (Tampil di Tablet/Desktop) */}
+        {/* 2. Role Badge (Tampil di Tablet/Desktop >= sm) */}
         <Badge
           variant="outline"
-          className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium ${roleBadgeStyle}`}
+          className={cn(
+            "hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium shrink-0",
+            roleBadgeStyle
+          )}
         >
           {roleIcon}
-          <span>{roleLabel}</span>
+          <span className="truncate max-w-[110px] md:max-w-none">{roleLabel}</span>
         </Badge>
 
         {/* 3. Profil Pengguna & Dropdown Logout */}
@@ -173,29 +194,33 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-2 h-9 px-1.5 sm:px-2 rounded-full sm:rounded-md hover:bg-muted/80"
+              className="flex items-center gap-2 h-9 px-1.5 sm:px-2 rounded-full sm:rounded-md hover:bg-muted/80 shrink-0"
               aria-label="Menu akun pengguna"
             >
-              <Avatar className="size-8 ring-1 ring-border">
+              <Avatar className="size-8 ring-1 ring-border shrink-0">
                 {user.fotoUrl && (
-                  <AvatarImage src={user.fotoUrl} alt={user.nama} />
+                  <AvatarImage
+                    src={user.fotoUrl}
+                    alt={user.nama}
+                    className="object-cover"
+                  />
                 )}
                 <AvatarFallback className="text-xs font-bold bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
 
-              {/* Nama Pengguna & Email (Desktop Lebar) */}
-              <div className="hidden lg:flex flex-col text-left">
-                <span className="text-xs font-semibold text-foreground leading-tight truncate max-w-[140px]">
+              {/* Nama Pengguna & Email (Desktop Lebar >= lg) */}
+              <div className="hidden lg:flex flex-col text-left overflow-hidden">
+                <span className="text-xs font-semibold text-foreground leading-tight truncate max-w-[120px] xl:max-w-[160px]">
                   {user.nama}
                 </span>
-                <span className="text-[10px] text-muted-foreground truncate max-w-[140px]">
+                <span className="text-[10px] text-muted-foreground truncate max-w-[120px] xl:max-w-[160px]">
                   {user.email}
                 </span>
               </div>
 
-              <ChevronDown className="size-3.5 text-muted-foreground hidden sm:block" />
+              <ChevronDown className="size-3.5 text-muted-foreground hidden sm:block shrink-0" />
             </Button>
           </DropdownMenuTrigger>
 
