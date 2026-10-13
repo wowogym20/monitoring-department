@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useSidebar } from "@/components/layout/sidebar-context"
 import {
   Menu,
   LogOut,
@@ -27,6 +28,7 @@ import {
   User as UserIcon,
   ChevronDown,
   Building2,
+  PanelLeft,
 } from "lucide-react"
 
 import Image from "next/image"
@@ -44,6 +46,7 @@ export interface HeaderProps {
 
 export function Header({ user, onMobileMenuToggle }: HeaderProps) {
   const pathname = usePathname()
+  const { isCollapsed, toggleSidebar, toggleMobile } = useSidebar()
 
   // Dapatkan judul halaman aktif untuk breadcrumb desktop
   const currentNavItem = navigationItems.find(
@@ -97,11 +100,24 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
         <Button
           variant="ghost"
           size="icon"
-          onClick={onMobileMenuToggle}
+          onClick={onMobileMenuToggle || toggleMobile}
           className="md:hidden size-9"
           aria-label="Buka navigasi menu"
         >
           <Menu className="size-5" />
+        </Button>
+
+        {/* Tombol Toggle Sidebar Desktop (>= md) */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          className="hidden md:flex size-9 text-muted-foreground hover:text-foreground"
+          aria-label={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
+          aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
+        >
+          <PanelLeft className="size-5" />
         </Button>
 
         {/* Brand Ringkas (Mobile) */}

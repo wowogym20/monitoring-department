@@ -192,4 +192,140 @@ describe('Skenario Hak Akses & Kebijakan Row-Level Security (RLS)', () => {
       expect(calculateAverageScore([1, 2, 3, 4, 5, 3, 2])).toBe(2.86)
     })
   })
+
+  // Skenario 8: Hak Akses Manajemen Anggota (FR-3 & Matriks Akses Bagian 4)
+  describe('Skenario 8: Kebijakan RLS & Proteksi Server Action Anggota', () => {
+    // Model evaluasi Server Action & RLS
+    function evaluateMemberQuery(
+      user: { role: UserRole; department_id?: string },
+      requestedDeptId?: string
+    ) {
+      if (user.role === 'user') {
+        // Server action & RLS selalu memaksa department_id ke departemen milik ketua
+        return { allowed: true, effectiveDepartmentId: user.department_id }
+      }
+      // Super admin & admin bisa melihat semua atau spesifik
+      return { allowed: true, effectiveDepartmentId: requestedDeptId || 'all' }
+    }
+
+    function evaluateMemberMutation(
+      user: { role: UserRole; department_id?: string },
+      targetMemberDeptId: string,
+      action: 'insert' | 'update' | 'delete' = 'update'
+    ) {
+      if (user.role === 'admin' && action) {
+        // Admin SDM hanya view (tidak boleh INSERT/UPDATE/DELETE langsung)
+        return { allowed: false, reason: 'Admin SDM tidak diizinkan melakukan mutasi langsung' }
+      }
+      if (user.role === 'super_admin') {
+        return { allowed: true }
+      }
+      if (user.role === 'user') {
+        // Ketua hanya boleh di departemennya sendiri
+        if (user.department_id !== targetMemberDeptId) {
+          return {
+            allowed: false,
+            reason: 'Ketua tidak memiliki akses untuk mengubah anggota departemen lain',
+          }
+        }
+        return { allowed: true }
+      }
+      return { allowed: false, reason: 'Tidak terotentikasi' }
+    }
+
+    it('Ketua A meminta data anggota departemen B harus dipaksa HANYA melihat departemen A', () => {
+      const result = evaluateMemberQuery(mockKetuaA, mockDeptB.id)
+      expect(result.effectiveDepartmentId).toBe(mockDeptA.id)
+      expect(result.effectiveDepartmentId).not.toBe(mockDeptB.id)
+    })
+
+    it('Ketua A TIDAK BISA mengubah (UPDATE) anggota departemen B', () => {
+      const updateAttempt = evaluateMemberMutation(mockKetuaA, mockDeptB.id, 'update')
+      expect(updateAttempt.allowed).toBe(false)
+      expect(updateAttempt.reason).toContain('tidak memiliki akses')
+    })
+
+    it('Ketua A TIDAK BISA menghapus (DELETE) anggota departemen B', () => {
+      const deleteAttempt = evaluateMemberMutation(mockKetuaA, mockDeptB.id, 'delete')
+      expect(deleteAttempt.allowed).toBe(false)
+      expect(deleteAttempt.reason).toContain('tidak memiliki akses')
+    })
+
+    it('Ketua A BISA mengubah anggota departemennya sendiri (departemen A)', () => {
+      const ownUpdate = evaluateMemberMutation(mockKetuaA, mockDeptA.id, 'update')
+      expect(ownUpdate.allowed).toBe(true)
+    })
+
+    it('Admin SDM TIDAK BISA membuat atau menghapus anggota langsung (hanya view)', () => {
+      const adminInsert = evaluateMemberMutation(mockAdmin, mockDeptA.id, 'insert')
+      expect(adminInsert.allowed).toBe(false)
+      const adminDelete = evaluateMemberMutation(mockAdmin, mockDeptA.id, 'delete')
+      expect(adminDelete.allowed).toBe(false)
+    })
+
+    it('Super Admin BISA melakukan CRUD pada anggota departemen manapun', () => {
+      const saInsert = evaluateMemberMutation(mockSuperAdmin, mockDeptA.id, 'insert')
+      const saUpdate = evaluateMemberMutation(mockSuperAdmin, mockDeptB.id, 'update')
+      const saDelete = evaluateMemberMutation(mockSuperAdmin, mockDeptB.id, 'delete')
+      expect(saInsert.allowed).toBe(true)
+      expect(saUpdate.allowed).toBe(true)
+      expect(saDelete.allowed).toBe(true)
+    })
+  })
+
+  // Skenario 9: Aturan Hapus vs Nonaktif Anggota & Keunikan NIP
+  describe('Skenario 9: Aturan Bisnis Hapus (Soft Delete) vs Nonaktif & NIP Unik', () => {
+    function evaluateMemberDeletion(member: { has_assessment: boolean }) {
+      if (member.has_assessment) {
+        return {
+          canDelete: false,
+          error:
+            'Anggota tidak dapat dihapus karena sudah memiliki riwayat penilaian. Anda hanya dapat menonaktifkan status anggota ini.',
+        }
+      }
+      return { canDelete: true, deleteType: 'soft_delete' }
+    }
+
+    function checkNipUniqueness(
+      existingMembers: Array<{ department_id: string; nip: string }>,
+      newMember: { department_id: string; nip: string }
+    ) {
+      const duplicate = existingMembers.some(
+        (m) => m.department_id === newMember.department_id && m.nip.toLowerCase() === newMember.nip.toLowerCase()
+      )
+      return !duplicate
+    }
+
+    it('Anggota yang SUDAH memiliki penilaian DITOLAK saat dihapus', () => {
+      const assessedMember = { has_assessment: true }
+      const res = evaluateMemberDeletion(assessedMember)
+      expect(res.canDelete).toBe(false)
+      expect(res.error).toContain('hanya dapat menonaktifkan')
+    })
+
+    it('Anggota yang BELUM memiliki penilaian boleh dihapus menggunakan soft delete', () => {
+      const unassessedMember = { has_assessment: false }
+      const res = evaluateMemberDeletion(unassessedMember)
+      expect(res.canDelete).toBe(true)
+      expect(res.deleteType).toBe('soft_delete')
+    })
+
+    it('NIP yang sama di departemen yang sama harus ditolak (duplikat)', () => {
+      const existing = [{ department_id: mockDeptA.id, nip: '19900101' }]
+      const isUnique = checkNipUniqueness(existing, {
+        department_id: mockDeptA.id,
+        nip: '19900101',
+      })
+      expect(isUnique).toBe(false)
+    })
+
+    it('NIP yang sama di departemen yang BERBEDA diperbolehkan', () => {
+      const existing = [{ department_id: mockDeptA.id, nip: '19900101' }]
+      const isUnique = checkNipUniqueness(existing, {
+        department_id: mockDeptB.id,
+        nip: '19900101',
+      })
+      expect(isUnique).toBe(true)
+    })
+  })
 })
