@@ -58,18 +58,24 @@ export async function updateSession(request: NextRequest) {
     pathname === "/login" ||
     pathname === "/lupa-password" ||
     pathname === "/reset-password"
-  const isPublicRoute = isAuthRoute || pathname === "/"
 
-  // 1. Jika belum login dan mengakses rute terlindungi
-  if (!user && !isPublicRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/login"
-    url.searchParams.set("redirect", pathname)
-    return { supabaseResponse: NextResponse.redirect(url), user: null, role: null }
+  // 1. Jika belum login
+  if (!user) {
+    if (pathname === "/") {
+      const url = request.nextUrl.clone()
+      url.pathname = "/login"
+      return { supabaseResponse: NextResponse.redirect(url), user: null, role: null }
+    }
+    if (!isAuthRoute) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/login"
+      url.searchParams.set("redirect", pathname)
+      return { supabaseResponse: NextResponse.redirect(url), user: null, role: null }
+    }
   }
 
-  // 2. Jika sudah login dan mengakses halaman auth (/login, /lupa-password) atau landing (/)
-  if (user && isPublicRoute && pathname !== "/reset-password") {
+  // 2. Jika sudah login dan mengakses halaman auth atau root
+  if (user && (isAuthRoute || pathname === "/") && pathname !== "/reset-password") {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     url.searchParams.delete("redirect")
