@@ -275,7 +275,7 @@ export function PanduanTabsClient() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive font-bold">•</span>
-                  <span>Bagian KOordinator membutuhkan waktu berhari-hari untuk merekap ratusan data staf dan guru.</span>
+                  <span>Bagian Koordinator membutuhkan waktu berhari-hari untuk merekap ratusan data staf dan guru.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive font-bold">•</span>
@@ -470,7 +470,7 @@ export function PanduanTabsClient() {
               {
                 step: "01",
                 title: "Inisialisasi Periode & Aspek Penilaian",
-                actor: "Super Admin / Admin SDM",
+                actor: "Super Admin / Koordinator",
                 desc: "Super Admin atau Koordinator membuka periode penilaian baru (misal: Semester Ganjil 2026/2027), menetapkan batas tanggal evaluasi, serta memastikan 7 aspek terstandar aktif.",
                 icon: Calendar,
                 badgeColor: "bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300",
@@ -478,7 +478,7 @@ export function PanduanTabsClient() {
               {
                 step: "02",
                 title: "Pendataan Anggota Departemen",
-                actor: "Ketua Departemen & Admin SDM",
+                actor: "Kepala Departemen & Koordinator",
                 desc: "Ketua mendata anggota tim di departemennya. Koordinator juga dapat mempercepat proses dengan mengimpor ratusan data guru sekaligus melalui berkas Excel/CSV.",
                 icon: Users,
                 badgeColor: "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300",
@@ -486,7 +486,7 @@ export function PanduanTabsClient() {
               {
                 step: "03",
                 title: "Pengisian Lembar Penilaian (Skala Likert 1–5)",
-                actor: "Ketua Departemen (User)",
+                actor: "Kepala Departemen (User)",
                 desc: "Ketua mengisi skor 1–5 pada 7 aspek dan memberikan catatan evaluasi. Nilai dapat disimpan sebagai Draf (Draft) atau langsung dikirimkan ke Koordinator (Submit).",
                 icon: ClipboardCheck,
                 badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
@@ -494,7 +494,7 @@ export function PanduanTabsClient() {
               {
                 step: "04",
                 title: "Verifikasi, Umpan Balik, & Approval",
-                actor: "Admin SDM (Admin)",
+                actor: "Koordinator (Admin)",
                 desc: "Koordinator memantau kelengkapan rekap 15 departemen. Koordinator dapat Menyetujui (Approve) penilaian atau Meminta Revisi (Revision Requested) dengan menyertakan catatan kinerja kerja.",
                 icon: BadgeCheck,
                 badgeColor: "bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300",
@@ -510,7 +510,7 @@ export function PanduanTabsClient() {
               {
                 step: "06",
                 title: "Rekapitulasi Lembaga & Ekspor Laporan",
-                actor: "Pimpinan & Admin SDM",
+                actor: "Super Admin & Koordinator",
                 desc: "Koordinator memantau komparasi radar 15 departemen di dashboard. Laporan resmi dapat diunduh kapan saja dalam format Excel multi-sheet (.xlsx) atau dokumen cetak PDF (.pdf).",
                 icon: BarChart3,
                 badgeColor: "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300",
@@ -518,7 +518,7 @@ export function PanduanTabsClient() {
               {
                 step: "07",
                 title: "Jejak Audit Permanen & Penutupan Periode",
-                actor: "Pimpinan / Super-Admin",
+                actor: "Koodinator / Super-Admin",
                 desc: "Seluruh riwayat perubahan nilai terekam di audit trail log. Koordinator mengunci periode menjadi Closed sehingga seluruh nilai membeku dan menjadi arsip historis resmi.",
                 icon: Lock,
                 badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300",
