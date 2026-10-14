@@ -661,7 +661,7 @@ export function PanduanTabsClient() {
               <ul className="text-xs text-muted-foreground space-y-1.5 pl-4 list-disc">
                 <li><strong className="text-foreground">Tindakan Setujui:</strong> Mengubah status menjadi Approved jika nilai telah objektif.</li>
                 <li><strong className="text-foreground">Minta Revisi:</strong> Mengembalikan lembar nilai ke Kepala Departemen dengan status Revision Requested.</li>
-                <li><strong className="text-foreground">Fitur Diskusi:</strong> Kolom komentar dua arah antara Koordinatordan Kepala Departemen.</li>
+                <li><strong className="text-foreground">Fitur Diskusi:</strong> Kolom komentar dua arah antara Koordinator dan Kepala Departemen.</li>
               </ul>
             </Card>
 
