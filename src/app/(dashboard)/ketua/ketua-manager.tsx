@@ -356,7 +356,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
               Buat Akun Ketua Baru
             </DialogTitle>
             <DialogDescription>
-              Akun akan dibuat di sistem autentikasi dengan peran ketua departemen (user).
+              Akun akan dibuat di sistem autentikasi dengan peran kepala departemen (user).
             </DialogDescription>
           </DialogHeader>
 
