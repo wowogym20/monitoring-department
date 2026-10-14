@@ -4,6 +4,8 @@ import {
   updateDepartmentSchema,
   assignKetuaSchema,
   createKetuaSchema,
+  updateKetuaSchema,
+  deleteKetuaSchema,
   toggleKetuaStatusSchema,
   resetKetuaPasswordSchema,
   createAspectSchema,
@@ -67,18 +69,27 @@ describe("Unit Test Skema Validasi Zod Master Data", () => {
   })
 
   describe("2. Validasi Akun Ketua", () => {
-    it("menerima pembuatan akun ketua yang valid", () => {
+    it("menerima pembuatan akun ketua yang valid dengan atau tanpa departemen", () => {
       const valid = {
         nama: "Ustadz Haris",
         email: "haris@tazakka.or.id",
         password: "Password123!",
         no_hp: "081234567890",
+        department_id: "123e4567-e89b-12d3-a456-426614174000",
       }
       const res = createKetuaSchema.safeParse(valid)
       expect(res.success).toBe(true)
       if (res.success) {
         expect(res.data.email).toBe("haris@tazakka.or.id")
         expect(res.data.no_hp).toBe("081234567890")
+        expect(res.data.department_id).toBe("123e4567-e89b-12d3-a456-426614174000")
+      }
+
+      // Department id string kosong dinormalkan ke null
+      const resEmpty = createKetuaSchema.safeParse({ ...valid, department_id: "" })
+      expect(resEmpty.success).toBe(true)
+      if (resEmpty.success) {
+        expect(resEmpty.data.department_id).toBeNull()
       }
     })
 
@@ -96,6 +107,48 @@ describe("Unit Test Skema Validasi Zod Master Data", () => {
         password: "12345",
       })
       expect(invalidPassword.success).toBe(false)
+    })
+
+    it("memvalidasi updateKetuaSchema dengan benar", () => {
+      const validUuid = "123e4567-e89b-12d3-a456-426614174000"
+      const deptUuid = "223e4567-e89b-12d3-a456-426614174000"
+
+      const res = updateKetuaSchema.safeParse({
+        id: validUuid,
+        nama: "Ustadz Ahmad Fauzi, M.Pd.",
+        email: "ahmad.fauzi@tazakka.or.id",
+        no_hp: "081299998888",
+        department_id: deptUuid,
+      })
+      expect(res.success).toBe(true)
+
+      // Test unassign / department_id null atau kosong
+      const resNullDept = updateKetuaSchema.safeParse({
+        id: validUuid,
+        nama: "Ustadz Ahmad Fauzi",
+        email: "ahmad.fauzi@tazakka.or.id",
+        no_hp: "",
+        department_id: "",
+      })
+      expect(resNullDept.success).toBe(true)
+      if (resNullDept.success) {
+        expect(resNullDept.data.department_id).toBeNull()
+        expect(resNullDept.data.no_hp).toBeNull()
+      }
+
+      // Test email invalid
+      const resBadEmail = updateKetuaSchema.safeParse({
+        id: validUuid,
+        nama: "Ustadz Ahmad Fauzi",
+        email: "invalid-email-format",
+      })
+      expect(resBadEmail.success).toBe(false)
+    })
+
+    it("memvalidasi deleteKetuaSchema dengan UUID yang valid", () => {
+      const validUuid = "123e4567-e89b-12d3-a456-426614174000"
+      expect(deleteKetuaSchema.safeParse({ id: validUuid }).success).toBe(true)
+      expect(deleteKetuaSchema.safeParse({ id: "bukan-uuid" }).success).toBe(false)
     })
 
     it("memvalidasi toggleKetuaStatusSchema dengan benar", () => {

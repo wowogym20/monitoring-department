@@ -87,11 +87,11 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 
   const initials = user.nama
     ? user.nama
-        .split(" ")
-        .slice(0, 2)
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
+      .split(" ")
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
     : "U"
 
   return (
@@ -199,7 +199,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
               className="group flex items-center gap-2 sm:gap-2.5 h-10 px-1.5 sm:px-2.5 rounded-full border border-border/50 hover:border-border/80 bg-background/50 hover:bg-muted/70 transition-all duration-150 cursor-pointer shrink-0 data-[state=open]:bg-muted data-[state=open]:border-border"
               aria-label="Menu akun pengguna"
             >
-              <Avatar className="size-8 ring-1 ring-border/80 shrink-0">
+              <Avatar className="size-12 ring-1 ring-border/80 shrink-0">
                 {user.fotoUrl && (
                   <AvatarImage
                     src={user.fotoUrl}

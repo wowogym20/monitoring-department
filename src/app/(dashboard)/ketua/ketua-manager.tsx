@@ -17,6 +17,13 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -24,6 +31,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,25 +58,34 @@ import {
   Loader2,
   Search,
   Building,
+  Pencil,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react"
 import { formatDateJakarta } from "@/lib/date"
 import {
   createKetuaAction,
+  updateKetuaAction,
+  deleteKetuaAction,
   toggleKetuaStatusAction,
   resetKetuaPasswordAction,
   type KetuaAccountItem,
+  type DepartmentOption,
 } from "@/lib/actions/ketua"
 import { cn } from "@/lib/utils"
 
 interface KetuaManagerProps {
   initialAccounts: KetuaAccountItem[]
+  departments: DepartmentOption[]
 }
 
-export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
+export function KetuaManager({ initialAccounts, departments = [] }: KetuaManagerProps) {
   const router = useRouter()
 
   const [search, setSearch] = React.useState("")
   const [createOpen, setCreateOpen] = React.useState(false)
+  const [editAccount, setEditAccount] = React.useState<KetuaAccountItem | null>(null)
+  const [deleteAccount, setDeleteAccount] = React.useState<KetuaAccountItem | null>(null)
   const [resetAccount, setResetAccount] = React.useState<KetuaAccountItem | null>(null)
 
   // Form Buat Akun Baru
@@ -67,6 +93,13 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [noHp, setNoHp] = React.useState("")
+  const [deptId, setDeptId] = React.useState("none")
+
+  // Form Edit Akun
+  const [editNama, setEditNama] = React.useState("")
+  const [editEmail, setEditEmail] = React.useState("")
+  const [editNoHp, setEditNoHp] = React.useState("")
+  const [editDeptId, setEditDeptId] = React.useState("none")
 
   // Form Reset Password
   const [newPassword, setNewPassword] = React.useState("")
@@ -85,6 +118,28 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
     )
   }, [initialAccounts, search])
 
+  // Opsi departemen yang belum memiliki ketua (untuk create)
+  const availableDeptsForCreate = React.useMemo(() => {
+    return departments.filter((d) => !d.ketua_id)
+  }, [departments])
+
+  // Opsi departemen untuk edit (departemen yang saat ini dipimpin ketua ini + departemen kosong)
+  const availableDeptsForEdit = React.useMemo(() => {
+    if (!editAccount) return []
+    return departments.filter(
+      (d) => !d.ketua_id || d.id === editAccount.department?.id
+    )
+  }, [departments, editAccount])
+
+  // Action: Buka Modal Edit
+  const openEditModal = (account: KetuaAccountItem) => {
+    setEditAccount(account)
+    setEditNama(account.nama)
+    setEditEmail(account.email)
+    setEditNoHp(account.no_hp || "")
+    setEditDeptId(account.department?.id || "none")
+  }
+
   // Action: Buat Akun Ketua Baru
   const handleCreateKetua = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,6 +150,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
         email,
         password,
         no_hp: noHp.trim() || null,
+        department_id: deptId !== "none" ? deptId : null,
       })
 
       if (res.success) {
@@ -104,12 +160,61 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
         setEmail("")
         setPassword("")
         setNoHp("")
+        setDeptId("none")
         router.refresh()
       } else {
         toast.error(res.error)
       }
     } catch {
       toast.error("Terjadi kesalahan sistem saat membuat akun")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Action: Edit Akun Ketua
+  const handleUpdateKetua = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editAccount) return
+    setIsSubmitting(true)
+    try {
+      const res = await updateKetuaAction({
+        id: editAccount.id,
+        nama: editNama,
+        email: editEmail,
+        no_hp: editNoHp.trim() || null,
+        department_id: editDeptId !== "none" ? editDeptId : null,
+      })
+
+      if (res.success) {
+        toast.success(res.message)
+        setEditAccount(null)
+        router.refresh()
+      } else {
+        toast.error(res.error)
+      }
+    } catch {
+      toast.error("Terjadi kesalahan sistem saat memperbarui akun ketua")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // Action: Hapus Akun Ketua
+  const handleDeleteKetua = async () => {
+    if (!deleteAccount) return
+    setIsSubmitting(true)
+    try {
+      const res = await deleteKetuaAction(deleteAccount.id)
+      if (res.success) {
+        toast.success(res.message)
+        setDeleteAccount(null)
+        router.refresh()
+      } else {
+        toast.error(res.error)
+      }
+    } catch {
+      toast.error("Gagal menghapus akun ketua")
     } finally {
       setIsSubmitting(false)
     }
@@ -181,6 +286,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
             setEmail("")
             setPassword("")
             setNoHp("")
+            setDeptId("none")
             setCreateOpen(true)
           }}
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs"
@@ -303,7 +409,11 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                               <MoreHorizontal className="size-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuContent align="end" className="w-52">
+                            <DropdownMenuItem onClick={() => openEditModal(account)}>
+                              <Pencil className="size-4 mr-2 text-primary" />
+                              Edit Profil & Departemen
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onClick={() => {
                                 setResetAccount(account)
@@ -313,7 +423,6 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                               <KeyRound className="size-4 mr-2 text-primary" />
                               Reset Kata Sandi
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => handleToggleStatus(account)}
                             >
@@ -328,6 +437,14 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                                   Aktifkan Akun
                                 </>
                               )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => setDeleteAccount(account)}
+                              className="text-destructive focus:text-destructive"
+                            >
+                              <Trash2 className="size-4 mr-2" />
+                              Hapus Akun
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -350,7 +467,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
         </div>
       </div>
 
-      {/* Tampilan Mobile: Kartu Akun Responsif Bebas Scroll Horizontal (Optimal untuk HP 360px+) */}
+      {/* Tampilan Mobile: Kartu Akun Responsif Bebas Scroll Horizontal */}
       <div className="block md:hidden space-y-3">
         {filteredAccounts.length > 0 ? (
           filteredAccounts.map((account) => {
@@ -425,7 +542,11 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                           <MoreHorizontal className="size-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuContent align="end" className="w-52">
+                        <DropdownMenuItem onClick={() => openEditModal(account)}>
+                          <Pencil className="size-4 mr-2 text-primary" />
+                          Edit Profil & Departemen
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
                             setResetAccount(account)
@@ -435,7 +556,6 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                           <KeyRound className="size-4 mr-2 text-primary" />
                           Reset Kata Sandi
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => handleToggleStatus(account)}
                         >
@@ -450,6 +570,14 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                               Aktifkan Akun
                             </>
                           )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setDeleteAccount(account)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="size-4 mr-2" />
+                          Hapus Akun
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -488,23 +616,34 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                   </div>
                 </div>
 
-                {/* Footer: Tanggal Terdaftar & Tombol Cepat Reset Password */}
+                {/* Footer: Tanggal Terdaftar & Tombol Cepat Aksi */}
                 <div className="flex items-center justify-between pt-2 border-t border-border/40 text-[11px] text-muted-foreground">
                   <span>
                     Terdaftar: <strong className="font-medium text-foreground">{formatDateJakarta(account.created_at)}</strong>
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 px-2 text-xs gap-1 font-medium text-primary hover:text-primary"
-                    onClick={() => {
-                      setResetAccount(account)
-                      setNewPassword("")
-                    }}
-                  >
-                    <KeyRound className="size-3" />
-                    <span>Reset Sandi</span>
-                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1 font-medium"
+                      onClick={() => openEditModal(account)}
+                    >
+                      <Pencil className="size-3" />
+                      <span>Edit</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1 font-medium text-primary hover:text-primary"
+                      onClick={() => {
+                        setResetAccount(account)
+                        setNewPassword("")
+                      }}
+                    >
+                      <KeyRound className="size-3" />
+                      <span>Sandi</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             )
@@ -518,7 +657,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
 
       {/* DIALOG 1: Buat Akun Ketua Baru */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserCog className="size-5 text-primary" />
@@ -578,6 +717,26 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
               />
             </div>
 
+            <div className="space-y-1.5">
+              <Label htmlFor="ketua-dept">Departemen yang Dipimpin (Opsional)</Label>
+              <Select value={deptId} onValueChange={setDeptId}>
+                <SelectTrigger id="ketua-dept" className="w-full">
+                  <SelectValue placeholder="Pilih departemen..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Belum Ditugaskan</SelectItem>
+                  {availableDeptsForCreate.map((d) => (
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.nama} ({d.kode})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Hanya departemen aktif yang belum memiliki ketua yang ditampilkan dalam daftar.
+              </p>
+            </div>
+
             <DialogFooter>
               <Button
                 type="button"
@@ -596,7 +755,135 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
         </DialogContent>
       </Dialog>
 
-      {/* DIALOG 2: Reset Kata Sandi */}
+      {/* DIALOG 2: Edit Akun Ketua & Departemen */}
+      <Dialog open={!!editAccount} onOpenChange={(open) => !open && setEditAccount(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="size-5 text-primary" />
+              Edit Akun & Departemen Ketua
+            </DialogTitle>
+            <DialogDescription>
+              Perbarui profil, alamat email login, nomor kontak, atau penetapan departemen ketua.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdateKetua} className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-nama">Nama Lengkap</Label>
+              <Input
+                id="edit-nama"
+                required
+                placeholder="Nama lengkap ketua"
+                value={editNama}
+                onChange={(e) => setEditNama(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-email">Alamat Email (Login)</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                required
+                placeholder="contoh: ketua@tazakka.or.id"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Mengubah email akan memperbarui akun login Supabase Auth ketua secara langsung.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-hp">Nomor HP / WhatsApp (Opsional)</Label>
+              <Input
+                id="edit-hp"
+                placeholder="Contoh: 081234567890"
+                value={editNoHp}
+                onChange={(e) => setEditNoHp(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-dept">Departemen yang Dipimpin</Label>
+              <Select value={editDeptId} onValueChange={setEditDeptId}>
+                <SelectTrigger id="edit-dept" className="w-full">
+                  <SelectValue placeholder="Pilih departemen..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Belum Ditugaskan</SelectItem>
+                  {availableDeptsForEdit.map((d) => {
+                    const isCurrent = d.id === editAccount?.department?.id
+                    return (
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.nama} ({d.kode}) {isCurrent ? "— (Saat ini)" : ""}
+                      </SelectItem>
+                    )
+                  })}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                Pilih &quot;Belum Ditugaskan&quot; untuk melepaskan tugas ketua dari departemen saat ini.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditAccount(null)}
+                disabled={isSubmitting}
+              >
+                Batal
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="size-4 mr-2 animate-spin" />}
+                Simpan Perubahan
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* DIALOG 3: Konfirmasi Hapus Akun Ketua (Alert Dialog) */}
+      <AlertDialog open={!!deleteAccount} onOpenChange={(open) => !open && setDeleteAccount(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="size-5 shrink-0" />
+              Hapus Akun Kepala Departemen?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 text-sm">
+              <p>
+                Apakah Anda yakin ingin menghapus akun ketua{" "}
+                <strong className="text-foreground">{deleteAccount?.nama}</strong> (
+                {deleteAccount?.email})?
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Tindakan ini akan menghapus akun login dan profil ketua secara permanen dari sistem.
+                Jika ketua telah memiliki riwayat penilaian evaluasi, penghapusan akan ditolak otomatis demi integritas data.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDeleteKetua()
+              }}
+              disabled={isSubmitting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isSubmitting && <Loader2 className="size-4 mr-2 animate-spin" />}
+              Hapus Permanen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* DIALOG 4: Reset Kata Sandi */}
       <Dialog
         open={!!resetAccount}
         onOpenChange={(open) => !open && setResetAccount(null)}

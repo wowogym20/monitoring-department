@@ -79,9 +79,50 @@ export const createKetuaSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => (val && val.length > 0 ? val : null)),
+  department_id: z
+    .string()
+    .uuid({ message: "ID departemen tidak valid" })
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
 })
 
 export type CreateKetuaInput = z.infer<typeof createKetuaSchema>
+
+export const updateKetuaSchema = z.object({
+  id: z.string().uuid({ message: "ID akun tidak valid" }),
+  nama: z
+    .string({ required_error: "Nama ketua wajib diisi" })
+    .min(2, { message: "Nama minimal 2 karakter" })
+    .max(100, { message: "Nama maksimal 100 karakter" })
+    .trim(),
+  email: z
+    .string({ required_error: "Email wajib diisi" })
+    .email({ message: "Format email tidak valid" })
+    .trim()
+    .toLowerCase(),
+  no_hp: z
+    .string()
+    .trim()
+    .max(20, { message: "Nomor HP maksimal 20 digit" })
+    .optional()
+    .nullable()
+    .transform((val) => (val && val.length > 0 ? val : null)),
+  department_id: z
+    .string()
+    .uuid({ message: "ID departemen tidak valid" })
+    .nullable()
+    .optional()
+    .or(z.literal("").transform(() => null)),
+})
+
+export type UpdateKetuaInput = z.infer<typeof updateKetuaSchema>
+
+export const deleteKetuaSchema = z.object({
+  id: z.string().uuid({ message: "ID akun tidak valid" }),
+})
+
+export type DeleteKetuaInput = z.infer<typeof deleteKetuaSchema>
 
 export const toggleKetuaStatusSchema = z.object({
   id: z.string().uuid({ message: "ID akun tidak valid" }),

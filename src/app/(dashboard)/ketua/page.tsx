@@ -1,6 +1,9 @@
 import { Suspense } from "react"
 import { requireRole } from "@/lib/auth"
-import { getKetuaAccountsServer } from "@/lib/actions/ketua"
+import {
+  getKetuaAccountsServer,
+  getDepartmentOptionsServer,
+} from "@/lib/actions/ketua"
 import { KetuaManager } from "./ketua-manager"
 import { Card } from "@/components/ui/card"
 import { Loader2 } from "lucide-react"
@@ -8,7 +11,10 @@ import { Loader2 } from "lucide-react"
 export default async function KetuaPage() {
   await requireRole("super_admin")
 
-  const accounts = await getKetuaAccountsServer()
+  const [accounts, departments] = await Promise.all([
+    getKetuaAccountsServer(),
+    getDepartmentOptionsServer(),
+  ])
 
   return (
     <div className="space-y-6">
@@ -17,7 +23,7 @@ export default async function KetuaPage() {
           Akun Kepala Departemen
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Kelola akun login ketua departemen, aktivasi akun, dan reset kata sandi (Khusus Super-Admin).
+          Kelola data akun login kepala departemen, penugasan departemen, aktivasi akun, dan reset kata sandi (Khusus Super-Admin).
         </p>
       </div>
 
@@ -28,7 +34,7 @@ export default async function KetuaPage() {
           </Card>
         }
       >
-        <KetuaManager initialAccounts={accounts} />
+        <KetuaManager initialAccounts={accounts} departments={departments} />
       </Suspense>
     </div>
   )
