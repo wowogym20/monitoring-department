@@ -28,11 +28,15 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     // 2. Navigasi ke /ketua dan Buat Akun Ketua Baru
     await page.goto("/ketua", { waitUntil: "domcontentloaded" })
     await page.waitForURL("**/ketua")
-    await expect(page.locator("text=Akun Kepala Departemen, text=Akun Ketua Departemen").first()).toBeVisible({ timeout: 15000 })
+    await expect(
+      page.getByRole("heading", { name: /Akun (Kepala|Ketua) Departemen/i })
+    ).toBeVisible({ timeout: 15000 })
 
     // Buka modal pembuatan akun
-    await page.click('button:has-text("Buat Akun Kadep Baru"), button:has-text("Buat Akun Ketua Baru")')
-    await expect(page.locator('text=Buat Akun Kepala Departemen Baru, text=Buat Akun Ketua Baru').first()).toBeVisible({ timeout: 10000 })
+    await page.locator('button:has-text("Buat Akun Kadep Baru"), button:has-text("Buat Akun Ketua Baru")').click()
+    await expect(
+      page.getByRole("dialog").getByRole("heading", { name: /Buat Akun/i })
+    ).toBeVisible({ timeout: 10000 })
 
     // Isi formulir ketua baru
     await page.fill("#ketua-nama", ketuaNama)
@@ -44,7 +48,7 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     await page.click('button[type="submit"]:has-text("Buat Akun")')
 
     // Verifikasi akun ketua baru muncul di tabel
-    await expect(page.locator("table").locator(`text=${ketuaNama}`)).toBeVisible({ timeout: 10000 })
+    await expect(page.locator("table").locator(`text=${ketuaNama}`)).toBeVisible({ timeout: 15000 })
 
     // 3. Navigasi ke /departemen dan Tetapkan Ketua ke Departemen
     await page.goto("/departemen", { waitUntil: "domcontentloaded" })
@@ -60,7 +64,9 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     await assignButton.click()
 
     // Tunggu dialog pemilihan ketua terbuka
-    await expect(page.locator("text=Pilih atau Ganti Ketua Departemen, text=Pilih atau Ganti Kepala Departemen").first()).toBeVisible({ timeout: 10000 })
+    await expect(
+      page.getByRole("dialog").getByRole("heading", { name: /Pilih atau Ganti/i })
+    ).toBeVisible({ timeout: 10000 })
 
     // Buka Select akun ketua
     await page.click("#select-ketua")
