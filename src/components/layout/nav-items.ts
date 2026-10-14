@@ -55,7 +55,7 @@ export const navigationItems: NavItem[] = [
   },
   {
     title: "Kepala Departemen",
-    href: "/ketua",
+    href: "/kepaladepartemen",
     icon: UserCog,
     roles: ["super_admin"],
   },
