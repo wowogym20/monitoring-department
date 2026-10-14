@@ -275,7 +275,7 @@ export function MemberFormDialog({
                   <FormControl>
                     <Input
                       id="input-jabatan"
-                      placeholder="Contoh: Ketua Bagian"
+                      placeholder="Contoh: Ketua Bagian / Anggota"
                       {...field}
                     />
                   </FormControl>
