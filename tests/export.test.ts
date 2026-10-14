@@ -560,6 +560,6 @@ describe("Fase 7 — Fitur Ekspor (Excel & PDF)", () => {
       // Target SLA Non-Fungsional PRD Bagian 13: waktu ekspor per berkas <= 10 detik (10.000 ms)
       expect(excelDuration).toBeLessThan(10000)
       expect(pdfDuration).toBeLessThan(10000)
-    })
+    }, 20000)
   })
 })

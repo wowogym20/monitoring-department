@@ -3,13 +3,10 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useTheme } from "next-themes"
 import {
   LogIn,
   LayoutDashboard,
   Download,
-  Moon,
-  Sun,
   Share2,
   PlusSquare,
   CheckCircle2,
@@ -17,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 interface HeroLandingProps {
   isLoggedIn: boolean
@@ -29,9 +27,6 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function HeroLanding({ isLoggedIn, userEmail }: HeroLandingProps) {
-  const { setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
   // State PWA Install
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isInstalled, setIsInstalled] = useState(false)
@@ -40,8 +35,6 @@ export function HeroLanding({ isLoggedIn, userEmail }: HeroLandingProps) {
 
   useEffect(() => {
     queueMicrotask(() => {
-      setMounted(true)
-
       // 1. Cek apakah aplikasi sudah berjalan dalam mode standalone (sudah terinstall)
       const nav = window.navigator as unknown as { standalone?: boolean }
       const isStandalone =
@@ -159,23 +152,7 @@ export function HeroLanding({ isLoggedIn, userEmail }: HeroLandingProps) {
 
         {/* Action Controls: Theme Toggle */}
         <div className="flex items-center gap-2">
-          {mounted && (
-            <Button
-              variant="outline"
-              size="icon"
-              aria-label="Ganti mode tema gelap atau terang"
-              onClick={() =>
-                setTheme(resolvedTheme === "dark" ? "light" : "dark")
-              }
-              className="size-8 sm:size-9 rounded-full border-border/80 hover:bg-muted/80"
-            >
-              {resolvedTheme === "dark" ? (
-                <Sun className="size-4 text-amber-400" />
-              ) : (
-                <Moon className="size-4 text-emerald-700" />
-              )}
-            </Button>
-          )}
+          <ThemeToggle />
         </div>
       </header>
 

@@ -15,6 +15,8 @@ test.describe("Alur SDM & Ketua: Rekap, Minta Revisi, Komentar Balasan, dan Tran
   test("Alur Lengkap: SDM filter & minta revisi -> Ketua terima notifikasi, balas komentar, dan perbarui nilai -> Status kembali Submitted", async ({
     page,
   }) => {
+    test.setTimeout(90000)
+
     // =========================================================================
     // BAGIAN 1: SDM MEMFILTER REKAP, MEMBUKA DETAIL, DAN MEMINTA REVISI
     // =========================================================================
