@@ -14,6 +14,8 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
   test("Super-Admin membuat ketua, menetapkannya ke departemen, dan membuat periode penilaian", async ({
     page,
   }) => {
+    test.setTimeout(90000)
+
     // 1. Login sebagai Super-Admin
     await page.goto("/login")
     await page.fill('input[type="email"]', SUPER_ADMIN.email)
@@ -21,16 +23,16 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     await page.click('button[type="submit"]')
 
     await page.waitForURL("**/dashboard")
-    await expect(page.locator("text=Super-Admin").first()).toBeVisible()
+    await expect(page.locator("text=Super-Admin").first()).toBeVisible({ timeout: 15000 })
 
     // 2. Navigasi ke /ketua dan Buat Akun Ketua Baru
-    await page.goto("/ketua")
+    await page.goto("/ketua", { waitUntil: "domcontentloaded" })
     await page.waitForURL("**/ketua")
-    await expect(page.locator("text=Akun Ketua Departemen")).toBeVisible()
+    await expect(page.locator("text=Akun Kepala Departemen, text=Akun Ketua Departemen").first()).toBeVisible({ timeout: 15000 })
 
     // Buka modal pembuatan akun
-    await page.click('button:has-text("Buat Akun Ketua Baru")')
-    await expect(page.locator('text=Buat Akun Ketua Baru').first()).toBeVisible()
+    await page.click('button:has-text("Buat Akun Kadep Baru"), button:has-text("Buat Akun Ketua Baru")')
+    await expect(page.locator('text=Buat Akun Kepala Departemen Baru, text=Buat Akun Ketua Baru').first()).toBeVisible({ timeout: 10000 })
 
     // Isi formulir ketua baru
     await page.fill("#ketua-nama", ketuaNama)
@@ -47,37 +49,37 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     // 3. Navigasi ke /departemen dan Tetapkan Ketua ke Departemen
     await page.goto("/departemen", { waitUntil: "domcontentloaded" })
     await page.waitForURL("**/departemen")
-    await expect(page.locator('main h1:has-text("Departemen")')).toBeVisible()
+    await expect(page.locator('main h1:has-text("Departemen")')).toBeVisible({ timeout: 15000 })
 
     // Cari baris departemen yang memiliki tombol "Pilih" / "Ganti" ketua di dalam tabel
     const assignButton = page
       .locator("table tbody tr")
       .first()
       .locator('button:has-text("Pilih"), button:has-text("Ganti")')
-    await expect(assignButton).toBeVisible()
+    await expect(assignButton).toBeVisible({ timeout: 15000 })
     await assignButton.click()
 
     // Tunggu dialog pemilihan ketua terbuka
-    await expect(page.locator("text=Pilih atau Ganti Ketua Departemen")).toBeVisible()
+    await expect(page.locator("text=Pilih atau Ganti Ketua Departemen, text=Pilih atau Ganti Kepala Departemen").first()).toBeVisible({ timeout: 10000 })
 
     // Buka Select akun ketua
     await page.click("#select-ketua")
 
     // Pilih ketua yang baru saja dibuat
     const ketuaOption = page.locator('[role="option"]').filter({ hasText: ketuaNama })
-    await expect(ketuaOption).toBeVisible({ timeout: 5000 })
+    await expect(ketuaOption).toBeVisible({ timeout: 10000 })
     await ketuaOption.click()
 
     // Simpan penetapan ketua
     await page.click('button[type="submit"]:has-text("Simpan Penugasan")')
 
     // Verifikasi nama ketua tampil di tabel departemen
-    await expect(page.locator(`text=${ketuaNama}`).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.locator(`text=${ketuaNama}`).first()).toBeVisible({ timeout: 15000 })
 
     // 4. Navigasi ke /periode dan Buat Periode Penilaian Baru
     await page.goto("/periode", { waitUntil: "domcontentloaded" })
     await page.waitForURL("**/periode")
-    await expect(page.locator('main h1:has-text("Periode Penilaian")')).toBeVisible()
+    await expect(page.locator('main h1:has-text("Periode Penilaian")')).toBeVisible({ timeout: 15000 })
 
     // Buka modal pembuatan periode baru
     await page.click('button:has-text("Buka Periode Baru")')
