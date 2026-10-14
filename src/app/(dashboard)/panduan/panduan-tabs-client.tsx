@@ -225,7 +225,7 @@ export function PanduanTabsClient() {
                 Sistem Monitoring & Evaluasi Kinerja 14 Departemen
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-3xl leading-relaxed">
-                Aplikasi internal berbasis web yang memungkinkan para Ketua Departemen menilai anggotanya secara terstandar menggunakan skala Likert 1–5, serta memberikan Pimpinan dan Bagian SDM gambaran kinerja kelembagaan yang transparan, terukur, dan siap ekspor.
+                Aplikasi internal berbasis web yang memungkinkan para Kepala Departemen menilai anggotanya secara terstandar menggunakan skala Likert 1–5, serta memberikan Pimpinan dan Bagian Koordinator gambaran kinerja kelembagaan yang transparan, terukur, dan siap ekspor.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 sm:p-6 pt-0 space-y-4">
@@ -627,8 +627,8 @@ export function PanduanTabsClient() {
                 Tempat mengelola seluruh personel di bawah naungan departemen.
               </p>
               <ul className="text-xs text-muted-foreground space-y-1.5 pl-4 list-disc">
-                <li><strong className="text-foreground">Tambah Anggota:</strong> Klik tombol Tambah Anggota, isi Nama, NIP/ID, Jabatan, dan Kontak.</li>
-                <li><strong className="text-foreground">Filter & Pencarian:</strong> Cari anggota dengan cepat lewat kolom pencarian nama/NIP.</li>
+                <li><strong className="text-foreground">Tambah Anggota:</strong> Klik tombol Tambah Anggota, isi Nama, NIG/ID, Jabatan, dan Kontak.</li>
+                <li><strong className="text-foreground">Filter & Pencarian:</strong> Cari anggota dengan cepat lewat kolom pencarian nama/NIG.</li>
                 <li><strong className="text-foreground">Nonaktifkan Anggota:</strong> Gunakan opsi nonaktif untuk mutasi tanpa menghapus histori nilai lampau.</li>
               </ul>
             </Card>
@@ -643,7 +643,7 @@ export function PanduanTabsClient() {
                 Lembar evaluasi Likert 1–5 untuk menilai 7 dimensi kualitas anggota.
               </p>
               <ul className="text-xs text-muted-foreground space-y-1.5 pl-4 list-disc">
-                <li><strong className="text-foreground">Simpan Draf:</strong> Nilai sementara tersimpan di sistem, belum diajukan ke SDM.</li>
+                <li><strong className="text-foreground">Simpan Draf:</strong> Nilai sementara tersimpan di sistem, belum diajukan ke Koordinator.</li>
                 <li><strong className="text-foreground">Submit Penilaian:</strong> Skor otomatis dikalkulasi dan status berubah ke Submitted.</li>
                 <li><strong className="text-foreground">Catatan Khusus:</strong> Tambahkan apresiasi atau rekomendasi pembinaan personal.</li>
               </ul>
@@ -656,12 +656,12 @@ export function PanduanTabsClient() {
                 <h4>3. Modul Rekapitulasi & Approval (/rekap)</h4>
               </div>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Pusat verifikasi SDM dan pemantauan kelengkapan pengisian nilai.
+                Pusat verifikasi Koordinator dan pemantauan kelengkapan pengisian nilai.
               </p>
               <ul className="text-xs text-muted-foreground space-y-1.5 pl-4 list-disc">
                 <li><strong className="text-foreground">Tindakan Setujui:</strong> Mengubah status menjadi Approved jika nilai telah objektif.</li>
-                <li><strong className="text-foreground">Minta Revisi:</strong> Mengembalikan lembar nilai ke Ketua dengan status Revision Requested.</li>
-                <li><strong className="text-foreground">Fitur Diskusi:</strong> Kolom komentar dua arah antara Admin SDM dan Ketua Departemen.</li>
+                <li><strong className="text-foreground">Minta Revisi:</strong> Mengembalikan lembar nilai ke Kepala Departemen dengan status Revision Requested.</li>
+                <li><strong className="text-foreground">Fitur Diskusi:</strong> Kolom komentar dua arah antara Koordinatordan Kepala Departemen.</li>
               </ul>
             </Card>
 
@@ -677,7 +677,7 @@ export function PanduanTabsClient() {
               <ul className="text-xs text-muted-foreground space-y-1.5 pl-4 list-disc">
                 <li><strong className="text-foreground">Unduh Excel (.xlsx):</strong> Berkas multi-sheet dengan rincian aspek, formula, dan status.</li>
                 <li><strong className="text-foreground">Unduh PDF (.pdf):</strong> Laporan cetak resmi bertanda tangan digital siap arsip pimpinan.</li>
-                <li><strong className="text-foreground">Filter Lingkup:</strong> Pilih ekspor seluruh 14 departemen atau departemen spesifik.</li>
+                <li><strong className="text-foreground">Filter Lingkup:</strong> Pilih ekspor seluruh 15 departemen atau departemen spesifik.</li>
               </ul>
             </Card>
 
@@ -685,12 +685,12 @@ export function PanduanTabsClient() {
             <Card className="p-4 sm:p-5 space-y-3 md:col-span-2">
               <div className="flex items-center gap-2 font-bold text-sm sm:text-base text-foreground">
                 <ShieldCheck className="size-4 text-purple-600 dark:text-purple-400 shrink-0" />
-                <h4>5. Tata Kelola Khusus Super Admin (/departemen, /ketua, /periode)</h4>
+                <h4>5. Tata Kelola Khusus Super Admin (Departemen, Kadep, Periode)</h4>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground pt-1">
                 <div className="p-3 rounded-lg bg-muted/40 border border-border/80">
                   <span className="font-semibold text-foreground block mb-1">Rotasi Ketua (/ketua)</span>
-                  Menetapkan akun ketua baru untuk departemen tertentu tanpa menghapus data penilaian lama.
+                  Menetapkan akun Kadep baru untuk departemen tertentu tanpa menghapus data penilaian lama.
                 </div>
                 <div className="p-3 rounded-lg bg-muted/40 border border-border/80">
                   <span className="font-semibold text-foreground block mb-1">Kalender Periode (/periode)</span>
@@ -741,12 +741,12 @@ export function PanduanTabsClient() {
                   Buku Panduan Lengkap (Semua Role)
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
-                  Dokumen komprehensif memuat seluruh latar belakang, SOP operasional ketiga peran (Ketua, SDM, Pimpinan), rubrik 7 aspek, dan panduan teknis FAQ.
+                  Dokumen komprehensif memuat seluruh latar belakang, SOP operasional ketiga peran (Kadep, Koordinator, Pimpinan), rubrik 7 aspek, dan panduan teknis FAQ.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-5 pt-0 mt-auto">
                 <div className="p-3 rounded-lg bg-muted/40 text-xs text-muted-foreground space-y-1 mb-4">
-                  <p><strong className="text-foreground">Peruntukan:</strong> Pimpinan Lembaga, Arsip SDM, Tim TI</p>
+                  <p><strong className="text-foreground">Peruntukan:</strong> Pimpinan Lembaga, Arsip Koordinator, Tim TI</p>
                   <p><strong className="text-foreground">Format:</strong> PDF Resmi A4 Berkop Tazakka</p>
                 </div>
                 <Button
@@ -774,21 +774,21 @@ export function PanduanTabsClient() {
               <CardHeader className="p-4 sm:p-5 pb-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <Badge variant="outline" className="border-blue-500/60 text-blue-600 dark:text-blue-400 text-[11px]">
-                    Role: Ketua Departemen
+                    Role: Kepala Departemen
                   </Badge>
                   <span className="text-[11px] font-mono text-muted-foreground">± 85 KB</span>
                 </div>
                 <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
                   <Users className="size-5 text-blue-600 dark:text-blue-400 shrink-0" />
-                  Buku Panduan: Ketua Departemen
+                  Buku Panduan: Kepala Departemen
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
-                  Petunjuk praktis bagi 14 Ketua Departemen: cara input anggota tim, pengisian evaluasi Likert 1–5, simpan draf, submit nilai, respon revisi SDM, dan aturan auto-resubmit.
+                  Petunjuk praktis bagi 15 Kepala Departemen: cara input anggota tim, pengisian evaluasi Likert 1–5, simpan draf, submit nilai, respon revisi Koordinator, dan aturan auto-resubmit.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-5 pt-0 mt-auto">
                 <div className="p-3 rounded-lg bg-muted/40 text-xs text-muted-foreground space-y-1 mb-4">
-                  <p><strong className="text-foreground">Peruntukan:</strong> 14 Ketua Departemen Operasional</p>
+                  <p><strong className="text-foreground">Peruntukan:</strong> 15 Kepala Departemen Operasional</p>
                   <p><strong className="text-foreground">Format:</strong> PDF Ringkas & Terarah untuk Smartphone/Desktop</p>
                 </div>
                 <Button
@@ -805,7 +805,7 @@ export function PanduanTabsClient() {
                   ) : (
                     <>
                       <Download className="size-4 mr-2" />
-                      Unduh Panduan Ketua (.pdf)
+                      Unduh Panduan Kedep (.pdf)
                     </>
                   )}
                 </Button>
@@ -817,21 +817,21 @@ export function PanduanTabsClient() {
               <CardHeader className="p-4 sm:p-5 pb-3">
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <Badge variant="outline" className="border-amber-500/60 text-amber-600 dark:text-amber-400 text-[11px]">
-                    Role: Admin SDM
+                    Role: Koordinator
                   </Badge>
                   <span className="text-[11px] font-mono text-muted-foreground">± 90 KB</span>
                 </div>
                 <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
                   <ClipboardCheck className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
-                  Buku Panduan: Admin SDM
+                  Buku Panduan: Koordinator
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
-                  Petunjuk operasional verifikasi 14 departemen, impor data massal ratusan pegawai lewat Excel, approval lembar nilai, pemberian umpan balik, dan ekspor laporan resmi.
+                  Petunjuk operasional verifikasi 15 departemen, impor data massal ratusan guru lewat Excel, approval lembar nilai, pemberian umpan balik, dan ekspor laporan resmi.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-5 pt-0 mt-auto">
                 <div className="p-3 rounded-lg bg-muted/40 text-xs text-muted-foreground space-y-1 mb-4">
-                  <p><strong className="text-foreground">Peruntukan:</strong> Pengelola SDM, Bagian Personalia, Tata Usaha</p>
+                  <p><strong className="text-foreground">Peruntukan:</strong> Pengelola Koordinator, Bagian Personalia, Tata Usaha</p>
                   <p><strong className="text-foreground">Format:</strong> PDF Lengkap Operasional Verifikasi</p>
                 </div>
                 <Button
@@ -848,7 +848,7 @@ export function PanduanTabsClient() {
                   ) : (
                     <>
                       <Download className="size-4 mr-2" />
-                      Unduh Panduan Admin SDM (.pdf)
+                      Unduh Panduan Koordinator (.pdf)
                     </>
                   )}
                 </Button>
@@ -869,12 +869,12 @@ export function PanduanTabsClient() {
                   Buku Panduan: Pimpinan / Super-Admin
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
-                  Petunjuk eksekutif pimpinan: tata kelola 14 departemen, rotasi amanah ketua, kalender pembukaan & penguncian periode, kustomisasi aspek, dan pengawasan jejak audit log.
+                  Petunjuk eksekutif pimpinan: tata kelola 15 departemen, rotasi amanah Kadep, kalender pembukaan & penguncian periode, kustomisasi aspek, dan pengawasan jejak audit log.
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 sm:p-5 pt-0 mt-auto">
                 <div className="p-3 rounded-lg bg-muted/40 text-xs text-muted-foreground space-y-1 mb-4">
-                  <p><strong className="text-foreground">Peruntukan:</strong> Pimpinan Pondok, Badan Pengawas, Dewan Direksi</p>
+                  <p><strong className="text-foreground">Peruntukan:</strong> Pimpinan Pondok dan Super Admin</p>
                   <p><strong className="text-foreground">Format:</strong> PDF Tata Kelola Kelembagaan Eksekutif</p>
                 </div>
                 <Button
