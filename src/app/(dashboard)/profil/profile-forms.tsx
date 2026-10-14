@@ -78,11 +78,11 @@ export function AccountProfileCard({
       badgeClass: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/25",
     },
     admin: {
-      label: "Admin (SDM)",
+      label: "Koordinator",
       badgeClass: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/25",
     },
     user: {
-      label: "Ketua Departemen",
+      label: "Kepala Departemen",
       badgeClass: "bg-muted text-foreground border-border",
     },
   }
