@@ -459,7 +459,7 @@ export function PanduanTabsClient() {
                 Alur Kerja Evaluasi Kinerja & Siklus Penilaian
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">
-                Gambaran komprehensif alur kerja dari tahap inisiasi kalender penilaian, pendataan staf, evaluasi Likert, verifikasi approval, hingga pembekuan data dan ekspor laporan.
+                Gambaran komprehensif alur kerja dari tahap inisiasi kalender penilaian, pendataan guru, evaluasi Likert, verifikasi approval, hingga pembekuan data dan ekspor laporan.
               </CardDescription>
             </CardHeader>
           </Card>
