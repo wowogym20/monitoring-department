@@ -41,21 +41,21 @@ import { cn } from "@/lib/utils"
 
 // 14 Departemen Resmi Pondok Modern Tazakka
 const DEPARTEMEN_LIST = [
-  { kode: "DEP-01", nama: "Departemen Penelitian dan Pengembangan Akademik" },
-  { kode: "DEP-02", nama: "Departemen Pendidikan dan Pengajaran" },
-  { kode: "DEP-03", nama: "Departemen Pusat Data & Statistik" },
-  { kode: "DEP-04", nama: "Departemen Pengasuhan Santri" },
-  { kode: "DEP-05", nama: "Departemen Lazis Tazakka" },
-  { kode: "DEP-06", nama: "Departemen Wakaf Tazakka" },
-  { kode: "DEP-07", nama: "Departemen Pengembangan Amal Usaha" },
-  { kode: "DEP-08", nama: "Departemen Pengembangan TI" },
-  { kode: "DEP-09", nama: "Departemen SDM" },
-  { kode: "DEP-10", nama: "Departemen Kesekretariatan" },
-  { kode: "DEP-11", nama: "Departemen Keuangan" },
-  { kode: "DEP-12", nama: "Departemen Kehumasan" },
-  { kode: "DEP-13", nama: "Departemen Pengembangan Perguruan Tinggi" },
-  { kode: "DEP-14", nama: "Departemen Pekerjaan Umum" },
-  { kode: "DEP-15", nama: "IKAT" },
+  { kode: "LITBANG_GURU", nama: "Departemen Penelitian dan Pengembangan Akademik" },
+  { kode: "DEPDIKJAR", nama: "Departemen Pendidikan dan Pengajaran" },
+  { kode: "PUSAT_DATA", nama: "Departemen Pusat Data & Statistik" },
+  { kode: "PENGASUHAN_SANTRI", nama: "Departemen Pengasuhan Santri" },
+  { kode: "LAZIS", nama: "Departemen Lazis Tazakka" },
+  { kode: "WAKAF", nama: "Departemen Wakaf Tazakka" },
+  { kode: "AMAL_USAHA", nama: "Departemen Pengembangan Amal Usaha" },
+  { kode: "TI", nama: "Departemen Pengembangan TI" },
+  { kode: "SDM", nama: "Departemen SDM" },
+  { kode: "SEKPIM", nama: "Departemen Kesekretariatan" },
+  { kode: "KEUANGAN", nama: "Departemen Keuangan" },
+  { kode: "HUMAS", nama: "Departemen Kehumasan" },
+  { kode: "PERGURUAN_TINGGI", nama: "Departemen Pengembangan Perguruan Tinggi" },
+  { kode: "DPU", nama: "Departemen Pekerjaan Umum" },
+  { kode: "IKAT", nama: "IKAT" },
 ]
 
 // 7 Aspek Penilaian Terstandar
