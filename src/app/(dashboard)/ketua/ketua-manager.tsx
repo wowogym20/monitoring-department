@@ -195,7 +195,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">#</TableHead>
-              <TableHead>Nama Ketua</TableHead>
+              <TableHead>Nama Kepala</TableHead>
               <TableHead>Email Login</TableHead>
               <TableHead>No. HP</TableHead>
               <TableHead>Departemen Terkait</TableHead>
