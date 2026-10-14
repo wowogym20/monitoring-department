@@ -258,7 +258,7 @@ export async function createMemberAction(input: CreateMemberInput) {
       if (duplicateNip) {
         return {
           success: false,
-          error: `NIP/ID internal '${validated.nip}' sudah digunakan oleh '${duplicateNip.nama}' di departemen ini.`,
+          error: `NIG '${validated.nip}' sudah digunakan oleh '${duplicateNip.nama}' di departemen ini.`,
         }
       }
     }
@@ -344,7 +344,7 @@ export async function updateMemberAction(input: UpdateMemberInput) {
       if (duplicateNip) {
         return {
           success: false,
-          error: `NIP/ID internal '${validated.nip}' sudah digunakan oleh '${duplicateNip.nama}' di departemen ini.`,
+          error: `NIG '${validated.nip}' sudah digunakan oleh '${duplicateNip.nama}' di departemen ini.`,
         }
       }
     }
@@ -605,7 +605,7 @@ export async function importMembersAction(formData: FormData): Promise<ImportMem
       headerMap["departemen"]
     const colNama = headerMap["nama"] || headerMap["nama_lengkap"] || headerMap["nama_anggota"]
     const colJabatan = headerMap["jabatan"] || headerMap["posisi"]
-    const colNip = headerMap["nip"] || headerMap["id_internal"] || headerMap["nip_id"]
+    const colNip = headerMap["nig"] || headerMap["nip"] || headerMap["id_internal"] || headerMap["nip_id"]
     const colNoHp =
       headerMap["no_hp"] ||
       headerMap["nomor_hp"] ||
@@ -745,7 +745,7 @@ export async function importMembersAction(formData: FormData): Promise<ImportMem
             row: rowNumber,
             nama: rowData.nama,
             nip: rowData.nip,
-            message: `NIP '${rowData.nip}' duplikat dalam berkas impor untuk departemen ${dept.kode}.`,
+            message: `NIG '${rowData.nip}' duplikat dalam berkas impor untuk departemen ${dept.kode}.`,
           })
           continue
         }
@@ -755,7 +755,7 @@ export async function importMembersAction(formData: FormData): Promise<ImportMem
             row: rowNumber,
             nama: rowData.nama,
             nip: rowData.nip,
-            message: `NIP '${rowData.nip}' sudah terdaftar pada anggota aktif di departemen ${dept.kode}.`,
+            message: `NIG '${rowData.nip}' sudah terdaftar pada anggota aktif di departemen ${dept.kode}.`,
           })
           continue
         }

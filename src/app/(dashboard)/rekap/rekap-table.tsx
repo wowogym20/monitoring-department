@@ -166,7 +166,7 @@ export function RekapTable({
                   {item.member_nama}
                 </span>
                 <span className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
-                  {item.member_nip ? `NIP: ${item.member_nip}` : "NIP: -"} • {item.member_jabatan}
+                  {item.member_nip ? `NIG: ${item.member_nip}` : "NIG: -"} • {item.member_jabatan}
                 </span>
               </div>
             </div>
@@ -478,7 +478,7 @@ export function RekapTable({
               <Input
                 id="input-search-nama"
                 type="text"
-                placeholder="Ketik nama atau NIP..."
+                placeholder="Ketik nama atau NIG..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 className="h-9.5 pl-9 pr-8 text-xs bg-background w-full"

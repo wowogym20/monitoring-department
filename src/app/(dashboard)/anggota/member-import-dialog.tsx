@@ -125,7 +125,7 @@ export function MemberImportDialog({
                   Pastikan berkas memuat kolom: <span className="font-mono font-medium text-foreground">kode_departemen</span>,{" "}
                   <span className="font-mono font-medium text-foreground">nama</span>,{" "}
                   <span className="font-mono font-medium text-foreground">jabatan</span>, serta kolom opsional:{" "}
-                  <span className="font-mono font-medium text-foreground">nip</span>,{" "}
+                  <span className="font-mono font-medium text-foreground">nig</span> (atau <span className="font-mono font-medium text-foreground">nip</span>),{" "}
                   <span className="font-mono font-medium text-foreground">no_hp</span>.
                 </p>
               </div>

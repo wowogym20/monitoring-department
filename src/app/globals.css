@@ -60,8 +60,8 @@
   --border: hsl(150 12% 86%);
   --input: hsl(150 12% 86%);
   --ring: hsl(160 84% 24%);
-  --chart-1: hsl(160 84% 24%);
-  --chart-2: hsl(24 95% 40%);
+  --chart-1: hsl(160 84% 38%);
+  --chart-2: hsl(25 95% 50%);
   --chart-3: hsl(173 80% 36%);
   --chart-4: hsl(38 92% 40%);
   --radius: 0.625rem;
@@ -90,8 +90,8 @@
   --border: hsl(160 10% 22%);
   --input: hsl(160 10% 22%);
   --ring: hsl(158 64% 52%);
-  --chart-1: hsl(158 64% 52%);
-  --chart-2: hsl(27 96% 61%);
+  --chart-1: hsl(158 64% 48%);
+  --chart-2: hsl(27 96% 56%);
   --chart-3: hsl(173 80% 40%);
   --chart-4: hsl(38 92% 50%);
 }

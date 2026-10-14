@@ -80,10 +80,6 @@ export function CompletionChart({
 }: CompletionChartProps) {
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart")
 
-  // Token Desain: Hijau Emerald (--chart-1) & Oren Tangerine (--chart-2)
-  const emeraldColor = "hsl(var(--chart-1, 160 84% 39%))"
-  const orangeColor = "hsl(var(--chart-2, 25 95% 53%))"
-
   return (
     <Card className="border-border shadow-xs">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 px-4 sm:px-6">
@@ -136,6 +132,16 @@ export function CompletionChart({
                 data={data}
                 margin={{ top: 20, right: 10, left: -20, bottom: 45 }}
               >
+                <defs>
+                  <linearGradient id="completionEmeraldGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--chart-1, #10b981)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="var(--chart-1, #059669)" stopOpacity={0.88} />
+                  </linearGradient>
+                  <linearGradient id="completionOrangeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--chart-2, #f97316)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="var(--chart-2, #ea580c)" stopOpacity={0.88} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   className="stroke-muted/50"
@@ -157,7 +163,10 @@ export function CompletionChart({
                   tick={{ fontSize: 11, fill: "currentColor" }}
                   className="text-muted-foreground"
                 />
-                <Tooltip content={<CustomCompletionTooltip />} />
+                <Tooltip
+                  content={<CustomCompletionTooltip />}
+                  cursor={{ fill: "rgba(16, 185, 129, 0.08)" }}
+                />
                 <Legend
                   verticalAlign="top"
                   align="right"
@@ -171,7 +180,7 @@ export function CompletionChart({
                   dataKey="completedPercent"
                   stackId="completion"
                   name="Selesai Dinilai (%)"
-                  fill={emeraldColor}
+                  fill="url(#completionEmeraldGradient)"
                   radius={[0, 0, 0, 0]}
                 />
                 {/* Segmen Oren untuk Belum Selesai */}
@@ -179,7 +188,7 @@ export function CompletionChart({
                   dataKey="incompletePercent"
                   stackId="completion"
                   name="Belum Selesai (%)"
-                  fill={orangeColor}
+                  fill="url(#completionOrangeGradient)"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>

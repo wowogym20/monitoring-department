@@ -105,7 +105,7 @@ export function AttentionList({
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {item.jabatan} {item.nip ? `• NIP: ${item.nip}` : ""}
+                        {item.jabatan} {item.nip ? `• NIG: ${item.nip}` : ""}
                       </p>
                     </div>
 

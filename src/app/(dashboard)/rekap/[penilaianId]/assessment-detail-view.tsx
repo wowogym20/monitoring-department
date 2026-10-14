@@ -253,7 +253,7 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-muted-foreground">
-                  <span>{assessment.member_nip ? `NIP: ${assessment.member_nip}` : "NIP: -"}</span>
+                  <span>{assessment.member_nip ? `NIG: ${assessment.member_nip}` : "NIG: -"}</span>
                   <span>•</span>
                   <span>{assessment.member_jabatan}</span>
                   <span>•</span>

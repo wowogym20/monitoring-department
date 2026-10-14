@@ -261,8 +261,8 @@ export function AnggotaManager({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="search-anggota"
-                aria-label="Cari nama atau NIP anggota"
-                placeholder="Cari berdasarkan nama atau NIP..."
+                aria-label="Cari nama atau NIG anggota"
+                placeholder="Cari berdasarkan nama atau NIG..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -323,7 +323,7 @@ export function AnggotaManager({
           <TableHeader className="bg-muted/50">
             <TableRow>
               <TableHead className="w-12 text-center">No</TableHead>
-              <TableHead>NIP / ID</TableHead>
+              <TableHead>NIG</TableHead>
               <TableHead>Nama Lengkap</TableHead>
               {showDeptFilter && <TableHead>Departemen</TableHead>}
               <TableHead>Jabatan</TableHead>
@@ -508,7 +508,7 @@ export function AnggotaManager({
                   <div className="flex items-center gap-1.5">
                     <IdCard className="h-3.5 w-3.5 shrink-0" />
                     <span className="font-mono">
-                      {member.nip || <span className="italic text-muted-foreground/70">Tanpa NIP</span>}
+                      {member.nip || <span className="italic text-muted-foreground/70">Tanpa NIG</span>}
                     </span>
                   </div>
 

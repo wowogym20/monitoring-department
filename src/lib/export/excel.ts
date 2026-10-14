@@ -261,7 +261,7 @@ export async function generateExcelWorkbook(dataset: ExportDataset): Promise<Buf
   const detailHeaders: string[] = [
     "No",
     "Departemen",
-    "NIP / ID",
+    "NIG",
     "Nama Anggota",
     "Jabatan",
     ...dataset.aspects.map((a) => a.nama),
@@ -370,7 +370,7 @@ export async function generateExcelWorkbook(dataset: ExportDataset): Promise<Buf
   const detailColWidths = [
     { width: 6 }, // No
     { width: 28 }, // Departemen
-    { width: 16 }, // NIP
+    { width: 16 }, // NIG
     { width: 30 }, // Nama
     { width: 22 }, // Jabatan
     ...dataset.aspects.map(() => ({ width: 16 })), // Tiap Aspek

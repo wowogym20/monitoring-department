@@ -242,13 +242,13 @@ export function MemberFormDialog({
               )}
             />
 
-            {/* NIP / ID Internal */}
+            {/* NIG */}
             <FormField
               control={form.control}
               name="nip"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>NIP / ID Internal (Opsional)</FormLabel>
+                  <FormLabel>NIG (Opsional)</FormLabel>
                   <FormControl>
                     <Input
                       id="input-nip"

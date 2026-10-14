@@ -93,8 +93,20 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
 
     // Isi formulir periode baru
     await page.fill("#periode-nama", periodeNama)
-    await page.fill("#tgl-mulai", "2026-10-01")
-    await page.fill("#tgl-akhir", "2026-12-31")
+
+    // Pilih Tanggal Mulai menggunakan shadcn DatePicker
+    await page.click("#tgl-mulai")
+    const popoverMulai = page.locator('[data-slot="popover-content"]')
+    await expect(popoverMulai).toBeVisible()
+    await popoverMulai.locator('button:not(:disabled)').filter({ hasText: /^1\b/ }).first().click()
+    await expect(popoverMulai).not.toBeVisible()
+
+    // Pilih Tanggal Akhir menggunakan shadcn DatePicker
+    await page.click("#tgl-akhir")
+    const popoverAkhir = page.locator('[data-slot="popover-content"]')
+    await expect(popoverAkhir).toBeVisible()
+    await popoverAkhir.locator('button:not(:disabled)').filter({ hasText: /^28\b/ }).first().click()
+    await expect(popoverAkhir).not.toBeVisible()
 
     // Submit form
     await page.click('button[type="submit"]:has-text("Buat Periode")')

@@ -336,7 +336,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
         <div className="relative w-full lg:w-80">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Cari nama, NIP, atau jabatan..."
+            placeholder="Cari nama, NIG, atau jabatan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 pr-8 text-xs h-9.5 bg-background w-full"
@@ -432,7 +432,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                         {member.nama}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {member.nip ? `NIP: ${member.nip} • ` : ""}
+                        {member.nip ? `NIG: ${member.nip} • ` : ""}
                         {member.jabatan}
                       </div>
                     </TableCell>

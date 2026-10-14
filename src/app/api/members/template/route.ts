@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 
     sheet.columns = [
       { header: "kode_departemen", key: "kode_departemen", width: 20 },
-      { header: "nip", key: "nip", width: 18 },
+      { header: "nig", key: "nip", width: 18 },
       { header: "nama", key: "nama", width: 30 },
       { header: "jabatan", key: "jabatan", width: 25 },
       { header: "no_hp", key: "no_hp", width: 18 },

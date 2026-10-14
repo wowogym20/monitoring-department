@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
+import { Card } from "@/components/ui/card"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogContent,
@@ -80,6 +82,19 @@ export function PeriodeManager({
   // Action: Buat Periode Baru
   const handleCreatePeriod = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!tanggalMulai) {
+      toast.error("Tanggal mulai wajib diisi")
+      return
+    }
+    if (!tanggalAkhir) {
+      toast.error("Tanggal akhir wajib diisi")
+      return
+    }
+    if (tanggalAkhir < tanggalMulai) {
+      toast.error("Tanggal akhir tidak boleh mendahului tanggal mulai")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const res = await createPeriodAction({
@@ -110,6 +125,19 @@ export function PeriodeManager({
   const handleUpdatePeriod = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!editPeriod) return
+    if (!tanggalMulai) {
+      toast.error("Tanggal mulai wajib diisi")
+      return
+    }
+    if (!tanggalAkhir) {
+      toast.error("Tanggal akhir wajib diisi")
+      return
+    }
+    if (tanggalAkhir < tanggalMulai) {
+      toast.error("Tanggal akhir tidak boleh mendahului tanggal mulai")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const res = await updatePeriodAction({
@@ -177,6 +205,103 @@ export function PeriodeManager({
     }
   }
 
+  const renderStatusBadge = (status: "open" | "closed") => {
+    if (status === "open") {
+      return (
+        <Badge className="bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 flex items-center gap-1.5 w-fit">
+          <span className="size-1.5 rounded-full bg-white animate-pulse" />
+          Terbuka (Open)
+        </Badge>
+      )
+    }
+    return (
+      <Badge
+        variant="secondary"
+        className="bg-muted text-muted-foreground flex items-center gap-1.5 w-fit"
+      >
+        <Lock className="size-3" />
+        Ditutup (Closed)
+      </Badge>
+    )
+  }
+
+  const renderActionMenu = (period: AssessmentPeriod) => {
+    const isOpen = period.status === "open"
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 p-0"
+            aria-label="Aksi Periode"
+          >
+            <MoreHorizontal className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem
+            onClick={() => {
+              setEditPeriod(period)
+              setNama(period.nama)
+              setTanggalMulai(period.tanggal_mulai)
+              setTanggalAkhir(period.tanggal_akhir)
+            }}
+          >
+            <Edit className="size-4 mr-2" />
+            Ubah Rincian
+          </DropdownMenuItem>
+
+          {isOpen ? (
+            <DropdownMenuItem
+              onClick={() =>
+                setStatusDialog({
+                  period,
+                  targetStatus: "closed",
+                })
+              }
+            >
+              <Lock className="size-4 mr-2 text-amber-600" />
+              Tutup Periode
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              disabled={!isSuperAdmin}
+              onClick={() => {
+                if (!isSuperAdmin) {
+                  toast.error(
+                    "Hanya Super-Admin yang dapat membuka kembali periode yang sudah ditutup."
+                  )
+                  return
+                }
+                setStatusDialog({
+                  period,
+                  targetStatus: "open",
+                })
+              }}
+            >
+              <Unlock className="size-4 mr-2 text-emerald-600" />
+              Buka Kembali {!isSuperAdmin && "(Khusus Super-Admin)"}
+            </DropdownMenuItem>
+          )}
+
+          {isSuperAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                onClick={() => setDeletePeriod(period)}
+              >
+                <Trash2 className="size-4 mr-2" />
+                Hapus Periode
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -200,8 +325,8 @@ export function PeriodeManager({
         </Button>
       </div>
 
-      {/* Tabel Periode */}
-      <div className="rounded-md border border-border bg-card overflow-hidden">
+      {/* Tampilan Desktop (>= md): Tabel */}
+      <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -216,118 +341,29 @@ export function PeriodeManager({
           </TableHeader>
           <TableBody>
             {initialPeriods.length > 0 ? (
-              initialPeriods.map((period, idx) => {
-                const isOpen = period.status === "open"
-
-                return (
-                  <TableRow key={period.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {idx + 1}
-                    </TableCell>
-                    <TableCell className="font-semibold text-foreground">
-                      {period.nama}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {formatDateJakarta(period.tanggal_mulai)}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {formatDateJakarta(period.tanggal_akhir)}
-                    </TableCell>
-                    <TableCell>
-                      {isOpen ? (
-                        <Badge className="bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 flex items-center gap-1.5 w-fit">
-                          <span className="size-1.5 rounded-full bg-white animate-pulse" />
-                          Terbuka (Open)
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="secondary"
-                          className="bg-muted text-muted-foreground flex items-center gap-1.5 w-fit"
-                        >
-                          <Lock className="size-3" />
-                          Ditutup (Closed)
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDateJakarta(period.created_at)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 p-0"
-                            aria-label="Aksi Periode"
-                          >
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditPeriod(period)
-                              setNama(period.nama)
-                              setTanggalMulai(period.tanggal_mulai)
-                              setTanggalAkhir(period.tanggal_akhir)
-                            }}
-                          >
-                            <Edit className="size-4 mr-2" />
-                            Ubah Rincian
-                          </DropdownMenuItem>
-
-                          {isOpen ? (
-                            <DropdownMenuItem
-                              onClick={() =>
-                                setStatusDialog({
-                                  period,
-                                  targetStatus: "closed",
-                                })
-                              }
-                            >
-                              <Lock className="size-4 mr-2 text-amber-600" />
-                              Tutup Periode
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              disabled={!isSuperAdmin}
-                              onClick={() => {
-                                if (!isSuperAdmin) {
-                                  toast.error(
-                                    "Hanya Super-Admin yang dapat membuka kembali periode yang sudah ditutup."
-                                  )
-                                  return
-                                }
-                                setStatusDialog({
-                                  period,
-                                  targetStatus: "open",
-                                })
-                              }}
-                            >
-                              <Unlock className="size-4 mr-2 text-emerald-600" />
-                              Buka Kembali {!isSuperAdmin && "(Khusus Super-Admin)"}
-                            </DropdownMenuItem>
-                          )}
-
-                          {isSuperAdmin && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                onClick={() => setDeletePeriod(period)}
-                              >
-                                <Trash2 className="size-4 mr-2" />
-                                Hapus Periode
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
+              initialPeriods.map((period, idx) => (
+                <TableRow key={period.id}>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {idx + 1}
+                  </TableCell>
+                  <TableCell className="font-semibold text-foreground">
+                    {period.nama}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {formatDateJakarta(period.tanggal_mulai)}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {formatDateJakarta(period.tanggal_akhir)}
+                  </TableCell>
+                  <TableCell>{renderStatusBadge(period.status)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {formatDateJakarta(period.created_at)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {renderActionMenu(period)}
+                  </TableCell>
+                </TableRow>
+              ))
             ) : (
               <TableRow>
                 <TableCell
@@ -340,6 +376,70 @@ export function PeriodeManager({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Tampilan Mobile (< md): Kartu Menyusun ke Bawah (Tanpa Horizontal Scroll) */}
+      <div className="space-y-3 md:hidden">
+        {initialPeriods.length > 0 ? (
+          initialPeriods.map((period, idx) => (
+            <Card
+              key={period.id}
+              className="p-4 rounded-xl border border-border bg-card shadow-2xs space-y-3 gap-0"
+            >
+              {/* Header Kartu: Nomor, Status, dan Tombol Aksi */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-1.5 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                      #{idx + 1}
+                    </span>
+                    {renderStatusBadge(period.status)}
+                  </div>
+                  <h3 className="font-semibold text-sm text-foreground break-words leading-snug">
+                    {period.nama}
+                  </h3>
+                </div>
+                <div className="shrink-0 -mr-1">
+                  {renderActionMenu(period)}
+                </div>
+              </div>
+
+              {/* Detail Periode: Tanggal Mulai & Tanggal Akhir Menyusun ke Bawah */}
+              <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-border/60 text-xs">
+                <div>
+                  <span className="text-[11px] text-muted-foreground block font-medium mb-0.5">
+                    Tanggal Mulai
+                  </span>
+                  <span className="text-foreground font-medium">
+                    {formatDateJakarta(period.tanggal_mulai)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[11px] text-muted-foreground block font-medium mb-0.5">
+                    Tanggal Akhir
+                  </span>
+                  <span className="text-foreground font-medium">
+                    {formatDateJakarta(period.tanggal_akhir)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Tanggal Dibuat */}
+              <div className="pt-2 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
+                <span className="text-[11px]">Dibuat</span>
+                <span className="font-medium text-foreground">
+                  {formatDateJakarta(period.created_at)}
+                </span>
+              </div>
+            </Card>
+          ))
+        ) : (
+          <Card className="p-8 text-center border-dashed">
+            <p className="text-sm font-medium text-muted-foreground">
+              Belum ada periode penilaian yang dibuat.
+            </p>
+          </Card>
+        )}
       </div>
 
       {/* DIALOG 1: Tambah Periode */}
@@ -370,23 +470,30 @@ export function PeriodeManager({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="tgl-mulai">Tanggal Mulai</Label>
-                <Input
+                <DatePicker
                   id="tgl-mulai"
-                  type="date"
-                  required
                   value={tanggalMulai}
-                  onChange={(e) => setTanggalMulai(e.target.value)}
+                  onChange={(val) => {
+                    setTanggalMulai(val)
+                    if (tanggalAkhir && val && tanggalAkhir < val) {
+                      setTanggalAkhir(val)
+                    }
+                  }}
+                  maxDate={tanggalAkhir || undefined}
+                  placeholder="Pilih tanggal mulai"
+                  disabled={isSubmitting}
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="tgl-akhir">Tanggal Akhir</Label>
-                <Input
+                <DatePicker
                   id="tgl-akhir"
-                  type="date"
-                  required
                   value={tanggalAkhir}
-                  onChange={(e) => setTanggalAkhir(e.target.value)}
+                  onChange={(val) => setTanggalAkhir(val)}
+                  minDate={tanggalMulai || undefined}
+                  placeholder="Pilih tanggal akhir"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -439,23 +546,30 @@ export function PeriodeManager({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="edit-tgl-mulai">Tanggal Mulai</Label>
-                <Input
+                <DatePicker
                   id="edit-tgl-mulai"
-                  type="date"
-                  required
                   value={tanggalMulai}
-                  onChange={(e) => setTanggalMulai(e.target.value)}
+                  onChange={(val) => {
+                    setTanggalMulai(val)
+                    if (tanggalAkhir && val && tanggalAkhir < val) {
+                      setTanggalAkhir(val)
+                    }
+                  }}
+                  maxDate={tanggalAkhir || undefined}
+                  placeholder="Pilih tanggal mulai"
+                  disabled={isSubmitting}
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="edit-tgl-akhir">Tanggal Akhir</Label>
-                <Input
+                <DatePicker
                   id="edit-tgl-akhir"
-                  type="date"
-                  required
                   value={tanggalAkhir}
-                  onChange={(e) => setTanggalAkhir(e.target.value)}
+                  onChange={(val) => setTanggalAkhir(val)}
+                  minDate={tanggalMulai || undefined}
+                  placeholder="Pilih tanggal akhir"
+                  disabled={isSubmitting}
                 />
               </div>
             </div>

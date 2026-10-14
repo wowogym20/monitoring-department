@@ -83,9 +83,6 @@ export function DeptScoreChart({
 }: DeptScoreChartProps) {
   const [viewMode, setViewMode] = useState<"chart" | "table">("chart")
 
-  // Warna Emerald Token --chart-1 (PRD 10.1.B)
-  const emeraldColor = "hsl(var(--chart-1, 160 84% 39%))"
-
   return (
     <Card className="border-border shadow-xs">
       <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 px-4 sm:px-6">
@@ -131,13 +128,23 @@ export function DeptScoreChart({
           <div
             className="w-full h-[320px] sm:h-[360px]"
             role="img"
-            aria-label={`Grafik batang rata-rata skor 14 departemen. Peringkat tertinggi: ${data[0]?.name} dengan skor ${data[0]?.score}.`}
+            aria-label={`Grafik batang rata-rata skor 14 departemen dengan tema emerald (capaian target) dan oren (perlu pembinaan). Peringkat tertinggi: ${data[0]?.name} dengan skor ${data[0]?.score}.`}
           >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={data}
                 margin={{ top: 20, right: 10, left: -20, bottom: 45 }}
               >
+                <defs>
+                  <linearGradient id="scoreEmeraldGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--chart-1, #10b981)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="var(--chart-1, #059669)" stopOpacity={0.85} />
+                  </linearGradient>
+                  <linearGradient id="scoreOrangeGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="var(--chart-2, #f97316)" stopOpacity={1} />
+                    <stop offset="100%" stopColor="var(--chart-2, #ea580c)" stopOpacity={0.85} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   className="stroke-muted/50"
@@ -164,17 +171,20 @@ export function DeptScoreChart({
                 />
                 <Bar
                   dataKey="score"
-                  fill={emeraldColor}
-                  radius={[4, 4, 0, 0]}
+                  fill="url(#scoreEmeraldGradient)"
+                  radius={[5, 5, 0, 0]}
                   name="Rata-rata Skor"
                 >
-                  {data.map((entry) => (
-                    <Cell
-                      key={`cell-${entry.id}`}
-                      fill={emeraldColor}
-                      className="transition-opacity hover:opacity-85"
-                    />
-                  ))}
+                  {data.map((entry) => {
+                    const isTargetMet = entry.score >= 3.5
+                    return (
+                      <Cell
+                        key={`cell-${entry.id}`}
+                        fill={isTargetMet ? "url(#scoreEmeraldGradient)" : "url(#scoreOrangeGradient)"}
+                        className="transition-opacity hover:opacity-85"
+                      />
+                    )
+                  })}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -229,10 +239,20 @@ export function DeptScoreChart({
           </div>
         )}
 
-        <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground px-2">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground px-2">
           <div className="flex items-center gap-1.5">
             <Award className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
             <span>Skala penilaian resmi: 1 (Sangat Kurang) hingga 5 (Sangat Baik).</span>
+          </div>
+          <div className="flex items-center gap-3 font-medium">
+            <div className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-full bg-emerald-600 dark:bg-emerald-500 inline-block shrink-0" aria-hidden="true" />
+              <span>Target Baik (≥ 3.50)</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="size-2.5 rounded-full bg-orange-500 dark:bg-orange-400 inline-block shrink-0" aria-hidden="true" />
+              <span>Perlu Pembinaan (&lt; 3.50)</span>
+            </div>
           </div>
         </div>
       </CardContent>

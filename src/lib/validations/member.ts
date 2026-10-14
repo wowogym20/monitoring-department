@@ -12,7 +12,7 @@ export const memberFormSchema = z.object({
   nip: z
     .string()
     .trim()
-    .max(50, "NIP/ID internal maksimal 50 karakter")
+    .max(50, "NIG maksimal 50 karakter")
     .optional()
     .nullable()
     .transform((val) => (val && val.trim().length > 0 ? val.trim() : null)),
@@ -85,7 +85,7 @@ export const importMemberRowSchema = z.object({
   nip: z
     .string()
     .trim()
-    .max(50, "NIP/ID internal maksimal 50 karakter")
+    .max(50, "NIG maksimal 50 karakter")
     .optional()
     .nullable()
     .transform((val) => (val && val.trim().length > 0 ? val.trim() : null)),

@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Card } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -262,6 +263,93 @@ export function DepartmentTable({
     }
   }
 
+  const renderStatusBadge = React.useCallback((active: boolean) => (
+    <Badge
+      variant={active ? "default" : "secondary"}
+      className={
+        active
+          ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+          : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
+      }
+    >
+      {active ? (
+        <>
+          <CheckCircle2 className="size-3 mr-1 shrink-0" />
+          <span>Aktif</span>
+        </>
+      ) : (
+        <>
+          <XCircle className="size-3 mr-1 shrink-0" />
+          <span>Nonaktif</span>
+        </>
+      )}
+    </Badge>
+  ), [])
+
+  const renderActionMenu = React.useCallback(
+    (dept: DepartmentListItem) => {
+      if (!isSuperAdmin) return null
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 p-0"
+              aria-label="Menu Aksi"
+            >
+              <MoreHorizontal className="size-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onClick={() => {
+                setEditDept(dept)
+                setNama(dept.nama)
+                setKode(dept.kode)
+                setIsActive(dept.is_active)
+              }}
+            >
+              <Edit className="size-4 mr-2" />
+              Ubah Data
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                setAssignDept(dept)
+                setSelectedKetuaId(dept.ketua_id || "unassigned")
+              }}
+            >
+              <UserCheck className="size-4 mr-2" />
+              Pilih/Ganti Ketua
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleToggleStatus(dept)}>
+              {dept.is_active ? (
+                <>
+                  <XCircle className="size-4 mr-2 text-amber-600" />
+                  Nonaktifkan
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
+                  Aktifkan
+                </>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+              onClick={() => setDeleteDept(dept)}
+            >
+              <Trash2 className="size-4 mr-2" />
+              Hapus Permanen
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+    [isSuperAdmin, handleToggleStatus]
+  )
+
   // Column definitions for TanStack Table
   const columns = React.useMemo<ColumnDef<DepartmentListItem>[]>(
     () => [
@@ -344,102 +432,20 @@ export function DepartmentTable({
       {
         accessorKey: "is_active",
         header: "Status",
-        cell: ({ row }) => {
-          const active = row.original.is_active
-          return (
-            <Badge
-              variant={active ? "default" : "secondary"}
-              className={
-                active
-                  ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
-                  : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
-              }
-            >
-              {active ? (
-                <>
-                  <CheckCircle2 className="size-3 mr-1 shrink-0" />
-                  <span>Aktif</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="size-3 mr-1 shrink-0" />
-                  <span>Nonaktif</span>
-                </>
-              )}
-            </Badge>
-          )
-        },
+        cell: ({ row }) => renderStatusBadge(row.original.is_active),
       },
       ...(isSuperAdmin
         ? [
             {
               id: "actions",
               header: "Aksi",
-              cell: ({ row }: { row: { original: DepartmentListItem } }) => {
-                const dept = row.original
-                return (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 p-0"
-                        aria-label="Menu Aksi"
-                      >
-                        <MoreHorizontal className="size-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setEditDept(dept)
-                          setNama(dept.nama)
-                          setKode(dept.kode)
-                          setIsActive(dept.is_active)
-                        }}
-                      >
-                        <Edit className="size-4 mr-2" />
-                        Ubah Data
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setAssignDept(dept)
-                          setSelectedKetuaId(dept.ketua_id || "unassigned")
-                        }}
-                      >
-                        <UserCheck className="size-4 mr-2" />
-                        Pilih/Ganti Ketua
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleToggleStatus(dept)}>
-                        {dept.is_active ? (
-                          <>
-                            <XCircle className="size-4 mr-2 text-amber-600" />
-                            Nonaktifkan
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
-                            Aktifkan
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                        onClick={() => setDeleteDept(dept)}
-                      >
-                        <Trash2 className="size-4 mr-2" />
-                        Hapus Permanen
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )
-              },
+              cell: ({ row }: { row: { original: DepartmentListItem } }) =>
+                renderActionMenu(row.original),
             },
           ]
         : []),
     ],
-    [isSuperAdmin, page, pageSize, handleToggleStatus]
+    [isSuperAdmin, page, pageSize, renderStatusBadge, renderActionMenu]
   )
 
   const table = useReactTable({
@@ -471,7 +477,7 @@ export function DepartmentTable({
             value={currentStatus}
             onValueChange={handleStatusFilterChange}
           >
-            <SelectTrigger className="w-36 text-sm" aria-label="Filter status departemen">
+            <SelectTrigger className="w-32 sm:w-36 text-sm shrink-0" aria-label="Filter status departemen">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -498,8 +504,8 @@ export function DepartmentTable({
         )}
       </div>
 
-      {/* TanStack Table Container */}
-      <div className="rounded-md border border-border bg-card overflow-hidden">
+      {/* Tampilan Desktop (>= md): TanStack Table */}
+      <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -543,6 +549,98 @@ export function DepartmentTable({
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Tampilan Mobile (< md): Kartu Menyusun ke Bawah (Tanpa Horizontal Scroll) */}
+      <div className="space-y-3 md:hidden">
+        {initialData.length > 0 ? (
+          initialData.map((dept, idx) => {
+            const rowNumber = (page - 1) * pageSize + idx + 1
+            return (
+              <Card
+                key={dept.id}
+                className="p-4 rounded-xl border border-border bg-card shadow-2xs space-y-3 gap-0"
+              >
+                {/* Header Kartu: Nomor, Kode, Status & Tombol Aksi */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+                    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-muted text-muted-foreground">
+                      #{rowNumber}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="font-mono text-xs uppercase bg-muted/50 border-border"
+                    >
+                      {dept.kode}
+                    </Badge>
+                    {renderStatusBadge(dept.is_active)}
+                  </div>
+                  {isSuperAdmin && (
+                    <div className="shrink-0 -mr-1">
+                      {renderActionMenu(dept)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Departemen & Info Dibuat */}
+                <div className="space-y-0.5">
+                  <h3 className="font-semibold text-sm text-foreground break-words leading-snug">
+                    {dept.nama}
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Dibuat: {formatDateJakarta(dept.created_at)}
+                  </p>
+                </div>
+
+                {/* Ketua Departemen */}
+                <div className="pt-2.5 border-t border-border/60 flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="text-[11px] text-muted-foreground block font-medium mb-0.5">
+                      Ketua Departemen
+                    </span>
+                    {dept.ketua ? (
+                      <div>
+                        <p className="text-xs font-medium text-foreground truncate">
+                          {dept.ketua.nama}
+                        </p>
+                        {dept.ketua.no_hp && (
+                          <p className="text-[11px] text-muted-foreground font-mono truncate">
+                            {dept.ketua.no_hp}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs italic text-muted-foreground">
+                        Belum ditentukan
+                      </span>
+                    )}
+                  </div>
+
+                  {isSuperAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 shrink-0"
+                      onClick={() => {
+                        setAssignDept(dept)
+                        setSelectedKetuaId(dept.ketua_id || "unassigned")
+                      }}
+                    >
+                      <UserCheck className="size-3.5 mr-1" />
+                      {dept.ketua ? "Ganti" : "Pilih"}
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            )
+          })
+        ) : (
+          <Card className="p-8 text-center border-dashed">
+            <p className="text-sm font-medium text-muted-foreground">
+              Tidak ada departemen yang sesuai kriteria pencarian.
+            </p>
+          </Card>
+        )}
       </div>
 
       {/* Server Pagination Footer */}
