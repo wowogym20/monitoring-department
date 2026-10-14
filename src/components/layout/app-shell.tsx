@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sheet"
 
 import { useUnreadComments } from "@/hooks/use-unread-comments"
+import { GradientButton } from "@/components/common/gradient-button"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -71,32 +72,36 @@ export function AppShell({ children, user }: AppShellProps) {
           </SheetHeader>
 
           {/* Daftar Tautan Menu Mobile */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1.5">
             {filteredNavItems.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (item.href !== "/dashboard" && pathname.startsWith(item.href))
               const Icon = item.icon
               return (
-                <Link
+                <GradientButton
                   key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
+                  asChild
+                  theme={isActive ? "emerald" : "auto"}
+                  size="default"
                   className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    "w-full justify-start rounded-xl px-3.5 py-2.5 text-sm transition-all",
+                    !isActive && "opacity-85 hover:opacity-100 font-medium"
                   )}
                 >
-                  <Icon className="size-4 shrink-0" />
-                  <span className="flex-1 truncate">{item.title}</span>
-                  {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
-                    <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                      {item.unreadCount}
-                    </span>
-                  )}
-                </Link>
+                  <Link
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Icon className="size-4 shrink-0" />
+                    <span className="flex-1 truncate text-left">{item.title}</span>
+                    {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
+                      <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs shrink-0">
+                        {item.unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                </GradientButton>
               )
             })}
           </nav>
@@ -150,49 +155,53 @@ export function AppShell({ children, user }: AppShellProps) {
         </div>
 
         {/* Daftar Tautan Menu Desktop */}
-        <nav className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1 overflow-x-hidden">
+        <nav className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1.5 overflow-x-hidden">
           {filteredNavItems.map((item) => {
             const isActive =
               pathname === item.href ||
               (item.href !== "/dashboard" && pathname.startsWith(item.href))
             const Icon = item.icon
             return (
-              <Link
+              <GradientButton
                 key={item.href}
-                href={item.href}
-                title={item.title}
+                asChild
+                theme={isActive ? "emerald" : "auto"}
+                size={isCollapsed ? "icon" : "default"}
                 className={cn(
-                  "flex items-center rounded-md text-sm font-medium transition-all relative",
+                  "transition-all duration-200 relative",
                   isCollapsed
-                    ? "justify-center size-10 mx-auto"
-                    : "gap-3 px-3 py-2",
-                  isActive
-                    ? "bg-primary text-primary-foreground font-semibold shadow-xs"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "size-10 mx-auto rounded-xl"
+                    : "w-full justify-start rounded-xl px-3 py-2 text-sm",
+                  !isActive && "opacity-85 hover:opacity-100 font-medium"
                 )}
               >
-                <Icon className="size-4 shrink-0" />
-                <span
-                  className={cn(
-                    "transition-opacity duration-200",
-                    isCollapsed ? "sr-only" : "flex-1 truncate"
-                  )}
+                <Link
+                  href={item.href}
+                  title={item.title}
                 >
-                  {item.title}
-                </span>
-                {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
-                  isCollapsed ? (
-                    <span
-                      className="absolute top-2 right-2 size-2 bg-orange-500 rounded-full"
-                      aria-label={`${item.unreadCount} notifikasi belum dibaca`}
-                    />
-                  ) : (
-                    <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                      {item.unreadCount}
-                    </span>
-                  )
-                )}
-              </Link>
+                  <Icon className="size-4 shrink-0" />
+                  <span
+                    className={cn(
+                      "transition-opacity duration-200",
+                      isCollapsed ? "sr-only" : "flex-1 truncate text-left"
+                    )}
+                  >
+                    {item.title}
+                  </span>
+                  {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
+                    isCollapsed ? (
+                      <span
+                        className="absolute top-2 right-2 size-2 bg-orange-500 rounded-full"
+                        aria-label={`${item.unreadCount} notifikasi belum dibaca`}
+                      />
+                    ) : (
+                      <span className="bg-orange-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs shrink-0">
+                        {item.unreadCount}
+                      </span>
+                    )
+                  )}
+                </Link>
+              </GradientButton>
             )
           })}
         </nav>

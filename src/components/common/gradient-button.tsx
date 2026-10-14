@@ -167,6 +167,23 @@ const gradientButtonVariants = cva(
 
           "dark:active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.18)]",
         ],
+        emerald: [
+          // Tema Hijau Emerald Tazakka
+          "text-white",
+          "border-emerald-600/60 dark:border-emerald-500/50",
+          "bg-gradient-to-b",
+          "from-emerald-500",
+          "via-emerald-600",
+          "to-emerald-700",
+          "shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_-1px_0_rgba(0,0,0,0.30),0_2px_6px_rgba(5,150,105,0.35)]",
+          "hover:from-emerald-400",
+          "hover:via-emerald-500",
+          "hover:to-emerald-600",
+          "active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.35)]",
+          "dark:from-emerald-600",
+          "dark:via-emerald-700",
+          "dark:to-emerald-800",
+        ],
       },
 
       size: {
