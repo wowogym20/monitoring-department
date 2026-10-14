@@ -233,10 +233,10 @@ export function PanduanTabsClient() {
                 <div className="p-3.5 rounded-xl border border-border bg-card/60">
                   <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold text-xs sm:text-sm">
                     <Building2 className="size-4 shrink-0" />
-                    <span>14 Departemen</span>
+                    <span>15 Departemen</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Cakupan menyeluruh seluruh lini organisasi operasional pondok modern.
+                    Cakupan seluruh Departemen Pondok Modern Tazakka.
                   </p>
                 </div>
                 <div className="p-3.5 rounded-xl border border-border bg-card/60">
@@ -254,7 +254,7 @@ export function PanduanTabsClient() {
                     <span>Isolasi & Privasi Data</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Ketua hanya dapat mengakses departemennya; anggota tidak memiliki akses login.
+                    Kadep hanya dapat mengakses departemennya; anggota tidak memiliki akses login.
                   </p>
                 </div>
               </div>
@@ -275,7 +275,7 @@ export function PanduanTabsClient() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive font-bold">•</span>
-                  <span>Bagian SDM membutuhkan waktu berhari-hari untuk merekap ratusan data staf dan guru.</span>
+                  <span>Bagian KOordinator membutuhkan waktu berhari-hari untuk merekap ratusan data staf dan guru.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-destructive font-bold">•</span>
@@ -300,11 +300,11 @@ export function PanduanTabsClient() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-600 font-bold">•</span>
-                  <span>Waktu rekapitulasi SDM dipersingkat dari hitungan hari menjadi hitungan menit.</span>
+                  <span>Waktu rekapitulasi Koordinator dipersingkat dari hitungan hari menjadi hitungan menit.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-600 font-bold">•</span>
-                  <span>Dashboard eksekutif real-time dengan diagram radar komparasi 14 departemen.</span>
+                  <span>Dashboard eksekutif real-time dengan diagram radar komparasi 15 departemen.</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-600 font-bold">•</span>
@@ -319,7 +319,7 @@ export function PanduanTabsClient() {
             <CardHeader className="p-4 sm:p-6 pb-3">
               <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-2">
                 <Building2 className="size-5 text-primary shrink-0" />
-                Daftar 14 Departemen Resmi Lembaga
+                Daftar 15 Departemen Resmi Lembaga
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm text-muted-foreground">
                 Setiap departemen diketuai oleh satu personel yang bertanggung jawab mengelola dan mengevaluasi anggotanya.
