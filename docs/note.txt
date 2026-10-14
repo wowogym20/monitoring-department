@@ -28,16 +28,3 @@ const DEV_USERS: DevUserSeed[] = [
   },
 ]
 
-
-
-Terapkan Open Graph untuk semua social media 
-
-Tambahkan Halaman Beranda / , yang isinya hero section saja dengan min h screen tidak bisa di scroll 
-dengan Text "Dashboard Integrasi Tazakka" yang besar di tengah
-dan button "Login" yang mengarah ke halaman login jika belum login dan mengarah ke dashboard jika sudah login
-dan button install app jika sudah install maka tidak muncul
-
-PWA agar bisa di install di android dan ios dan desktop
-
-
-Terapkan progras loading bar di atas halaman saat halaman sedang load data dan memuat halaman baru maupun apa itu loading nya

@@ -139,7 +139,7 @@ export function HeroLanding({ isLoggedIn, userEmail }: HeroLandingProps) {
         <div className="flex items-center gap-2">
           <div className="relative size-8 sm:size-10 rounded-lg overflow-hidden border border-emerald-600/30 bg-background/80 shadow-xs flex items-center justify-center p-1">
             <Image
-              src="/logo-tazakka.png"
+              src="/icons/icon-192x192.png"
               alt="Logo Tazakka"
               width={36}
               height={36}

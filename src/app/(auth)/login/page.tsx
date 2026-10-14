@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Loader2, Lock, Mail, ShieldAlert, Eye, EyeOff } from "lucide-react"
+import { Loader2, Lock, Mail, ShieldAlert, Eye, EyeOff, ArrowLeft } from "lucide-react"
 
 function LoginForm() {
   const router = useRouter()
@@ -153,7 +153,7 @@ function LoginForm() {
         <CardFooter className="flex flex-col gap-3 pt-2">
           <Button
             type="submit"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold cursor-pointer"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -165,6 +165,17 @@ function LoginForm() {
               "Masuk ke Sistem"
             )}
           </Button>
+
+          <Button
+            asChild
+            variant="ghost"
+            className="w-full text-xs sm:text-sm text-muted-foreground hover:text-foreground cursor-pointer"
+          >
+            <Link href="/" className="flex items-center justify-center gap-1.5">
+              <ArrowLeft className="size-3.5" />
+              Kembali ke Beranda
+            </Link>
+          </Button>
         </CardFooter>
       </form>
     </Card>
@@ -174,6 +185,22 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative">
+      {/* Navigasi Pojok Kiri Atas ke Beranda */}
+      <div className="absolute top-4 left-4">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="gap-2 text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:bg-muted/80 rounded-lg px-2.5 sm:px-3 py-1.5 transition-colors cursor-pointer"
+        >
+          <Link href="/" aria-label="Kembali ke Beranda" id="btn-back-home">
+            <ArrowLeft className="size-4 shrink-0" />
+            <span className="hidden sm:inline font-medium">Kembali ke Beranda</span>
+            <span className="sm:hidden font-medium">Beranda</span>
+          </Link>
+        </Button>
+      </div>
+
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
@@ -181,24 +208,31 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-3 flex flex-col items-center">
-          <div className="size-16 sm:size-20 rounded-full overflow-hidden border-2 border-primary/25 shadow-sm bg-muted/20 shrink-0 flex items-center justify-center">
-            <Image
-              src="/Logo.jpeg"
-              alt="Logo Tazakka"
-              width={80}
-              height={80}
-              className="size-full object-cover aspect-square"
-              priority
-            />
-          </div>
-          <div className="space-y-1">
-            <h1 className="font-extrabold text-xl sm:text-2xl tracking-tight text-foreground">
-              Monitoring Departemen
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Standarisasi Penilaian dan Pemantauan Kinerja Internal
-            </p>
-          </div>
+          <Link
+            href="/"
+            className="group flex flex-col items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl p-1 cursor-pointer transition-transform"
+            title="Kembali ke Beranda"
+            aria-label="Kembali ke Beranda"
+          >
+            <div className="size-16 sm:size-20 rounded-full overflow-hidden border-2 border-primary/25 shadow-sm bg-muted/20 shrink-0 flex items-center justify-center transition-all group-hover:scale-105 group-hover:border-primary/50 group-hover:shadow-md">
+              <Image
+                src="/Logo.jpeg"
+                alt="Logo Tazakka"
+                width={80}
+                height={80}
+                className="size-full object-cover aspect-square"
+                priority
+              />
+            </div>
+            <div className="space-y-1 text-center">
+              <h1 className="font-extrabold text-xl sm:text-2xl tracking-tight text-foreground group-hover:text-primary transition-colors">
+                Monitoring Departemen
+              </h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Standarisasi Penilaian dan Pemantauan Kinerja Internal
+              </p>
+            </div>
+          </Link>
         </div>
 
         {/* Suspense wrapper for Client Component reading searchParams */}

@@ -118,4 +118,30 @@ test.describe("Fitur Halaman Beranda Hero (/), PWA, Open Graph SEO & Loading Bar
     const sitemapResponse = await page.request.get("/sitemap.xml")
     expect(sitemapResponse.status()).toBe(200)
   })
+
+  test("4. Halaman /login menyediakan navigasi yang berfungsi untuk kembali ke beranda (/)", async ({
+    page,
+  }) => {
+    // 1. Uji tombol navigasi di pojok kiri atas
+    await page.goto("/login")
+    const backBtn = page.locator("#btn-back-home")
+    await expect(backBtn).toBeVisible()
+    await expect(backBtn).toHaveAttribute("href", "/")
+    await backBtn.click()
+    await expect(page).toHaveURL("/")
+
+    // 2. Uji tautan di bagian bawah form login (CardFooter)
+    await page.goto("/login")
+    const footerHomeLink = page.locator('form a[href="/"]:has-text("Kembali ke Beranda")')
+    await expect(footerHomeLink).toBeVisible()
+    await footerHomeLink.click()
+    await expect(page).toHaveURL("/")
+
+    // 3. Uji klik logo / brand header
+    await page.goto("/login")
+    const brandLink = page.locator('a[aria-label="Kembali ke Beranda"]').filter({ has: page.locator("img") })
+    await expect(brandLink).toBeVisible()
+    await brandLink.click()
+    await expect(page).toHaveURL("/")
+  })
 })
