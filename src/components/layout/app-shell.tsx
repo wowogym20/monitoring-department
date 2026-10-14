@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sheet"
 
 import { useUnreadComments } from "@/hooks/use-unread-comments"
+import { Home } from "lucide-react"
 
 interface AppShellProps {
   children: React.ReactNode
@@ -115,6 +116,29 @@ export function AppShell({ children, user }: AppShellProps) {
               )
             })}
           </nav>
+
+          {/* Footer Mobile Sheet: Navigasi ke Halaman Beranda di Bagian Bawah */}
+          <div className="border-t border-border p-3 shrink-0">
+            <Link
+              href="/"
+              onClick={() => setMobileOpen(false)}
+              title="Halaman Beranda"
+              className={cn(
+                "flex items-center gap-3 w-full rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors cursor-pointer",
+                pathname === "/"
+                  ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Home
+                className={cn(
+                  "size-4 shrink-0 transition-colors",
+                  pathname === "/" ? "text-primary-foreground" : "text-muted-foreground"
+                )}
+              />
+              <span className="flex-1 truncate text-left">Halaman Beranda</span>
+            </Link>
+          </div>
         </SheetContent>
       </Sheet>
 
@@ -227,6 +251,38 @@ export function AppShell({ children, user }: AppShellProps) {
             )
           })}
         </nav>
+
+        {/* Footer Sidebar: Navigasi ke Halaman Beranda di Bagian Bawah */}
+        <div className="border-t border-border p-2 sm:p-3 shrink-0">
+          <Link
+            href="/"
+            title="Halaman Beranda"
+            className={cn(
+              "flex items-center rounded-lg text-sm transition-colors relative cursor-pointer",
+              isCollapsed
+                ? "justify-center size-10 mx-auto"
+                : "gap-3 px-3 py-2.5 w-full",
+              pathname === "/"
+                ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground font-medium"
+            )}
+          >
+            <Home
+              className={cn(
+                "size-4 shrink-0 transition-colors",
+                pathname === "/" ? "text-primary-foreground" : "text-muted-foreground"
+              )}
+            />
+            <span
+              className={cn(
+                "transition-opacity duration-200",
+                isCollapsed ? "sr-only" : "flex-1 truncate text-left"
+              )}
+            >
+              Halaman Beranda
+            </span>
+          </Link>
+        </div>
       </aside>
 
       {/* Area Kanan: Header Global di Bagian Atas + Konten Halaman */}

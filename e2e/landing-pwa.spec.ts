@@ -144,4 +144,42 @@ test.describe("Fitur Halaman Beranda Hero (/), PWA, Open Graph SEO & Loading Bar
     await brandLink.click()
     await expect(page).toHaveURL("/")
   })
+
+  test("5. Sidebar aplikasi menyediakan navigasi 'Halaman Beranda' di bagian bawah menu", async ({
+    page,
+  }) => {
+    // 1. Login terlebih dahulu
+    await page.goto("/login")
+    await page.fill('input[type="email"]', SUPER_ADMIN.email)
+    await page.fill('input[type="password"]', SUPER_ADMIN.password)
+    await page.click('button[type="submit"]')
+    await page.waitForURL("**/dashboard")
+
+    // 2. Verifikasi link Halaman Beranda pada desktop sidebar
+    const desktopHomeLink = page.locator('aside a[href="/"]:has-text("Halaman Beranda")')
+    await expect(desktopHomeLink).toBeVisible()
+    await desktopHomeLink.click()
+
+    // 3. Pastikan berhasil pindah ke halaman beranda
+    await expect(page).toHaveURL("/")
+    const dashboardBtn = page.locator("#btn-hero-dashboard")
+    await expect(dashboardBtn).toBeVisible()
+    await dashboardBtn.click()
+    await expect(page).toHaveURL("**/dashboard")
+
+    // 4. Verifikasi link Halaman Beranda pada mobile sheet
+    await page.setViewportSize({ width: 375, height: 667 })
+    const hamburgerBtn = page.locator('header button[aria-label="Buka menu navigasi mobile"]')
+    await expect(hamburgerBtn).toBeVisible()
+    await hamburgerBtn.click()
+
+    const mobileSheet = page.locator('[role="dialog"]')
+    await expect(mobileSheet).toBeVisible()
+
+    const mobileHomeLink = mobileSheet.locator('a[href="/"]:has-text("Halaman Beranda")')
+    await expect(mobileHomeLink).toBeVisible()
+    await mobileHomeLink.click()
+
+    await expect(page).toHaveURL("/")
+  })
 })
