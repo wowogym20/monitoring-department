@@ -49,6 +49,7 @@ import {
   resetKetuaPasswordAction,
   type KetuaAccountItem,
 } from "@/lib/actions/ketua"
+import { cn } from "@/lib/utils"
 
 interface KetuaManagerProps {
   initialAccounts: KetuaAccountItem[]
@@ -189,162 +190,330 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
         </Button>
       </div>
 
-      {/* Tabel Akun Ketua */}
-      <div className="rounded-md border border-border bg-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">#</TableHead>
-              <TableHead>Nama Kepala</TableHead>
-              <TableHead>Email Login</TableHead>
-              <TableHead>No. HP</TableHead>
-              <TableHead>Departemen Terkait</TableHead>
-              <TableHead>Status Akun</TableHead>
-              <TableHead>Terdaftar</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredAccounts.length > 0 ? (
-              filteredAccounts.map((account, idx) => {
-                const initials = account.nama
-                  .split(" ")
-                  .slice(0, 2)
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()
-
-                return (
-                  <TableRow key={account.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {idx + 1}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-8">
-                          {account.foto_url && (
-                            <AvatarImage
-                              src={account.foto_url}
-                              alt={account.nama}
-                              className="object-cover"
-                            />
-                          )}
-                          <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium text-foreground">
-                          {account.nama}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {account.email}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {account.no_hp || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {account.department ? (
-                        <div className="flex items-center gap-1.5">
-                          <Building className="size-3.5 text-muted-foreground shrink-0" />
-                          <span className="text-xs font-medium">
-                            {account.department.nama}
-                          </span>
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] uppercase font-mono px-1 py-0"
-                          >
-                            {account.department.kode}
-                          </Badge>
-                        </div>
-                      ) : (
-                        <span className="text-xs italic text-muted-foreground">
-                          Belum ditugaskan
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={account.is_active ? "default" : "secondary"}
-                        className={
-                          account.is_active
-                            ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
-                            : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
-                        }
-                      >
-                        {account.is_active ? (
-                          <>
-                            <CheckCircle2 className="size-3 mr-1 shrink-0" />
-                            <span>Aktif</span>
-                          </>
-                        ) : (
-                          <>
-                            <XCircle className="size-3 mr-1 shrink-0" />
-                            <span>Nonaktif</span>
-                          </>
-                        )}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {formatDateJakarta(account.created_at)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 p-0"
-                            aria-label="Aksi Akun"
-                          >
-                            <MoreHorizontal className="size-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setResetAccount(account)
-                              setNewPassword("")
-                            }}
-                          >
-                            <KeyRound className="size-4 mr-2 text-primary" />
-                            Reset Kata Sandi
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleToggleStatus(account)}
-                          >
-                            {account.is_active ? (
-                              <>
-                                <XCircle className="size-4 mr-2 text-amber-600" />
-                                Nonaktifkan Akun
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
-                                Aktifkan Akun
-                              </>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )
-              })
-            ) : (
+      {/* Tampilan Desktop: Tabel Standar 8 Kolom */}
+      <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  Tidak ada akun ketua departemen yang ditemukan.
-                </TableCell>
+                <TableHead className="w-12">#</TableHead>
+                <TableHead>Nama Kepala</TableHead>
+                <TableHead>Email Login</TableHead>
+                <TableHead>No. HP</TableHead>
+                <TableHead>Departemen Terkait</TableHead>
+                <TableHead>Status Akun</TableHead>
+                <TableHead>Terdaftar</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredAccounts.length > 0 ? (
+                filteredAccounts.map((account, idx) => {
+                  const initials = account.nama
+                    .split(" ")
+                    .slice(0, 2)
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+
+                  return (
+                    <TableRow key={account.id}>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {idx + 1}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-8">
+                            {account.foto_url && (
+                              <AvatarImage
+                                src={account.foto_url}
+                                alt={account.nama}
+                                className="object-cover"
+                              />
+                            )}
+                            <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium text-foreground">
+                            {account.nama}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {account.email}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {account.no_hp || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {account.department ? (
+                          <div className="flex items-center gap-1.5">
+                            <Building className="size-3.5 text-muted-foreground shrink-0" />
+                            <span className="text-xs font-medium">
+                              {account.department.nama}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] uppercase font-mono px-1 py-0"
+                            >
+                              {account.department.kode}
+                            </Badge>
+                          </div>
+                        ) : (
+                          <span className="text-xs italic text-muted-foreground">
+                            Belum ditugaskan
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={account.is_active ? "default" : "secondary"}
+                          className={
+                            account.is_active
+                              ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                              : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
+                          }
+                        >
+                          {account.is_active ? (
+                            <>
+                              <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                              <span>Aktif</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="size-3 mr-1 shrink-0" />
+                              <span>Nonaktif</span>
+                            </>
+                          )}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {formatDateJakarta(account.created_at)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 p-0"
+                              aria-label="Aksi Akun"
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setResetAccount(account)
+                                setNewPassword("")
+                              }}
+                            >
+                              <KeyRound className="size-4 mr-2 text-primary" />
+                              Reset Kata Sandi
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleToggleStatus(account)}
+                            >
+                              {account.is_active ? (
+                                <>
+                                  <XCircle className="size-4 mr-2 text-amber-600" />
+                                  Nonaktifkan Akun
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
+                                  Aktifkan Akun
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={8}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    Tidak ada akun ketua departemen yang ditemukan.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Tampilan Mobile: Kartu Akun Responsif Bebas Scroll Horizontal (Optimal untuk HP 360px+) */}
+      <div className="block md:hidden space-y-3">
+        {filteredAccounts.length > 0 ? (
+          filteredAccounts.map((account) => {
+            const initials = account.nama
+              .split(" ")
+              .slice(0, 2)
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()
+
+            return (
+              <div
+                key={`mobile-${account.id}`}
+                className="rounded-lg border border-border bg-card p-3.5 space-y-3 shadow-2xs"
+              >
+                {/* Baris Atas: Avatar + Nama + Email & Status + Menu Aksi */}
+                <div className="flex items-start justify-between gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Avatar className="size-9 shrink-0">
+                      {account.foto_url && (
+                        <AvatarImage
+                          src={account.foto_url}
+                          alt={account.nama}
+                          className="object-cover"
+                        />
+                      )}
+                      <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-foreground truncate">
+                        {account.nama}
+                      </h3>
+                      <p className="font-mono text-xs text-muted-foreground truncate" title={account.email}>
+                        {account.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Badge
+                      variant={account.is_active ? "default" : "secondary"}
+                      className={cn(
+                        "text-[11px] px-2 py-0.5",
+                        account.is_active
+                          ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                          : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
+                      )}
+                    >
+                      {account.is_active ? (
+                        <>
+                          <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                          <span>Aktif</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="size-3 mr-1 shrink-0" />
+                          <span>Nonaktif</span>
+                        </>
+                      )}
+                    </Badge>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-7 p-0 text-muted-foreground hover:text-foreground"
+                          aria-label="Aksi Akun"
+                        >
+                          <MoreHorizontal className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setResetAccount(account)
+                            setNewPassword("")
+                          }}
+                        >
+                          <KeyRound className="size-4 mr-2 text-primary" />
+                          Reset Kata Sandi
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleToggleStatus(account)}
+                        >
+                          {account.is_active ? (
+                            <>
+                              <XCircle className="size-4 mr-2 text-amber-600" />
+                              Nonaktifkan Akun
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
+                              Aktifkan Akun
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+
+                {/* Rincian Departemen & Info Kontak */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1 border-t border-border/50">
+                  <div>
+                    <span className="text-[11px] text-muted-foreground block font-medium">Departemen:</span>
+                    {account.department ? (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Building className="size-3.5 text-muted-foreground shrink-0" />
+                        <span className="font-semibold text-foreground truncate">
+                          {account.department.nama}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] uppercase font-mono px-1 py-0 shrink-0"
+                        >
+                          {account.department.kode}
+                        </Badge>
+                      </div>
+                    ) : (
+                      <span className="text-xs italic text-muted-foreground mt-0.5 block">
+                        Belum ditugaskan
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="text-[11px] text-muted-foreground block font-medium">No. HP / Kontak:</span>
+                    <span className="font-mono text-xs text-foreground mt-0.5 block">
+                      {account.no_hp || "-"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Footer: Tanggal Terdaftar & Tombol Cepat Reset Password */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/40 text-[11px] text-muted-foreground">
+                  <span>
+                    Terdaftar: <strong className="font-medium text-foreground">{formatDateJakarta(account.created_at)}</strong>
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-xs gap-1 font-medium text-primary hover:text-primary"
+                    onClick={() => {
+                      setResetAccount(account)
+                      setNewPassword("")
+                    }}
+                  >
+                    <KeyRound className="size-3" />
+                    <span>Reset Sandi</span>
+                  </Button>
+                </div>
+              </div>
+            )
+          })
+        ) : (
+          <div className="p-6 text-center text-xs text-muted-foreground bg-card rounded-lg border border-dashed">
+            Tidak ada akun ketua departemen yang ditemukan.
+          </div>
+        )}
       </div>
 
       {/* DIALOG 1: Buat Akun Ketua Baru */}

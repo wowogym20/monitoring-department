@@ -128,7 +128,7 @@ export function HeroLanding({ isLoggedIn, userEmail }: HeroLandingProps) {
       />
 
       {/* TOP BAR / HEADER MINIMALIS */}
-      <header className="w-full max-w-6xl flex items-center justify-between z-10 shrink-0">
+      <header className="w-full max-w-6xl flex items-center justify-between z-10 shrink-0 pt-4 sm:pt-6 md:pt-8">
         <div className="flex items-center gap-2">
           <div className="relative size-8 sm:size-10 rounded-lg overflow-hidden border border-emerald-600/30 bg-background/80 shadow-xs flex items-center justify-center p-1">
             <Image

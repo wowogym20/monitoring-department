@@ -2,31 +2,31 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export default function ProfilLoading() {
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl space-y-4 sm:space-y-5">
       <div className="space-y-1">
-        <Skeleton className="h-7 w-48 rounded" />
-        <Skeleton className="h-4 w-72 rounded" />
+        <Skeleton className="h-6 w-44 rounded-md" />
+        <Skeleton className="h-3.5 w-64 rounded-md" />
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 flex items-center gap-6">
-        <Skeleton className="size-20 rounded-full" />
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-6 w-48 rounded" />
-          <Skeleton className="h-4 w-36 rounded" />
-          <Skeleton className="h-5 w-24 rounded-full" />
+      <div className="rounded-xl border border-border/80 bg-card p-3.5 sm:p-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+        <Skeleton className="size-20 sm:size-22 rounded-full shrink-0" />
+        <div className="space-y-2 flex-1 w-full sm:w-auto">
+          <Skeleton className="h-4 w-40 rounded" />
+          <Skeleton className="h-3.5 w-32 rounded" />
+          <Skeleton className="h-4 w-20 rounded-full" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          <Skeleton className="h-6 w-36 rounded" />
-          <Skeleton className="h-10 rounded-md" />
-          <Skeleton className="h-10 rounded-md" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-4 space-y-3">
+          <Skeleton className="h-5 w-32 rounded" />
+          <Skeleton className="h-9 rounded-md" />
+          <Skeleton className="h-9 rounded-md" />
         </div>
-        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          <Skeleton className="h-6 w-36 rounded" />
-          <Skeleton className="h-10 rounded-md" />
-          <Skeleton className="h-10 rounded-md" />
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-4 space-y-3">
+          <Skeleton className="h-5 w-32 rounded" />
+          <Skeleton className="h-9 rounded-md" />
+          <Skeleton className="h-9 rounded-md" />
         </div>
       </div>
     </div>

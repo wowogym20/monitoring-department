@@ -54,7 +54,7 @@ export const navigationItems: NavItem[] = [
     roles: ["super_admin", "admin"],
   },
   {
-    title: "Akun Ketua Dept",
+    title: "Ketua Departemen",
     href: "/ketua",
     icon: UserCog,
     roles: ["super_admin"],

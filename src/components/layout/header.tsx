@@ -196,10 +196,10 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="flex items-center gap-2 h-9 px-1.5 sm:px-2 rounded-full sm:rounded-md hover:bg-muted/80 shrink-0"
+              className="group flex items-center gap-2 sm:gap-2.5 h-10 px-1.5 sm:px-2.5 rounded-full border border-border/50 hover:border-border/80 bg-background/50 hover:bg-muted/70 transition-all duration-150 cursor-pointer shrink-0 data-[state=open]:bg-muted data-[state=open]:border-border"
               aria-label="Menu akun pengguna"
             >
-              <Avatar className="size-8 ring-1 ring-border shrink-0">
+              <Avatar className="size-8 ring-1 ring-border/80 shrink-0">
                 {user.fotoUrl && (
                   <AvatarImage
                     src={user.fotoUrl}
@@ -212,45 +212,62 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
                 </AvatarFallback>
               </Avatar>
 
-              {/* Nama Pengguna & Email (Desktop Lebar >= lg) */}
-              <div className="hidden lg:flex flex-col text-left overflow-hidden">
-                <span className="text-xs font-semibold text-foreground leading-tight truncate max-w-[120px] xl:max-w-[160px]">
+              {/* Nama Pengguna & Email (Responsif: Nama di >= md, Email di >= lg) */}
+              <div className="hidden md:flex flex-col text-left justify-center overflow-hidden min-w-0">
+                <span className="text-xs font-semibold text-foreground leading-tight truncate max-w-[130px] lg:max-w-[170px] xl:max-w-[220px]">
                   {user.nama}
                 </span>
-                <span className="text-[10px] text-muted-foreground truncate max-w-[120px] xl:max-w-[160px]">
+                <span className="hidden lg:block text-[11px] text-muted-foreground leading-tight truncate max-w-[130px] lg:max-w-[170px] xl:max-w-[220px]">
                   {user.email}
                 </span>
               </div>
 
-              <ChevronDown className="size-3.5 text-muted-foreground hidden sm:block shrink-0" />
+              <ChevronDown className="size-3.5 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180 hidden sm:block shrink-0" />
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-60 p-1.5">
-            {/* Header Ringkasan Akun */}
-            <DropdownMenuLabel className="p-2">
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {user.nama}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {user.email}
-                </p>
-                <div className="pt-1.5 flex items-center gap-1.5">
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] px-2 py-0.5 font-normal ${roleBadgeStyle}`}
-                  >
-                    {roleIcon}
-                    <span className="ml-1">{roleLabel}</span>
-                  </Badge>
-                </div>
-                {user.departmentName && (
-                  <p className="text-[11px] text-muted-foreground pt-1 flex items-center gap-1">
-                    <Building2 className="size-3 shrink-0" />
-                    <span className="truncate">{user.departmentName}</span>
+          <DropdownMenuContent align="end" className="w-72 p-1.5 shadow-lg border-border">
+            {/* Header Ringkasan Akun dengan Avatar & Rincian Profil */}
+            <DropdownMenuLabel className="p-2.5 font-normal">
+              <div className="flex items-start gap-3">
+                <Avatar className="size-10 ring-1 ring-border shrink-0 mt-0.5">
+                  {user.fotoUrl && (
+                    <AvatarImage
+                      src={user.fotoUrl}
+                      alt={user.nama}
+                      className="object-cover"
+                    />
+                  )}
+                  <AvatarFallback className="text-sm font-bold bg-primary text-primary-foreground">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+
+                <div className="flex flex-col space-y-1 min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                    {user.nama}
                   </p>
-                )}
+                  <p className="text-xs text-muted-foreground truncate leading-tight">
+                    {user.email}
+                  </p>
+
+                  <div className="pt-1.5 flex flex-wrap items-center gap-1.5">
+                    <Badge
+                      variant="outline"
+                      className={`text-[10px] px-2 py-0.5 font-medium ${roleBadgeStyle}`}
+                    >
+                      {roleIcon}
+                      <span className="ml-1">{roleLabel}</span>
+                    </Badge>
+                  </div>
+
+                  {user.departmentName && (
+                    <p className="text-[11px] text-muted-foreground pt-0.5 flex items-center gap-1 truncate">
+                      <Building2 className="size-3 text-primary shrink-0" />
+                      <span className="truncate">{user.departmentName}</span>
+                    </p>
+                  )}
+                </div>
               </div>
             </DropdownMenuLabel>
 
@@ -260,10 +277,10 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
             <DropdownMenuItem asChild>
               <Link
                 href="/profil"
-                className="cursor-pointer flex items-center gap-2 px-2.5 py-2 text-sm text-foreground hover:bg-muted rounded-sm"
+                className="cursor-pointer flex items-center gap-2.5 px-2.5 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
               >
-                <UserIcon className="size-4 text-muted-foreground" />
-                <span>Profil Saya</span>
+                <UserIcon className="size-4 text-muted-foreground shrink-0" />
+                <span className="font-medium">Profil Saya</span>
               </Link>
             </DropdownMenuItem>
 
@@ -273,7 +290,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
             <form action={logoutAction} className="w-full">
               <button
                 type="submit"
-                className="w-full text-left px-2.5 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-sm flex items-center gap-2 transition-colors cursor-pointer font-medium"
+                className="w-full text-left px-2.5 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md flex items-center gap-2.5 transition-colors cursor-pointer font-medium"
               >
                 <LogOut className="size-4 shrink-0" />
                 <span>Keluar (Logout)</span>

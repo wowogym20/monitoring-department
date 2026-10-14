@@ -119,29 +119,29 @@ export function AccountProfileCard({
   }
 
   return (
-    <Card className="border border-border/80 shadow-xs overflow-hidden bg-card">
-      <CardHeader className="p-4 sm:p-6 pb-4 border-b border-border/60">
+    <Card className="border border-border/80 shadow-xs overflow-hidden bg-card gap-0 py-0">
+      <CardHeader className="p-3.5 sm:p-4 pb-2.5 sm:pb-3 border-b border-border/60">
         <div className="flex items-center gap-2.5">
-          <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-            <UserCircle className="size-4" />
+          <div className="size-7 sm:size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+            <UserCircle className="size-3.5 sm:size-4" />
           </div>
           <div>
-            <CardTitle className="text-base sm:text-lg font-semibold text-foreground">
+            <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
               Informasi Akun &amp; Foto Profil
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm mt-0.5">
+            <CardDescription className="text-xs text-muted-foreground mt-0.5">
               Informasi peran dan atribusi departemen ditetapkan oleh sistem. Anda dapat memperbarui foto profil kapan saja.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col md:flex-row md:items-center gap-6 lg:gap-8">
+      <CardContent className="p-3.5 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 md:gap-6">
           {/* Bagian Foto Profil */}
-          <div className="flex flex-col items-center text-center shrink-0 w-full md:w-auto md:min-w-[190px]">
-            <div className="relative group mb-3">
-              <Avatar className="size-24 sm:size-28 ring-4 ring-primary/15 border border-border shadow-xs">
+          <div className="flex flex-col items-center text-center shrink-0 w-full sm:w-auto sm:min-w-[160px]">
+            <div className="relative group mb-2.5">
+              <Avatar className="size-20 sm:size-22 ring-2 ring-primary/20 border border-border shadow-2xs">
                 {previewUrl && (
                   <AvatarImage
                     src={previewUrl}
@@ -149,7 +149,7 @@ export function AccountProfileCard({
                     className="object-cover"
                   />
                 )}
-                <AvatarFallback className="text-2xl font-bold bg-primary text-primary-foreground">
+                <AvatarFallback className="text-xl sm:text-2xl font-bold bg-primary text-primary-foreground">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -158,7 +158,7 @@ export function AccountProfileCard({
                 className="absolute inset-0 bg-black/45 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[11px] font-medium gap-1"
                 title="Klik untuk ubah foto"
               >
-                <Camera className="size-6" />
+                <Camera className="size-5" />
                 <span>Ubah</span>
               </div>
             </div>
@@ -178,47 +178,47 @@ export function AccountProfileCard({
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isPending}
-              className="h-8 px-3 text-xs gap-1.5 font-medium rounded-lg"
+              className="h-7.5 px-2.5 text-xs gap-1.5 font-medium rounded-lg"
             >
               {isPending ? (
-                <Loader2 className="size-3.5 animate-spin text-primary" />
+                <Loader2 className="size-3 animate-spin text-primary" />
               ) : (
-                <Upload className="size-3.5" />
+                <Upload className="size-3" />
               )}
               <span>Pilih Foto Baru</span>
             </Button>
-            <p className="text-[11px] text-muted-foreground mt-1.5">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1">
               JPG, PNG, atau WebP (maks. 2MB)
             </p>
           </div>
 
           {/* Garis Pembatas Vertikal (Desktop/Tablet) / Horizontal (Mobile) */}
-          <div className="hidden md:block w-px self-stretch bg-border/70" />
-          <div className="block md:hidden h-px w-full bg-border/70" />
+          <div className="hidden sm:block w-px self-stretch bg-border/60 my-0.5" />
+          <div className="block sm:hidden h-px w-full bg-border/60 my-1" />
 
           {/* Bagian Informasi Akun */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 flex-1 min-w-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 flex-1 min-w-0">
             {/* 1. Email Akun */}
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                <Mail className="size-3.5 text-primary" />
+            <div className="space-y-0.5">
+              <span className="text-[11px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Mail className="size-3 text-primary shrink-0" />
                 <span>Email Akun</span>
               </span>
-              <p className="text-sm font-semibold text-foreground truncate" title={email}>
+              <p className="text-xs sm:text-sm font-semibold text-foreground truncate" title={email}>
                 {email}
               </p>
             </div>
 
             {/* 2. Peran Pengguna */}
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                <ShieldCheck className="size-3.5 text-primary" />
+            <div className="space-y-0.5">
+              <span className="text-[11px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <ShieldCheck className="size-3 text-primary shrink-0" />
                 <span>Peran Pengguna (Role)</span>
               </span>
               <div>
                 <Badge
                   variant="outline"
-                  className={cn("text-xs font-medium px-2 py-0.5", roleLabels[role]?.badgeClass)}
+                  className={cn("text-[11px] font-medium px-2 py-0.5", roleLabels[role]?.badgeClass)}
                 >
                   {roleLabels[role]?.label || role}
                 </Badge>
@@ -226,16 +226,16 @@ export function AccountProfileCard({
             </div>
 
             {/* 3. Status Akun */}
-            <div className="space-y-1">
-              <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                <CheckCircle2 className="size-3.5 text-primary" />
+            <div className="space-y-0.5">
+              <span className="text-[11px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <CheckCircle2 className="size-3 text-primary shrink-0" />
                 <span>Status Akun</span>
               </span>
               <div>
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-xs font-medium px-2 py-0.5",
+                    "text-[11px] font-medium px-2 py-0.5",
                     isActive
                       ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/25"
                       : "bg-destructive/15 text-destructive border-destructive/25"
@@ -248,13 +248,13 @@ export function AccountProfileCard({
 
             {/* 4. Departemen yang Dipimpin (jika role user / ketua departemen) */}
             {role === "user" && (
-              <div className="space-y-1 sm:col-span-2">
-                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                  <Building2 className="size-3.5 text-primary" />
+              <div className="space-y-0.5 sm:col-span-2">
+                <span className="text-[11px] sm:text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <Building2 className="size-3 text-primary shrink-0" />
                   <span>Departemen yang Dipimpin</span>
                 </span>
-                <div className="p-2.5 rounded-lg bg-muted/40 border border-border/60">
-                  <p className="text-sm font-semibold text-foreground">
+                <div className="p-2 px-2.5 rounded-md bg-muted/40 border border-border/60">
+                  <p className="text-xs sm:text-sm font-semibold text-foreground">
                     {departmentNama || "Belum ditugaskan ke departemen"}
                   </p>
                 </div>
@@ -329,23 +329,24 @@ export function EditProfileForm({
   }
 
   return (
-    <Card className="border border-border shadow-xs">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-foreground">
+    <Card className="border border-border shadow-xs gap-0 py-0 overflow-hidden flex flex-col">
+      <CardHeader className="p-3.5 sm:p-4 pb-2.5 sm:pb-3 border-b border-border/50">
+        <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
           Informasi Personal
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs text-muted-foreground mt-0.5">
           Ubah nama lengkap dan nomor kontak Anda.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nama">Nama Lengkap</Label>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
+        <CardContent className="p-3.5 sm:p-4 space-y-3 flex-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="nama" className="text-xs font-medium">Nama Lengkap</Label>
             <Input
               id="nama"
               placeholder="Masukkan nama lengkap"
               disabled={isPending}
+              className="h-9 text-xs sm:text-sm"
               {...register("nama")}
             />
             {errors.nama && (
@@ -353,12 +354,13 @@ export function EditProfileForm({
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="no_hp">Nomor HP / WhatsApp</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="no_hp" className="text-xs font-medium">Nomor HP / WhatsApp</Label>
             <Input
               id="no_hp"
               placeholder="Contoh: 081234567890"
               disabled={isPending}
+              className="h-9 text-xs sm:text-sm"
               {...register("no_hp")}
             />
             {errors.no_hp && (
@@ -366,9 +368,9 @@ export function EditProfileForm({
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end pt-2">
-          <Button type="submit" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <CardFooter className="p-3 sm:p-3.5 border-t border-border/40 bg-muted/15 flex justify-end">
+          <Button type="submit" disabled={isPending} className="h-8.5 px-3.5 text-xs sm:text-sm font-semibold">
+            {isPending && <Loader2 className="mr-2 size-3.5 animate-spin" />}
             Simpan Perubahan
           </Button>
         </CardFooter>
@@ -414,24 +416,25 @@ export function UpdatePasswordForm() {
   }
 
   return (
-    <Card className="border border-border shadow-xs">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold text-foreground">
+    <Card className="border border-border shadow-xs gap-0 py-0 overflow-hidden flex flex-col">
+      <CardHeader className="p-3.5 sm:p-4 pb-2.5 sm:pb-3 border-b border-border/50">
+        <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
           Ganti Kata Sandi
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-xs text-muted-foreground mt-0.5">
           Gunakan kata sandi baru yang kuat minimal 8 karakter.
         </CardDescription>
       </CardHeader>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="passwordBaru">Kata Sandi Baru</Label>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1">
+        <CardContent className="p-3.5 sm:p-4 space-y-3 flex-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="passwordBaru" className="text-xs font-medium">Kata Sandi Baru</Label>
             <Input
               id="passwordBaru"
               type="password"
               placeholder="Minimal 8 karakter"
               disabled={isPending}
+              className="h-9 text-xs sm:text-sm"
               {...register("passwordBaru")}
             />
             {errors.passwordBaru && (
@@ -441,13 +444,14 @@ export function UpdatePasswordForm() {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="konfirmasiPassword">Konfirmasi Kata Sandi Baru</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="konfirmasiPassword" className="text-xs font-medium">Konfirmasi Kata Sandi Baru</Label>
             <Input
               id="konfirmasiPassword"
               type="password"
               placeholder="Ulangi kata sandi baru"
               disabled={isPending}
+              className="h-9 text-xs sm:text-sm"
               {...register("konfirmasiPassword")}
             />
             {errors.konfirmasiPassword && (
@@ -457,9 +461,9 @@ export function UpdatePasswordForm() {
             )}
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end pt-2">
-          <Button type="submit" variant="secondary" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <CardFooter className="p-3 sm:p-3.5 border-t border-border/40 bg-muted/15 flex justify-end">
+          <Button type="submit" variant="secondary" disabled={isPending} className="h-8.5 px-3.5 text-xs sm:text-sm font-semibold">
+            {isPending && <Loader2 className="mr-2 size-3.5 animate-spin" />}
             Perbarui Kata Sandi
           </Button>
         </CardFooter>

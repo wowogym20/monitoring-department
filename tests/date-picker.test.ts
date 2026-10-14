@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { format, parseISO, isValid } from "date-fns"
+import { format, isValid } from "date-fns"
 import { id } from "date-fns/locale"
 
 describe("Komponen DatePicker & Utilitas Tanggal", () => {

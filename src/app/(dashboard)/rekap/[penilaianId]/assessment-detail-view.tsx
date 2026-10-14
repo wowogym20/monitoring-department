@@ -400,7 +400,8 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
             </CardHeader>
 
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
+              {/* Tampilan Desktop: Tabel Tabular 4 Kolom */}
+              <div className="hidden sm:block overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -444,6 +445,45 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+
+              {/* Tampilan Mobile: Kartu Skor Responsif Bebas Scroll Horizontal (360px+) */}
+              <div className="block sm:hidden divide-y divide-border/50">
+                {scores.map((s, idx) => (
+                  <div key={s.aspect_id} className="p-3.5 space-y-2 hover:bg-muted/15 transition-colors">
+                    <div className="flex items-start gap-2">
+                      <span className="font-mono text-xs font-bold text-muted-foreground shrink-0 mt-0.5">
+                        #{idx + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-xs sm:text-sm text-foreground">
+                          {s.aspect_nama}
+                        </h4>
+                        {s.aspect_deskripsi && (
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                            {s.aspect_deskripsi}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1.5 border-t border-border/40 text-xs">
+                      <span className="text-[11px] text-muted-foreground font-medium">
+                        Capaian Skor:
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <div className="inline-flex size-6 rounded-full items-center justify-center font-bold text-xs bg-muted font-mono border border-border/80">
+                          {s.nilai > 0 ? s.nilai : "-"}
+                        </div>
+                        {s.nilai > 0 ? (
+                          <SkorBadge skor={s.nilai} showScore={false} />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>

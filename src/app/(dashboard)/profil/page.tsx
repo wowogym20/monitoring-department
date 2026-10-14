@@ -10,13 +10,13 @@ export default async function ProfilPage() {
   const currentUser = await requireRole()
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-4 sm:space-y-5 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
-          <UserCheck className="size-7 text-primary shrink-0" />
-          Profil Pengguna
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <UserCheck className="size-5 sm:size-6 text-primary shrink-0" />
+          <span>Profil Pengguna</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
           Kelola informasi personal, foto profil, dan keamanan akun Anda.
         </p>
       </div>
@@ -32,7 +32,7 @@ export default async function ProfilPage() {
       />
 
       {/* Form Edit Profil & Ganti Password */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3.5 sm:gap-4 md:grid-cols-2">
         <EditProfileForm
           initialNama={currentUser.nama}
           initialNoHp={currentUser.no_hp}

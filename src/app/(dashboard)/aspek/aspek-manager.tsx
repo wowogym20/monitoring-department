@@ -54,6 +54,7 @@ import {
   deleteAspectAction,
 } from "@/lib/actions/aspek"
 import { AssessmentAspect, UserRole } from "@/types/database"
+import { cn } from "@/lib/utils"
 
 interface AspekManagerProps {
   initialAspects: AssessmentAspect[]
@@ -259,159 +260,316 @@ export function AspekManager({
           )}
         </div>
 
-        <div className="rounded-md border border-border bg-card overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-16">Urutan</TableHead>
-                <TableHead>Nama Aspek</TableHead>
-                <TableHead>Deskripsi / Rubrik Penilaian</TableHead>
-                <TableHead>Status</TableHead>
-                {isSuperAdmin && (
-                  <>
-                    <TableHead className="w-28 text-center">Atur Urutan</TableHead>
-                    <TableHead className="text-right w-20">Aksi</TableHead>
-                  </>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedAspects.length > 0 ? (
-                sortedAspects.map((aspect, idx) => {
-                  const isFirst = idx === 0
-                  const isLast = idx === sortedAspects.length - 1
-
-                  return (
-                    <TableRow key={aspect.id}>
-                      <TableCell className="font-mono font-bold text-center">
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {aspect.urutan}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-semibold text-foreground">
-                        {aspect.nama}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-md">
-                        {aspect.deskripsi || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={aspect.is_active ? "default" : "secondary"}
-                          className={
-                            aspect.is_active
-                              ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
-                              : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
-                          }
-                        >
-                          {aspect.is_active ? (
-                            <>
-                              <CheckCircle2 className="size-3 mr-1 shrink-0" />
-                              <span>Aktif</span>
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="size-3 mr-1 shrink-0" />
-                              <span>Nonaktif</span>
-                            </>
-                          )}
-                        </Badge>
-                      </TableCell>
-                      {isSuperAdmin && (
-                        <>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="size-7"
-                                disabled={isFirst}
-                                onClick={() => handleReorder(aspect.id, "up")}
-                                title="Pindah ke Atas"
-                                aria-label="Naikkan urutan"
-                              >
-                                <ArrowUp className="size-3.5" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="size-7"
-                                disabled={isLast}
-                                onClick={() => handleReorder(aspect.id, "down")}
-                                title="Pindah ke Bawah"
-                                aria-label="Turunkan urutan"
-                              >
-                                <ArrowDown className="size-3.5" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-8 p-0"
-                                  aria-label="Aksi Aspek"
-                                >
-                                  <MoreHorizontal className="size-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-44">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setEditAspect(aspect)
-                                    setNama(aspect.nama)
-                                    setDeskripsi(aspect.deskripsi || "")
-                                    setUrutan(aspect.urutan)
-                                    setIsActive(aspect.is_active)
-                                  }}
-                                >
-                                  <Edit className="size-4 mr-2" />
-                                  Ubah Aspek
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleToggleStatus(aspect)}
-                                >
-                                  {aspect.is_active ? (
-                                    <>
-                                      <XCircle className="size-4 mr-2 text-amber-600" />
-                                      Nonaktifkan
-                                    </>
-                                  ) : (
-                                    <>
-                                      <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
-                                      Aktifkan
-                                    </>
-                                  )}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  className="text-destructive focus:bg-destructive/10 focus:text-destructive"
-                                  onClick={() => setDeleteAspect(aspect)}
-                                >
-                                  <Trash2 className="size-4 mr-2" />
-                                  Hapus Aspek
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </>
-                      )}
-                    </TableRow>
-                  )
-                })
-              ) : (
+        {/* Tampilan Desktop: Tabel Standar 6 Kolom */}
+        <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={isSuperAdmin ? 6 : 4}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    Belum ada aspek penilaian yang dikonfigurasi.
-                  </TableCell>
+                  <TableHead className="w-16">Urutan</TableHead>
+                  <TableHead>Nama Aspek</TableHead>
+                  <TableHead>Deskripsi / Rubrik Penilaian</TableHead>
+                  <TableHead>Status</TableHead>
+                  {isSuperAdmin && (
+                    <>
+                      <TableHead className="w-28 text-center">Atur Urutan</TableHead>
+                      <TableHead className="text-right w-20">Aksi</TableHead>
+                    </>
+                  )}
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {sortedAspects.length > 0 ? (
+                  sortedAspects.map((aspect, idx) => {
+                    const isFirst = idx === 0
+                    const isLast = idx === sortedAspects.length - 1
+
+                    return (
+                      <TableRow key={aspect.id}>
+                        <TableCell className="font-mono font-bold text-center">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {aspect.urutan}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-semibold text-foreground">
+                          {aspect.nama}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-md">
+                          {aspect.deskripsi || "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={aspect.is_active ? "default" : "secondary"}
+                            className={
+                              aspect.is_active
+                                ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                                : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
+                            }
+                          >
+                            {aspect.is_active ? (
+                              <>
+                                <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                                <span>Aktif</span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="size-3 mr-1 shrink-0" />
+                                <span>Nonaktif</span>
+                              </>
+                            )}
+                          </Badge>
+                        </TableCell>
+                        {isSuperAdmin && (
+                          <>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-1">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="size-7"
+                                  disabled={isFirst}
+                                  onClick={() => handleReorder(aspect.id, "up")}
+                                  title="Pindah ke Atas"
+                                  aria-label="Naikkan urutan"
+                                >
+                                  <ArrowUp className="size-3.5" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="size-7"
+                                  disabled={isLast}
+                                  onClick={() => handleReorder(aspect.id, "down")}
+                                  title="Pindah ke Bawah"
+                                  aria-label="Turunkan urutan"
+                                >
+                                  <ArrowDown className="size-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="size-8 p-0"
+                                    aria-label="Aksi Aspek"
+                                  >
+                                    <MoreHorizontal className="size-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-44">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setEditAspect(aspect)
+                                      setNama(aspect.nama)
+                                      setDeskripsi(aspect.deskripsi || "")
+                                      setUrutan(aspect.urutan)
+                                      setIsActive(aspect.is_active)
+                                    }}
+                                  >
+                                    <Edit className="size-4 mr-2" />
+                                    Ubah Aspek
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleToggleStatus(aspect)}
+                                  >
+                                    {aspect.is_active ? (
+                                      <>
+                                        <XCircle className="size-4 mr-2 text-amber-600" />
+                                        Nonaktifkan
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
+                                        Aktifkan
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                                    onClick={() => setDeleteAspect(aspect)}
+                                  >
+                                    <Trash2 className="size-4 mr-2" />
+                                    Hapus Aspek
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </>
+                        )}
+                      </TableRow>
+                    )
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={isSuperAdmin ? 6 : 4}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      Belum ada aspek penilaian yang dikonfigurasi.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        {/* Tampilan Mobile: Kartu Responsif Bebas Scroll Horizontal (Optimal untuk HP 360px+) */}
+        <div className="block md:hidden space-y-3">
+          {sortedAspects.length > 0 ? (
+            sortedAspects.map((aspect, idx) => {
+              const isFirst = idx === 0
+              const isLast = idx === sortedAspects.length - 1
+
+              return (
+                <div
+                  key={`mobile-${aspect.id}`}
+                  className="rounded-lg border border-border bg-card p-3.5 space-y-3 shadow-2xs"
+                >
+                  {/* Top Bar: Urutan + Nama + Status & Menu Aksi */}
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-start gap-2 min-w-0">
+                      <Badge
+                        variant="outline"
+                        className="font-mono text-xs font-bold px-2 py-0.5 bg-muted/40 shrink-0 mt-0.5"
+                      >
+                        #{aspect.urutan}
+                      </Badge>
+                      <h3 className="font-bold text-sm text-foreground leading-snug">
+                        {aspect.nama}
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Badge
+                        variant={aspect.is_active ? "default" : "secondary"}
+                        className={cn(
+                          "text-[11px] px-2 py-0.5",
+                          aspect.is_active
+                            ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                            : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
+                        )}
+                      >
+                        {aspect.is_active ? (
+                          <>
+                            <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                            <span>Aktif</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="size-3 mr-1 shrink-0" />
+                            <span>Nonaktif</span>
+                          </>
+                        )}
+                      </Badge>
+
+                      {isSuperAdmin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 p-0 text-muted-foreground hover:text-foreground"
+                              aria-label="Aksi Aspek"
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditAspect(aspect)
+                                setNama(aspect.nama)
+                                setDeskripsi(aspect.deskripsi || "")
+                                setUrutan(aspect.urutan)
+                                setIsActive(aspect.is_active)
+                              }}
+                            >
+                              <Edit className="size-4 mr-2" />
+                              Ubah Aspek
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleToggleStatus(aspect)}
+                            >
+                              {aspect.is_active ? (
+                                <>
+                                  <XCircle className="size-4 mr-2 text-amber-600" />
+                                  Nonaktifkan
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
+                                  Aktifkan
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                              onClick={() => setDeleteAspect(aspect)}
+                            >
+                              <Trash2 className="size-4 mr-2" />
+                              Hapus Aspek
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Body: Deskripsi / Panduan Rubrik */}
+                  <div className="rounded-md bg-muted/30 border border-border/50 p-2.5 text-xs text-muted-foreground leading-relaxed">
+                    {aspect.deskripsi || (
+                      <span className="italic text-muted-foreground/80">
+                        Belum ada panduan rubrik untuk aspek ini.
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Footer (Khusus Super Admin): Kontrol Urutan Sentuh Ramah Jempol */}
+                  {isSuperAdmin && (
+                    <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs">
+                      <span className="text-[11px] text-muted-foreground font-medium">
+                        Atur Posisi Tampilan:
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7.5 px-2.5 text-xs gap-1"
+                          disabled={isFirst}
+                          onClick={() => handleReorder(aspect.id, "up")}
+                          aria-label="Naikkan urutan"
+                        >
+                          <ArrowUp className="size-3.5" />
+                          <span>Naik</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7.5 px-2.5 text-xs gap-1"
+                          disabled={isLast}
+                          onClick={() => handleReorder(aspect.id, "down")}
+                          aria-label="Turunkan urutan"
+                        >
+                          <ArrowDown className="size-3.5" />
+                          <span>Turun</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          ) : (
+            <div className="p-6 text-center text-xs text-muted-foreground bg-card rounded-lg border border-dashed">
+              Belum ada aspek penilaian yang dikonfigurasi.
+            </div>
+          )}
         </div>
       </div>
 
