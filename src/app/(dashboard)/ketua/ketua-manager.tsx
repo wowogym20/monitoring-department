@@ -880,7 +880,7 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
                 onChange={(e) => setEditEmail(e.target.value)}
               />
               <p className="text-[11px] text-muted-foreground">
-                Mengubah email akan memperbarui akun login Supabase Auth ketua secara langsung.
+                Mengubah email akan memperbarui akun login Anda secara langsung.
               </p>
             </div>
 
