@@ -57,15 +57,15 @@ test.describe("Alur Manajemen Anggota: Ketua (Mobile 360px) & Admin SDM (Impor M
 
     // Submit tambah anggota
     await page.click("#btn-submit-member")
+    await expect(page.locator('text=Tambah Anggota Baru')).not.toBeVisible({ timeout: 5000 }).catch(() => {})
+
+    // 4. Pencarian Anggota (filter NIP agar langsung terlihat di halaman aktif)
+    await page.fill("#search-anggota", nipAnggota)
 
     // Verifikasi kartu anggota baru tampil di viewport mobile
     const card = page.locator('[data-testid="member-card"]').filter({ hasText: namaAnggota })
     await expect(card).toBeVisible({ timeout: 10000 })
     await expect(card.getByText(jabatanAwal)).toBeVisible()
-
-    // 4. Pencarian Anggota
-    await page.fill("#search-anggota", nipAnggota)
-    await expect(card).toBeVisible({ timeout: 5000 })
 
     // 5. Ubah Data Anggota (Edit)
     const btnUbah = card.locator('button:has-text("Ubah")')

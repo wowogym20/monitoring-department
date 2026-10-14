@@ -1,214 +1,245 @@
-import { createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { requireRole } from "@/lib/auth"
+import { getDashboardData } from "@/lib/actions/dashboard"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { UserRole } from "@/types/database"
 import {
   Users,
-  ClipboardCheck,
   Building2,
-  CalendarDays,
-  ArrowRight,
   TrendingUp,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react"
+import { KpiCard } from "@/components/dashboard/kpi-card"
+import { ProgressCard } from "@/components/dashboard/progress-card"
+import { DeptScoreChart } from "@/components/dashboard/dept-score-chart"
+import { CompletionChart } from "@/components/dashboard/completion-chart"
+import { AttentionList } from "@/components/dashboard/attention-list"
+import { ScoreDistribution } from "@/components/dashboard/score-distribution"
+import { PeriodSelector } from "@/components/dashboard/period-selector"
+import { EmptyState } from "@/components/dashboard/empty-state"
+import { SuperAdminShortcuts } from "@/components/dashboard/superadmin-shortcuts"
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
+interface DashboardPageProps {
+  searchParams: Promise<{
+    periodId?: string
+  }>
+}
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const currentUser = await requireRole("super_admin", "admin", "user")
+  const resolvedSearchParams = await searchParams
+  const data = await getDashboardData(resolvedSearchParams?.periodId)
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("nama, role")
-    .eq("id", user?.id || "")
-    .single()
-
-  const role: UserRole = profile?.role || "user"
-  const nama = profile?.nama || "Pengguna"
-
-  // Ambil data statistik ringkas
-  let departmentInfo = null
-  let memberCount = 0
-  let departmentCount = 0
-
-  if (role === "user") {
-    const { data: dept } = await supabase
-      .from("departments")
-      .select("id, nama, kode")
-      .eq("ketua_id", user?.id || "")
-      .single()
-    departmentInfo = dept
-
-    if (dept) {
-      const { count } = await supabase
-        .from("members")
-        .select("*", { count: "exact", head: true })
-        .eq("department_id", dept.id)
-        .is("deleted_at", null)
-      memberCount = count || 0
-    }
-  } else {
-    const { count: deptCount } = await supabase
-      .from("departments")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true)
-    departmentCount = deptCount || 0
-
-    const { count: memCount } = await supabase
-      .from("members")
-      .select("*", { count: "exact", head: true })
-      .is("deleted_at", null)
-    memberCount = memCount || 0
+  if (!data) {
+    return <EmptyState type="no_period" role={currentUser.role} />
   }
 
-  // Ambil periode penilaian aktif
-  const { data: activePeriod } = await supabase
-    .from("assessment_periods")
-    .select("nama, status")
-    .eq("status", "open")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .single()
+  const isKetua = data.role === "user"
+  const isSuperAdmin = data.role === "super_admin"
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner */}
-      <div className="p-6 rounded-xl border border-border bg-gradient-to-r from-card to-muted/40 shadow-xs">
+      {/* 1. Header Banner & Selamat Datang */}
+      <div className="p-5 sm:p-6 rounded-xl border border-border bg-gradient-to-r from-card to-muted/40 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">
-                Selamat Datang, {nama}
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                Selamat Datang, {currentUser.nama}
               </h1>
-              <Badge variant="outline" className="text-xs bg-card">
-                {role === "super_admin" && "Super-Admin"}
-                {role === "admin" && "Admin SDM"}
-                {role === "user" && "Ketua Departemen"}
+              <Badge
+                variant="outline"
+                className="text-xs bg-card font-semibold border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
+              >
+                {currentUser.role === "super_admin" && "Super-Admin"}
+                {currentUser.role === "admin" && "Admin SDM"}
+                {currentUser.role === "user" && "Ketua Departemen"}
               </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {role === "user" && departmentInfo
-                ? `Mengelola penilaian untuk ${departmentInfo.nama}`
-                : "Portal monitoring dan standarisasi kinerja departemen Tazakka"}
+
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 leading-relaxed">
+              {isKetua
+                ? data.department
+                  ? `Mengelola evaluasi kinerja dan standarisasi nilai untuk ${data.department.nama}`
+                  : "Akun ketua belum ditetapkan ke salah satu departemen"
+                : "Portal monitoring, rekapitulasi, dan standarisasi kinerja 14 departemen Tazakka"}
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link href={role === "user" ? "/penilaian" : "/rekap"}>
-              <Button variant="default" className="gap-2">
-                <span>{role === "user" ? "Mulai Penilaian" : "Lihat Rekap"}</span>
-                <ArrowRight className="size-4" />
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href={isKetua ? "/penilaian" : "/rekap"}>
+              <Button variant="default" className="gap-2 font-semibold text-xs sm:text-sm">
+                <span>{isKetua ? "Mulai Penilaian" : "Buka Rekapitulasi"}</span>
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Card 1: Anggota / Departemen */}
-        <Card className="border-border shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              {role === "user" ? "Anggota Departemen" : "Total Departemen Aktif"}
-            </CardTitle>
-            {role === "user" ? (
-              <Users className="size-4 text-emerald-600 dark:text-emerald-400" />
-            ) : (
-              <Building2 className="size-4 text-emerald-600 dark:text-emerald-400" />
-            )}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-extrabold text-foreground">
-              {role === "user" ? memberCount : departmentCount}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {role === "user"
-                ? "Orang yang perlu dinilai di periode ini"
-                : "14 departemen terdaftar dalam sistem"}
-            </p>
-          </CardContent>
-        </Card>
+      {/* 2. Selector Periode (Default: Periode Terbuka) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3.5 rounded-lg border border-border bg-card/60 shadow-2xs">
+        <PeriodSelector
+          periods={data.periods}
+          selectedPeriodId={data.period?.id || null}
+        />
 
-        {/* Card 2: Periode Penilaian */}
-        <Card className="border-border shadow-xs">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Periode Penilaian
-            </CardTitle>
-            <CalendarDays className="size-4 text-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-lg font-bold truncate text-foreground">
-              {activePeriod?.nama || "Tidak ada periode aktif"}
-            </div>
-            <div className="mt-1 flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-              <span className="text-xs text-muted-foreground">Status: Terbuka (Open)</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Metrik Kinerja */}
-        <Card className="border-border shadow-xs sm:col-span-2 lg:col-span-1">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Target Kinerja
-            </CardTitle>
-            <TrendingUp className="size-4 text-teal-600 dark:text-teal-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-extrabold text-foreground">Likert 1–5</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Standar 7 Aspek Kinerja, Ibadah, dan Akhlak
-            </p>
-          </CardContent>
-        </Card>
+        {data.period && (
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <Sparkles className="size-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <span>
+              Menampilkan data untuk: <strong className="text-foreground">{data.period.nama}</strong>
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Quick Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Manajemen Anggota</CardTitle>
-            <CardDescription>
-              {role === "user"
-                ? "Perbarui daftar nama, NIP, dan jabatan anggota departemen Anda"
-                : "Pantau daftar anggota di seluruh 14 departemen"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/anggota">
-              <Button variant="outline" size="sm" className="w-full justify-between">
-                <span>Buka Data Anggota</span>
-                <Users className="size-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+      {/* Jika belum ada periode dalam sistem */}
+      {!data.period ? (
+        <EmptyState type="no_period" role={data.role} />
+      ) : isKetua ? (
+        /* --------------------------------------------------------------------- */
+        /* 3. TAMPILAN DASHBOARD KETUA DEPARTEMEN (ROLE: USER)                   */
+        /* --------------------------------------------------------------------- */
+        !data.department ? (
+          <EmptyState type="no_department" role="user" />
+        ) : (
+          <div className="space-y-6">
+            {/* Baris KPI Ketua (4 Kartu dengan Garis Atas Gradien Emerald -> Oren) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <KpiCard
+                title="Anggota Departemen"
+                value={`${data.kpi.totalMembers} Orang`}
+                subtitle="Total anggota aktif dalam departemen Anda"
+                icon={Users}
+              />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Lembar Penilaian</CardTitle>
-            <CardDescription>
-              {role === "user"
-                ? "Isi formulir penilaian 7 aspek untuk setiap anggota"
-                : "Tinjau rekapitulasi capaian dan berikan approval atau revisi"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href={role === "user" ? "/penilaian" : "/rekap"}>
-              <Button variant="secondary" size="sm" className="w-full justify-between">
-                <span>{role === "user" ? "Buka Form Penilaian" : "Buka Rekapitulasi"}</span>
-                <ClipboardCheck className="size-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+              <KpiCard
+                title="Sudah Dinilai"
+                value={`${data.kpi.assessedCount} Orang`}
+                subtitle={`${data.progress.completionPercent}% dari total anggota telah dinilai`}
+                icon={CheckCircle2}
+                badge={{
+                  text: `${data.progress.completionPercent}%`,
+                  variant: data.progress.completionPercent === 100 ? "default" : "outline",
+                  className: data.progress.completionPercent === 100 ? "bg-emerald-700 text-white dark:bg-emerald-800" : "",
+                }}
+              />
+
+              <KpiCard
+                title="Perlu Tindak Lanjut"
+                value={`${data.kpi.needActionCount} Orang`}
+                subtitle="Belum dinilai atau memerlukan perbaikan revisi"
+                icon={AlertTriangle}
+                badge={
+                  data.kpi.needActionCount > 0
+                    ? {
+                        text: "Perlu Tindakan",
+                        variant: "destructive",
+                        className: "bg-orange-700 text-white dark:bg-orange-800",
+                      }
+                    : undefined
+                }
+              />
+
+              <KpiCard
+                title="Rata-rata Skor Departemen"
+                value={data.kpi.averageScore !== null ? data.kpi.averageScore.toFixed(2) : "-"}
+                subtitle="Skala Likert 1–5 dari seluruh aspek aktif"
+                icon={TrendingUp}
+              />
+            </div>
+
+            {/* Kartu Progres Periode Berjalan & Alert Tenggat Waktu & Komentar SDM */}
+            <ProgressCard
+              totalMembers={data.progress.totalMembers}
+              assessedCount={data.progress.assessedCount}
+              draftCount={data.progress.draftCount}
+              completionPercent={data.progress.completionPercent}
+              periodName={data.period.nama}
+              periodEndDateFormatted={data.deadlineInfo.endDateFormatted}
+              daysRemaining={data.deadlineInfo.daysRemaining}
+              isNearDeadline={data.deadlineInfo.isNearDeadline}
+              isPastDeadline={data.deadlineInfo.isPastDeadline}
+              unreadCommentsCount={data.unreadComments.count}
+              unreadComments={data.unreadComments.items}
+              departmentName={data.department.nama}
+            />
+
+            {/* Daftar Anggota Belum Dinilai / Perlu Revisi */}
+            <AttentionList
+              role="user"
+              ketuaItems={data.attentionList}
+            />
+          </div>
+        )
+      ) : (
+        /* --------------------------------------------------------------------- */
+        /* 4. TAMPILAN DASHBOARD ADMIN (SDM) & SUPER_ADMIN                       */
+        /* --------------------------------------------------------------------- */
+        <div className="space-y-6">
+          {/* Baris KPI Admin (4 Kartu dengan Garis Atas Gradien Emerald -> Oren) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard
+              title="Total Departemen Aktif"
+              value={`${data.kpi.totalDepartments} Departemen`}
+              subtitle="Struktur departemen terdaftar dalam sistem"
+              icon={Building2}
+            />
+
+            <KpiCard
+              title="Total Anggota"
+              value={`${data.kpi.totalMembers} Orang`}
+              subtitle="Keseluruhan anggota di seluruh departemen"
+              icon={Users}
+            />
+
+            <KpiCard
+              title="Penilaian Selesai"
+              value={`${data.kpi.completionPercentage}%`}
+              subtitle="Persentase kelengkapan penilaian lintas departemen"
+              icon={CheckCircle2}
+              badge={{
+                text: `${data.kpi.completionPercentage}% Selesai`,
+                variant: data.kpi.completionPercentage === 100 ? "default" : "outline",
+                className: data.kpi.completionPercentage === 100 ? "bg-emerald-700 text-white dark:bg-emerald-800" : "",
+              }}
+            />
+
+            <KpiCard
+              title="Rata-rata Skor Keseluruhan"
+              value={data.kpi.overallAverageScore !== null ? `${data.kpi.overallAverageScore.toFixed(2)}` : "-"}
+              subtitle="Rata-rata kumulatif seluruh penilaian submitted/approved"
+              icon={TrendingUp}
+            />
+          </div>
+
+          {/* Grafik Recharts: Rata-rata Skor (Emerald) & Persentase Penyelesaian (Emerald + Oren) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <DeptScoreChart data={data.deptScores} />
+            <CompletionChart data={data.deptCompletions} />
+          </div>
+
+          {/* Baris Attention List (Perlu Tindak Lanjut SDM) & Distribusi Kategori Skor PRD 8 */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AttentionList
+              role={data.role}
+              incompleteDepartments={data.attentionList.incompleteDepartments}
+              pendingSubmissions={data.attentionList.pendingSubmissions}
+            />
+
+            <ScoreDistribution distribution={data.scoreDistribution} />
+          </div>
+
+          {/* Khusus Super-Admin: Pintasan Cepat & Ringkasan Tata Kelola Akun Ketua */}
+          {isSuperAdmin && (
+            <SuperAdminShortcuts governance={data.governance} />
+          )}
+        </div>
+      )}
     </div>
   )
 }
