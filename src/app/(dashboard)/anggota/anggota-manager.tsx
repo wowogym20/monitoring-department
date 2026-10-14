@@ -27,6 +27,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { BulkActionBar } from "@/components/ui/bulk-action-bar"
 import {
   Table,
   TableBody,
@@ -60,25 +62,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 
 import { UserRole } from "@/types/database"
 import {
   getMembersServer,
   toggleMemberStatusAction,
   deleteMemberAction,
+  getAllMemberIdsAction,
+  bulkDeleteMembersAction,
   type MemberListItem,
   type GetMembersResponse,
 } from "@/lib/actions/member"
+import { exportSelectedMembersToExcel } from "@/lib/export/member-export"
 import { MemberFormDialog } from "./member-form-dialog"
 import { MemberImportDialog } from "./member-import-dialog"
+import { MemberBulkEditDialog } from "./member-bulk-edit-dialog"
 
 interface DepartmentOption {
   id: string
@@ -118,8 +116,17 @@ export function AnggotaManager({
   const [deleteTarget, setDeleteTarget] = React.useState<MemberListItem | null>(null)
   const [isDeleting, setIsDeleting] = React.useState(false)
 
-  // Dialog Penjelasan Tidak Boleh Hapus (Sudah ada penilaian)
-  const [blockedDeleteMember, setBlockedDeleteMember] = React.useState<MemberListItem | null>(null)
+
+  // State Seleksi Baris & Aksi Massal
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
+  const [isAllMatchingSelected, setIsAllMatchingSelected] = React.useState(false)
+  const [isLoadingAllIds, setIsLoadingAllIds] = React.useState(false)
+
+  // Modal Aksi Massal
+  const [bulkEditOpen, setBulkEditOpen] = React.useState(false)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = React.useState(false)
+  const [isBulkDeleting, setIsBulkDeleting] = React.useState(false)
+  const [isBulkExporting, setIsBulkExporting] = React.useState(false)
 
   // Debounce input pencarian 350ms
   React.useEffect(() => {
@@ -130,7 +137,7 @@ export function AnggotaManager({
     return () => clearTimeout(timer)
   }, [search])
 
-  // Muat data saat filter berubah
+  // Muat data saat filter berubah dan reset seleksi aktif
   const loadData = React.useCallback(() => {
     startTransition(async () => {
       const res = await getMembersServer({
@@ -141,12 +148,134 @@ export function AnggotaManager({
         pageSize,
       })
       setData(res)
+      setSelectedIds(new Set())
+      setIsAllMatchingSelected(false)
     })
   }, [debouncedSearch, status, departmentId, page, pageSize])
 
   React.useEffect(() => {
     loadData()
   }, [loadData])
+
+  // Helper seleksi halaman saat ini
+  const currentPageIds = React.useMemo(() => data.data.map((m) => m.id), [data.data])
+  const isAllPageSelected =
+    currentPageIds.length > 0 && currentPageIds.every((id) => selectedIds.has(id))
+  const isSomePageSelected =
+    currentPageIds.some((id) => selectedIds.has(id)) && !isAllPageSelected
+
+  function toggleSelectMember(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+        setIsAllMatchingSelected(false)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  function toggleSelectAllPage(checked: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (checked) {
+        currentPageIds.forEach((id) => next.add(id))
+      } else {
+        currentPageIds.forEach((id) => next.delete(id))
+        setIsAllMatchingSelected(false)
+      }
+      return next
+    })
+  }
+
+  async function handleSelectAllMatching() {
+    setIsLoadingAllIds(true)
+    try {
+      const res = await getAllMemberIdsAction({
+        search: debouncedSearch,
+        status,
+        department_id: departmentId === "all" ? "" : departmentId,
+      })
+      if (res.success && res.ids) {
+        setSelectedIds(new Set(res.ids))
+        setIsAllMatchingSelected(true)
+        toast.success(`Seluruh ${res.ids.length} data anggota berhasil dipilih`)
+      } else {
+        toast.error(res.error || "Gagal memuat seluruh data anggota")
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan internal"
+      toast.error(msg)
+    } finally {
+      setIsLoadingAllIds(false)
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return
+    setIsBulkDeleting(true)
+
+    try {
+      const res = await bulkDeleteMembersAction({
+        memberIds: Array.from(selectedIds),
+      })
+
+      if (!res.success) {
+        toast.error(res.error || "Gagal menghapus anggota terpilih")
+        return
+      }
+
+      toast.success(res.message || "Anggota terpilih berhasil dihapus")
+      setBulkDeleteOpen(false)
+      setSelectedIds(new Set())
+      setIsAllMatchingSelected(false)
+      loadData()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Terjadi kesalahan sistem"
+      toast.error(msg)
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
+
+  async function handleBulkExport() {
+    if (selectedIds.size === 0) return
+    setIsBulkExporting(true)
+
+    try {
+      let membersToExport = data.data.filter((m) => selectedIds.has(m.id))
+
+      // Jika ada anggota yang terpilih di luar halaman saat ini (misal via Pilih Semua)
+      if (isAllMatchingSelected || membersToExport.length < selectedIds.size) {
+        const res = await getMembersServer({
+          search: debouncedSearch,
+          status,
+          department_id: departmentId === "all" ? "" : departmentId,
+          page: 1,
+          pageSize: 100, // Ambil dataset untuk diekspor
+        })
+        membersToExport = res.data.filter((m) => selectedIds.has(m.id))
+      }
+
+      if (membersToExport.length === 0) {
+        toast.error("Tidak ada data anggota yang dapat diekspor")
+        return
+      }
+
+      await exportSelectedMembersToExcel(
+        membersToExport,
+        `anggota-terpilih-${new Date().toISOString().slice(0, 10)}.xlsx`
+      )
+      toast.success(`Berhasil mengekspor ${membersToExport.length} data anggota ke Excel`)
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Gagal mengekspor data anggota"
+      toast.error(msg)
+    } finally {
+      setIsBulkExporting(false)
+    }
+  }
 
   // Aksi toggle status aktif
   async function handleToggleStatus(member: MemberListItem) {
@@ -167,11 +296,7 @@ export function AnggotaManager({
 
   // Klik tombol hapus
   function initiateDelete(member: MemberListItem) {
-    if (member.has_assessment) {
-      setBlockedDeleteMember(member)
-    } else {
-      setDeleteTarget(member)
-    }
+    setDeleteTarget(member)
   }
 
   // Konfirmasi eksekusi hapus
@@ -317,11 +442,80 @@ export function AnggotaManager({
         </CardContent>
       </Card>
 
+      {/* Toolbar Aksi Massal (Floating / Sticky) */}
+      <BulkActionBar
+        selectedCount={selectedIds.size}
+        entityLabel="anggota"
+        onClearSelection={() => {
+          setSelectedIds(new Set())
+          setIsAllMatchingSelected(false)
+        }}
+        onDelete={() => setBulkDeleteOpen(true)}
+        onEdit={() => setBulkEditOpen(true)}
+        onExport={handleBulkExport}
+        canDelete={canManage}
+        canEdit={canManage}
+        canExport={true}
+        isDeleting={isBulkDeleting}
+        isExporting={isBulkExporting}
+      />
+
+      {/* Banner Opsi Pilih Seluruh Data Lintas Halaman */}
+      {isAllPageSelected && data.total > data.data.length && (
+        <div
+          role="status"
+          className="bg-primary/10 border border-primary/25 rounded-md px-4 py-2.5 text-xs text-center text-foreground flex flex-wrap items-center justify-center gap-2 animate-in fade-in duration-150"
+        >
+          {isAllMatchingSelected ? (
+            <>
+              <span>
+                Seluruh <strong className="text-primary font-bold">{data.total}</strong> data anggota telah terpilih.
+              </span>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs font-semibold text-primary underline cursor-pointer"
+                onClick={() => {
+                  setIsAllMatchingSelected(false)
+                  setSelectedIds(new Set(currentPageIds))
+                }}
+              >
+                Batalkan seleksi seluruh halaman
+              </Button>
+            </>
+          ) : (
+            <>
+              <span>
+                Semua <strong className="font-semibold">{currentPageIds.length}</strong> anggota di halaman ini telah terpilih.
+              </span>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs font-semibold text-primary underline cursor-pointer"
+                onClick={handleSelectAllMatching}
+                disabled={isLoadingAllIds}
+              >
+                {isLoadingAllIds ? "Memuat seluruh data..." : `Pilih semua ${data.total} data anggota?`}
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Tampilan Desktop / Tablet: Tabel Data */}
       <div className="hidden sm:block rounded-lg border bg-card shadow-xs overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/50">
             <TableRow>
+              <TableHead className="w-10 px-3 text-center">
+                <Checkbox
+                  checked={isAllPageSelected ? true : isSomePageSelected ? "indeterminate" : false}
+                  onCheckedChange={(checked) => toggleSelectAllPage(Boolean(checked))}
+                  aria-label="Pilih semua anggota di halaman ini"
+                />
+              </TableHead>
               <TableHead className="w-12 text-center">No</TableHead>
               <TableHead>NIG</TableHead>
               <TableHead>Nama Lengkap</TableHead>
@@ -336,7 +530,7 @@ export function AnggotaManager({
             {isPending ? (
               <TableRow>
                 <TableCell
-                  colSpan={showDeptFilter ? 8 : 7}
+                  colSpan={showDeptFilter ? 9 : 8}
                   className="h-32 text-center text-muted-foreground"
                 >
                   Memuat data anggota...
@@ -345,7 +539,7 @@ export function AnggotaManager({
             ) : data.data.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={showDeptFilter ? 8 : 7}
+                  colSpan={showDeptFilter ? 9 : 8}
                   className="h-32 text-center text-muted-foreground"
                 >
                   Tidak ada data anggota yang sesuai kriteria pencarian.
@@ -354,8 +548,20 @@ export function AnggotaManager({
             ) : (
               data.data.map((member, idx) => {
                 const rowNumber = (data.page - 1) * data.pageSize + idx + 1
+                const isSelected = selectedIds.has(member.id)
                 return (
-                  <TableRow key={member.id} className="hover:bg-muted/40">
+                  <TableRow
+                    key={member.id}
+                    data-state={isSelected ? "selected" : undefined}
+                    className={`hover:bg-muted/40 ${isSelected ? "bg-primary/5" : ""}`}
+                  >
+                    <TableCell className="w-10 px-3 text-center">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelectMember(member.id)}
+                        aria-label={`Pilih baris anggota ${member.nama}`}
+                      />
+                    </TableCell>
                     <TableCell className="text-center font-medium text-muted-foreground">
                       {rowNumber}
                     </TableCell>
@@ -411,7 +617,7 @@ export function AnggotaManager({
                               variant="ghost"
                               size="icon-sm"
                               id={`dropdown-aksi-${member.id}`}
-                              className="text-muted-foreground hover:text-foreground"
+                              className="text-muted-foreground hover:text-foreground cursor-pointer"
                             >
                               <MoreVertical className="h-4 w-4" />
                               <span className="sr-only">Menu Aksi</span>
@@ -461,6 +667,23 @@ export function AnggotaManager({
 
       {/* Tampilan Mobile (< 640px / 360px): Kartu Anggota Responsif */}
       <div className="block sm:hidden space-y-3">
+        {/* Kontrol Seleksi Cepat di Mobile */}
+        {data.data.length > 0 && (
+          <div className="flex items-center justify-between px-1 text-xs text-muted-foreground">
+            <label className="flex items-center gap-2 cursor-pointer font-medium text-foreground">
+              <Checkbox
+                checked={isAllPageSelected ? true : isSomePageSelected ? "indeterminate" : false}
+                onCheckedChange={(checked) => toggleSelectAllPage(Boolean(checked))}
+                aria-label="Pilih semua anggota di halaman ini"
+              />
+              <span>Pilih semua di halaman ini</span>
+            </label>
+            {selectedIds.size > 0 && (
+              <span className="font-semibold text-primary">{selectedIds.size} dipilih</span>
+            )}
+          </div>
+        )}
+
         {isPending ? (
           <Card className="border p-6 text-center text-sm text-muted-foreground">
             Memuat data anggota...
@@ -470,104 +693,123 @@ export function AnggotaManager({
             Tidak ada data anggota ditemukan.
           </Card>
         ) : (
-          data.data.map((member) => (
-            <Card key={member.id} data-testid="member-card" className="border border-border/80 shadow-xs">
-              <CardContent className="p-4 space-y-3">
-                {/* Header Card: Nama & Badge Status */}
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-semibold text-base text-foreground leading-snug">
-                      {member.nama}
-                    </h3>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                      <Briefcase className="h-3 w-3" />
-                      <span>{member.jabatan}</span>
+          data.data.map((member) => {
+            const isSelected = selectedIds.has(member.id)
+            return (
+              <Card
+                key={member.id}
+                data-testid="member-card"
+                className={`border shadow-xs transition-colors ${
+                  isSelected ? "border-primary/50 bg-primary/5" : "border-border/80"
+                }`}
+              >
+                <CardContent className="p-4 space-y-3">
+                  {/* Header Card: Checkbox + Nama & Badge Status */}
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => toggleSelectMember(member.id)}
+                      aria-label={`Pilih kartu anggota ${member.nama}`}
+                      className="mt-1 shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-semibold text-base text-foreground leading-snug">
+                            {member.nama}
+                          </h3>
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
+                            <Briefcase className="h-3 w-3" />
+                            <span>{member.jabatan}</span>
+                          </div>
+                        </div>
+                        {member.is_active ? (
+                          <Badge
+                            variant="secondary"
+                            className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 text-[11px] font-medium border-emerald-200 dark:border-emerald-800 shrink-0"
+                          >
+                            <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                            <span>Aktif</span>
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="secondary"
+                            className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[11px] font-medium border-slate-200 dark:border-slate-700 shrink-0"
+                          >
+                            <XCircle className="size-3 mr-1 shrink-0" />
+                            <span>Nonaktif</span>
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  {member.is_active ? (
-                    <Badge
-                      variant="secondary"
-                      className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 text-[11px] font-medium border-emerald-200 dark:border-emerald-800"
-                    >
-                      <CheckCircle2 className="size-3 mr-1 shrink-0" />
-                      <span>Aktif</span>
-                    </Badge>
-                  ) : (
-                    <Badge
-                      variant="secondary"
-                      className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[11px] font-medium border-slate-200 dark:border-slate-700"
-                    >
-                      <XCircle className="size-3 mr-1 shrink-0" />
-                      <span>Nonaktif</span>
-                    </Badge>
-                  )}
-                </div>
 
-                {/* Detail Info */}
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1 border-t">
-                  <div className="flex items-center gap-1.5">
-                    <IdCard className="h-3.5 w-3.5 shrink-0" />
-                    <span className="font-mono">
-                      {member.nip || <span className="italic text-muted-foreground/70">Tanpa NIG</span>}
-                    </span>
-                  </div>
-
-                  {showDeptFilter ? (
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <Building2 className="h-3.5 w-3.5 shrink-0" />
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
-                        {member.department_kode}
-                      </Badge>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1.5 justify-end">
-                      <Phone className="h-3.5 w-3.5 shrink-0" />
-                      <span>{member.no_hp || "-"}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Tombol Aksi Mobile */}
-                {canManage && (
-                  <div className="pt-2 flex items-center justify-between gap-2 border-t">
+                  {/* Detail Info */}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1 border-t">
                     <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setMemberToEdit(member)
-                          setFormOpen(true)
-                        }}
-                        className="h-8 px-2.5 text-xs gap-1"
-                      >
-                        <Pencil className="h-3 w-3" />
-                        Ubah
-                      </Button>
+                      <IdCard className="h-3.5 w-3.5 shrink-0" />
+                      <span className="font-mono">
+                        {member.nip || <span className="italic text-muted-foreground/70">Tanpa NIG</span>}
+                      </span>
+                    </div>
+
+                    {showDeptFilter ? (
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <Building2 className="h-3.5 w-3.5 shrink-0" />
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                          {member.department_kode}
+                        </Badge>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 justify-end">
+                        <Phone className="h-3.5 w-3.5 shrink-0" />
+                        <span>{member.no_hp || "-"}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tombol Aksi Mobile */}
+                  {canManage && (
+                    <div className="pt-2 flex items-center justify-between gap-2 border-t">
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setMemberToEdit(member)
+                            setFormOpen(true)
+                          }}
+                          className="h-8 px-2.5 text-xs gap-1 cursor-pointer"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Ubah
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleStatus(member)}
+                          className="h-8 px-2 text-xs text-muted-foreground cursor-pointer"
+                        >
+                          <Power className="h-3 w-3 mr-1" />
+                          {member.is_active ? "Nonaktifkan" : "Aktifkan"}
+                        </Button>
+                      </div>
+
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleToggleStatus(member)}
-                        className="h-8 px-2 text-xs text-muted-foreground"
+                        onClick={() => initiateDelete(member)}
+                        className="h-8 px-2 text-xs text-destructive hover:text-destructive cursor-pointer"
                       >
-                        <Power className="h-3 w-3 mr-1" />
-                        {member.is_active ? "Nonaktifkan" : "Aktifkan"}
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Hapus
                       </Button>
                     </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => initiateDelete(member)}
-                      className="h-8 px-2 text-xs text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Hapus
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })
         )}
       </div>
 
@@ -663,11 +905,21 @@ export function AnggotaManager({
               <AlertTriangle className="h-5 w-5" />
               Hapus Anggota Departemen?
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus data anggota{" "}
-              <strong className="text-foreground">{deleteTarget?.nama}</strong>? Data akan
-              dihapus dari daftar aktif (soft delete) dan tidak akan dapat dinilai pada periode
-              berikutnya.
+            <AlertDialogDescription className="space-y-2">
+              <span>
+                Apakah Anda yakin ingin menghapus data anggota{" "}
+                <strong className="text-foreground">{deleteTarget?.nama}</strong>? Data akan
+                dihapus dari daftar aktif (soft delete) dan tidak akan dapat dinilai pada periode
+                berikutnya.
+              </span>
+              {deleteTarget?.has_assessment && (
+                <span className="block rounded-md bg-amber-500/10 border border-amber-500/30 p-2.5 text-xs text-amber-800 dark:text-amber-300 mt-2">
+                  <strong>Perhatian:</strong> Anggota ini memiliki{" "}
+                  <strong>{deleteTarget.assessment_count} riwayat penilaian</strong>. Seluruh lembar
+                  penilaian, nilai aspek, dan komentar yang terintegrasi akan ikut dihapus secara
+                  otomatis.
+                </span>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -684,54 +936,59 @@ export function AnggotaManager({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Dialog Penolakan Hapus (Karena Memiliki Penilaian) */}
-      <Dialog
-        open={Boolean(blockedDeleteMember)}
-        onOpenChange={(open) => !open && setBlockedDeleteMember(null)}
+      {/* Modal Dialog Ubah Massal Anggota */}
+      <MemberBulkEditDialog
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        selectedMemberIds={Array.from(selectedIds)}
+        userRole={userRole}
+        departments={departments}
+        onSuccess={() => {
+          setSelectedIds(new Set())
+          setIsAllMatchingSelected(false)
+          loadData()
+        }}
+      />
+
+      {/* Alert Dialog Konfirmasi Hapus Massal */}
+      <AlertDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => !open && setBulkDeleteOpen(false)}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-orange-600">
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Anggota Tidak Dapat Dihapus
-            </DialogTitle>
-            <DialogDescription className="pt-2 text-foreground space-y-2">
-              <p>
-                Anggota <strong className="font-semibold">{blockedDeleteMember?.nama}</strong>{" "}
-                sudah memiliki riwayat penilaian ({blockedDeleteMember?.assessment_count} lembar
-                penilaian) di sistem.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Sesuai aturan baku kepegawaian (PRD FR-3), anggota yang sudah dinilai{" "}
-                <strong>hanya boleh dinonaktifkan</strong> agar integritas rekapitulasi nilai dan
-                jejak audit tetap utuh.
-              </p>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => setBlockedDeleteMember(null)}
+              Hapus {selectedIds.size} Anggota Terpilih?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span>
+                Apakah Anda yakin ingin menghapus{" "}
+                <strong className="text-foreground">{selectedIds.size} anggota</strong> yang
+                dipilih? Data akan dihapus dari daftar aktif (soft delete) dan tidak akan dapat
+                dinilai pada periode berikutnya.
+              </span>
+              <span className="block text-xs text-muted-foreground mt-1">
+                Catatan: Jika ada anggota terpilih yang memiliki riwayat penilaian, seluruh lembar
+                penilaian dan data terkait yang terintegrasi juga akan ikut dihapus secara otomatis.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBulkDeleting} className="cursor-pointer">
+              Batal
+            </AlertDialogCancel>
+            <AlertDialogAction
+              id="btn-confirm-bulk-delete"
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+              className="bg-destructive text-white hover:bg-destructive/90 cursor-pointer"
             >
-              Mengerti
-            </Button>
-            {blockedDeleteMember?.is_active && (
-              <Button
-                variant="secondary"
-                className="bg-orange-500 text-white hover:bg-orange-600"
-                onClick={async () => {
-                  if (blockedDeleteMember) {
-                    await handleToggleStatus(blockedDeleteMember)
-                    setBlockedDeleteMember(null)
-                  }
-                }}
-              >
-                Nonaktifkan Anggota Ini
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {isBulkDeleting ? "Menghapus..." : `Ya, Hapus ${selectedIds.size} Anggota`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -9,9 +9,13 @@ import {
   createMemberSchema,
   updateMemberSchema,
   importMemberRowSchema,
+  bulkDeleteMemberSchema,
+  bulkUpdateMemberSchema,
   type MemberFilterParams,
   type CreateMemberInput,
   type UpdateMemberInput,
+  type BulkDeleteMemberInput,
+  type BulkUpdateMemberInput,
 } from "@/lib/validations/member"
 import ExcelJS from "exceljs"
 import { z } from "zod"
@@ -440,9 +444,8 @@ export async function toggleMemberStatusAction(id: string, is_active: boolean) {
 
 /**
  * Server Action: Hapus Anggota (Soft Delete)
- * Aturan PRD Bagian 7 (FR-3):
- * "Anggota yang sudah punya penilaian hanya boleh dinonaktifkan (tolak hapus di server,
- * dan UI menampilkan alasannya). Hapus memakai soft delete (deleted_at)."
+ * Mendukung cascade soft delete: jika anggota memiliki riwayat penilaian,
+ * seluruh lembar penilaian terkait juga ikut ditandai deleted_at.
  */
 export async function deleteMemberAction(id: string) {
   try {
@@ -470,7 +473,9 @@ export async function deleteMemberAction(id: string) {
       }
     }
 
-    // 1. Cek riwayat penilaian
+    const now = new Date().toISOString()
+
+    // 1. Cek & hitung riwayat penilaian aktif yang terkait
     const { count: assessmentCount, error: countErr } = await supabase
       .from("assessments")
       .select("*", { count: "exact", head: true })
@@ -484,21 +489,32 @@ export async function deleteMemberAction(id: string) {
       }
     }
 
+    // 2. Kaskade soft-delete seluruh lembar penilaian terkait jika ada
     if (assessmentCount && assessmentCount > 0) {
-      return {
-        success: false,
-        error:
-          "Anggota tidak dapat dihapus karena sudah memiliki riwayat penilaian. Anda hanya dapat menonaktifkan status anggota ini.",
+      const { error: cascadeErr } = await supabase
+        .from("assessments")
+        .update({
+          deleted_at: now,
+          updated_at: now,
+        })
+        .eq("member_id", validatedId)
+        .is("deleted_at", null)
+
+      if (cascadeErr) {
+        return {
+          success: false,
+          error: `Gagal menghapus riwayat penilaian terintegrasi: ${cascadeErr.message}`,
+        }
       }
     }
 
-    // 2. Lakukan soft delete
+    // 3. Lakukan soft delete data anggota
     const { error: deleteError } = await supabase
       .from("members")
       .update({
-        deleted_at: new Date().toISOString(),
+        deleted_at: now,
         is_active: false,
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       })
       .eq("id", validatedId)
 
@@ -510,9 +526,18 @@ export async function deleteMemberAction(id: string) {
     }
 
     revalidatePath("/anggota")
+    revalidatePath("/penilaian")
+    revalidatePath("/rekap")
+    revalidatePath("/dashboard")
+
+    const infoAssessments =
+      assessmentCount && assessmentCount > 0
+        ? ` beserta ${assessmentCount} data penilaian terintegrasi`
+        : ""
+
     return {
       success: true,
-      message: `Anggota '${member.nama}' berhasil dihapus.`,
+      message: `Anggota '${member.nama}'${infoAssessments} berhasil dihapus.`,
     }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server"
@@ -813,5 +838,311 @@ export async function importMembersAction(formData: FormData): Promise<ImportMem
       totalFailed: 1,
       errors: [{ row: 0, message: errorMsg }],
     }
+  }
+}
+
+/**
+ * Server Action: Mengambil seluruh ID anggota yang cocok dengan filter saat ini.
+ * Digunakan untuk mendukung fitur "Pilih semua X data di semua halaman".
+ */
+export async function getAllMemberIdsAction(
+  params: Partial<MemberFilterParams> = {}
+): Promise<{ success: boolean; ids: string[]; error?: string }> {
+  try {
+    const currentUser = await requireRole("super_admin", "admin", "user")
+    const parsed = memberFilterSchema.parse(params)
+    const supabase = await createClient()
+
+    let targetDepartmentId: string | undefined = undefined
+
+    if (currentUser.role === "user") {
+      if (!currentUser.department) {
+        return { success: true, ids: [] }
+      }
+      targetDepartmentId = currentUser.department.id
+    } else if (parsed.department_id && parsed.department_id.trim() !== "") {
+      targetDepartmentId = parsed.department_id.trim()
+    }
+
+    let query = supabase
+      .from("members")
+      .select("id")
+      .is("deleted_at", null)
+
+    if (targetDepartmentId) {
+      query = query.eq("department_id", targetDepartmentId)
+    }
+
+    if (parsed.status === "active") {
+      query = query.eq("is_active", true)
+    } else if (parsed.status === "inactive") {
+      query = query.eq("is_active", false)
+    }
+
+    if (parsed.search.trim()) {
+      const term = parsed.search.trim()
+      query = query.or(`nama.ilike.%${term}%,nip.ilike.%${term}%`)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      return { success: false, ids: [], error: error.message }
+    }
+
+    return {
+      success: true,
+      ids: (data || []).map((row) => row.id),
+    }
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server"
+    return { success: false, ids: [], error: errorMsg }
+  }
+}
+
+/**
+ * Server Action: Hapus Massal Anggota (Soft Delete)
+ * Mendukung cascade soft delete: jika ada anggota terpilih yang memiliki riwayat penilaian,
+ * seluruh lembar penilaian terkait juga ikut ditandai deleted_at.
+ * - Ketua (role user) hanya boleh menghapus anggota di departemennya sendiri.
+ * - Eksekusi soft delete dalam SATU query update kaskade.
+ */
+export async function bulkDeleteMembersAction(
+  input: BulkDeleteMemberInput
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const currentUser = await requireRole("super_admin", "user")
+    const validated = bulkDeleteMemberSchema.parse(input)
+    const supabase = await createClient()
+
+    if (validated.memberIds.length === 0) {
+      return { success: false, error: "Tidak ada data anggota yang dipilih." }
+    }
+
+    // 1. Ambil data anggota yang dipilih untuk validasi kepemilikan
+    const { data: members, error: fetchErr } = await supabase
+      .from("members")
+      .select("id, department_id, nama, deleted_at")
+      .in("id", validated.memberIds)
+      .is("deleted_at", null)
+
+    if (fetchErr) {
+      return { success: false, error: `Gagal memverifikasi data anggota: ${fetchErr.message}` }
+    }
+
+    if (!members || members.length === 0) {
+      return { success: false, error: "Data anggota yang dipilih tidak ditemukan atau sudah dihapus." }
+    }
+
+    // Validasi kepemilikan untuk role user (Ketua Departemen)
+    if (currentUser.role === "user") {
+      const unauthorizedMembers = members.filter(
+        (m) => m.department_id !== currentUser.department?.id
+      )
+      if (unauthorizedMembers.length > 0) {
+        return {
+          success: false,
+          error: "Anda tidak memiliki hak akses untuk menghapus anggota departemen lain.",
+        }
+      }
+    }
+
+    const validIds = members.map((m) => m.id)
+    const now = new Date().toISOString()
+
+    // 2. Kaskade soft-delete riwayat penilaian untuk seluruh anggota terpilih
+    const { count: assessmentCount, error: countErr } = await supabase
+      .from("assessments")
+      .select("*", { count: "exact", head: true })
+      .in("member_id", validIds)
+      .is("deleted_at", null)
+
+    if (countErr) {
+      return {
+        success: false,
+        error: `Gagal memeriksa riwayat penilaian anggota terpilih: ${countErr.message}`,
+      }
+    }
+
+    if (assessmentCount && assessmentCount > 0) {
+      const { error: cascadeErr } = await supabase
+        .from("assessments")
+        .update({
+          deleted_at: now,
+          updated_at: now,
+        })
+        .in("member_id", validIds)
+        .is("deleted_at", null)
+
+      if (cascadeErr) {
+        return {
+          success: false,
+          error: `Gagal menghapus riwayat penilaian terintegrasi: ${cascadeErr.message}`,
+        }
+      }
+    }
+
+    // 3. Jalankan soft delete data anggota terpilih dalam satu query
+    const { error: updateErr } = await supabase
+      .from("members")
+      .update({
+        deleted_at: now,
+        is_active: false,
+        updated_at: now,
+      })
+      .in("id", validIds)
+
+    if (updateErr) {
+      return {
+        success: false,
+        error: `Gagal menghapus anggota: ${updateErr.message}`,
+      }
+    }
+
+    revalidatePath("/anggota")
+    revalidatePath("/penilaian")
+    revalidatePath("/rekap")
+    revalidatePath("/dashboard")
+
+    const infoAssessments =
+      assessmentCount && assessmentCount > 0
+        ? ` beserta ${assessmentCount} data penilaian terintegrasi`
+        : ""
+
+    return {
+      success: true,
+      message: `Berhasil menghapus ${validIds.length} data anggota${infoAssessments}.`,
+    }
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      const firstMsg = err.errors[0]?.message || "Validasi data gagal"
+      return { success: false, error: firstMsg }
+    }
+    const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server"
+    return { success: false, error: errorMsg }
+  }
+}
+
+/**
+ * Server Action: Pembaruan Massal Anggota
+ * Mengubah status keaktifan, departemen (khusus super_admin), atau jabatan
+ * dalam SATU query update.
+ */
+export async function bulkUpdateMembersAction(
+  input: BulkUpdateMemberInput
+): Promise<{ success: boolean; message?: string; error?: string }> {
+  try {
+    const currentUser = await requireRole("super_admin", "user")
+    const validated = bulkUpdateMemberSchema.parse(input)
+    const supabase = await createClient()
+
+    if (validated.memberIds.length === 0) {
+      return { success: false, error: "Tidak ada data anggota yang dipilih." }
+    }
+
+    // 1. Ambil data anggota untuk validasi kepemilikan
+    const { data: members, error: fetchErr } = await supabase
+      .from("members")
+      .select("id, department_id, nama, deleted_at")
+      .in("id", validated.memberIds)
+      .is("deleted_at", null)
+
+    if (fetchErr) {
+      return { success: false, error: `Gagal memverifikasi data anggota: ${fetchErr.message}` }
+    }
+
+    if (!members || members.length === 0) {
+      return { success: false, error: "Data anggota yang dipilih tidak ditemukan." }
+    }
+
+    // Validasi kepemilikan untuk role user (Ketua Departemen)
+    if (currentUser.role === "user") {
+      const unauthorized = members.filter(
+        (m) => m.department_id !== currentUser.department?.id
+      )
+      if (unauthorized.length > 0) {
+        return {
+          success: false,
+          error: "Anda tidak memiliki hak akses untuk mengubah anggota departemen lain.",
+        }
+      }
+
+      // Role ketua TIDAK boleh memindahkan departemen
+      if (validated.department_id && validated.department_id.trim() !== "") {
+        return {
+          success: false,
+          error: "Hanya Super Admin yang memiliki hak akses untuk memindahkan anggota ke departemen lain.",
+        }
+      }
+    }
+
+    // 2. Susun objek pembaruan
+    const updatePayload: {
+      updated_at: string
+      is_active?: boolean
+      department_id?: string
+      jabatan?: string
+    } = {
+      updated_at: new Date().toISOString(),
+    }
+
+    if (validated.is_active === "active") {
+      updatePayload.is_active = true
+    } else if (validated.is_active === "inactive") {
+      updatePayload.is_active = false
+    }
+
+    if (
+      currentUser.role === "super_admin" &&
+      validated.department_id &&
+      validated.department_id.trim() !== ""
+    ) {
+      // Pastikan departemen target valid dan aktif
+      const { data: dept } = await supabase
+        .from("departments")
+        .select("id, is_active")
+        .eq("id", validated.department_id.trim())
+        .maybeSingle()
+
+      if (!dept || !dept.is_active) {
+        return {
+          success: false,
+          error: "Departemen tujuan tidak ditemukan atau sedang nonaktif.",
+        }
+      }
+
+      updatePayload.department_id = validated.department_id.trim()
+    }
+
+    if (validated.jabatan && validated.jabatan.trim() !== "") {
+      updatePayload.jabatan = validated.jabatan.trim()
+    }
+
+    // 3. Eksekusi pembaruan dalam satu query
+    const validIds = members.map((m) => m.id)
+    const { error: updateErr } = await supabase
+      .from("members")
+      .update(updatePayload)
+      .in("id", validIds)
+
+    if (updateErr) {
+      return {
+        success: false,
+        error: `Gagal memperbarui data anggota: ${updateErr.message}`,
+      }
+    }
+
+    revalidatePath("/anggota")
+    return {
+      success: true,
+      message: `Berhasil memperbarui data ${validIds.length} anggota.`,
+    }
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      const firstMsg = err.errors[0]?.message || "Validasi data gagal"
+      return { success: false, error: firstMsg }
+    }
+    const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server"
+    return { success: false, error: errorMsg }
   }
 }

@@ -118,3 +118,69 @@ export const importMemberRowSchema = z.object({
 })
 
 export type ImportMemberRow = z.infer<typeof importMemberRowSchema>
+
+/**
+ * Skema penghapusan massal anggota
+ */
+export const bulkDeleteMemberSchema = z.object({
+  memberIds: z
+    .array(z.string().uuid("ID Anggota tidak valid"))
+    .min(1, "Minimal pilih 1 anggota untuk dihapus"),
+})
+
+export type BulkDeleteMemberInput = z.infer<typeof bulkDeleteMemberSchema>
+
+/**
+ * Skema pembaruan massal data anggota
+ */
+export const bulkUpdateMemberSchema = z
+  .object({
+    memberIds: z
+      .array(z.string().uuid("ID Anggota tidak valid"))
+      .min(1, "Minimal pilih 1 anggota untuk diperbarui"),
+    is_active: z.enum(["keep", "active", "inactive"]).default("keep"),
+    department_id: z
+      .string()
+      .trim()
+      .optional()
+      .nullable()
+      .refine(
+        (val) => !val || val.length === 0 || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val),
+        { message: "Departemen tujuan tidak valid" }
+      ),
+    ubah_jabatan: z.boolean().optional().default(false),
+    jabatan: z
+      .string()
+      .trim()
+      .max(100, "Jabatan maksimal 100 karakter")
+      .optional()
+      .nullable()
+      .or(z.literal("")),
+  })
+  .refine(
+    (data) => {
+      if (data.ubah_jabatan && (!data.jabatan || data.jabatan.trim().length === 0)) {
+        return false
+      }
+      return true
+    },
+    {
+      message: "Nama jabatan baru wajib diisi jika opsi ubah jabatan diaktifkan",
+      path: ["jabatan"],
+    }
+  )
+  .refine(
+    (data) => {
+      const hasStatusChange = data.is_active !== "keep"
+      const hasDeptChange = Boolean(data.department_id && data.department_id.trim() !== "")
+      const hasJabatanChange = Boolean(data.jabatan && data.jabatan.trim().length > 0)
+      return hasStatusChange || hasDeptChange || hasJabatanChange
+    },
+    {
+      message: "Pilih setidaknya satu bidang untuk diubah (Status, Departemen, atau Jabatan)",
+      path: ["is_active"],
+    }
+  )
+
+export type BulkUpdateMemberInput = z.infer<typeof bulkUpdateMemberSchema>
+

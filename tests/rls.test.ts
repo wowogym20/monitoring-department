@@ -274,16 +274,16 @@ describe('Skenario Hak Akses & Kebijakan Row-Level Security (RLS)', () => {
   })
 
   // Skenario 9: Aturan Hapus vs Nonaktif Anggota & Keunikan NIP
-  describe('Skenario 9: Aturan Bisnis Hapus (Soft Delete) vs Nonaktif & NIP Unik', () => {
-    function evaluateMemberDeletion(member: { has_assessment: boolean }) {
+  describe('Skenario 9: Aturan Bisnis Hapus (Cascade Soft Delete) & NIP Unik', () => {
+    function evaluateMemberDeletion(member: { has_assessment: boolean; assessment_count?: number }) {
       if (member.has_assessment) {
         return {
-          canDelete: false,
-          error:
-            'Anggota tidak dapat dihapus karena sudah memiliki riwayat penilaian. Anda hanya dapat menonaktifkan status anggota ini.',
+          canDelete: true,
+          deleteType: 'cascade_soft_delete',
+          cascadeAssessmentsDeleted: member.assessment_count || 1,
         }
       }
-      return { canDelete: true, deleteType: 'soft_delete' }
+      return { canDelete: true, deleteType: 'soft_delete', cascadeAssessmentsDeleted: 0 }
     }
 
     function checkNipUniqueness(
@@ -296,18 +296,20 @@ describe('Skenario Hak Akses & Kebijakan Row-Level Security (RLS)', () => {
       return !duplicate
     }
 
-    it('Anggota yang SUDAH memiliki penilaian DITOLAK saat dihapus', () => {
-      const assessedMember = { has_assessment: true }
+    it('Anggota yang SUDAH memiliki penilaian TETAP BISA DIHAPUS dengan cascade soft delete', () => {
+      const assessedMember = { has_assessment: true, assessment_count: 3 }
       const res = evaluateMemberDeletion(assessedMember)
-      expect(res.canDelete).toBe(false)
-      expect(res.error).toContain('hanya dapat menonaktifkan')
+      expect(res.canDelete).toBe(true)
+      expect(res.deleteType).toBe('cascade_soft_delete')
+      expect(res.cascadeAssessmentsDeleted).toBe(3)
     })
 
-    it('Anggota yang BELUM memiliki penilaian boleh dihapus menggunakan soft delete', () => {
+    it('Anggota yang BELUM memiliki penilaian boleh dihapus menggunakan soft delete standar', () => {
       const unassessedMember = { has_assessment: false }
       const res = evaluateMemberDeletion(unassessedMember)
       expect(res.canDelete).toBe(true)
       expect(res.deleteType).toBe('soft_delete')
+      expect(res.cascadeAssessmentsDeleted).toBe(0)
     })
 
     it('NIP yang sama di departemen yang sama harus ditolak (duplikat)', () => {
