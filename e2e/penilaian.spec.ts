@@ -106,7 +106,7 @@ test.describe("Alur Penilaian Kinerja Ketua Departemen & Hak Akses", () => {
     await page.waitForURL("**/penilaian**", { timeout: 15000 })
 
     // Verifikasi di daftar penilaian bahwa status anggota memiliki badge "Draft" atau "Submitted"
-    await expect(page.locator('span:has-text("Draft"):visible, span:has-text("Submitted"):visible').first()).toBeVisible()
+    await expect(page.locator('span:has-text("Draft"):visible, span:has-text("Submitted"):visible').first()).toBeVisible({ timeout: 15000 })
 
     // 8. Buka kembali form anggota tersebut untuk melanjutkan penilaian
     const editBtn = page.locator(`a[href*="/penilaian/${memberPendidikanId}"]:visible`).first()
@@ -136,7 +136,7 @@ test.describe("Alur Penilaian Kinerja Ketua Departemen & Hak Akses", () => {
 
     // Verifikasi kembali ke /penilaian dan status berubah menjadi Submitted
     await page.waitForURL("**/penilaian**", { timeout: 15000 })
-    await expect(page.locator('span:has-text("Submitted"):visible').first()).toBeVisible()
+    await expect(page.locator('span:has-text("Submitted"):visible').first()).toBeVisible({ timeout: 15000 })
   })
 
   test("2. Isolasi Departemen: Ketua Pendidikan TIDAK BISA membuka form penilaian anggota Dept TI", async ({

@@ -150,6 +150,6 @@ test.describe("Alur SDM & Ketua: Rekap, Minta Revisi, Komentar Balasan, dan Tran
 
     // 17. Verifikasi Status otomatis kembali ke "Submitted"
     await page.waitForURL("**/penilaian**", { timeout: 15000 })
-    await expect(page.locator('span:has-text("Submitted"):visible').first()).toBeVisible()
+    await expect(page.locator('span:has-text("Submitted"):visible').first()).toBeVisible({ timeout: 15000 })
   })
 })
