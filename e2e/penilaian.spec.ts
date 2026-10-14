@@ -137,6 +137,9 @@ test.describe("Alur Penilaian Kinerja Ketua Departemen & Hak Akses", () => {
   test("2. Isolasi Departemen: Ketua Pendidikan TIDAK BISA membuka form penilaian anggota Dept TI", async ({
     page,
   }) => {
+    // Bersihkan sesi cookies sebelum login
+    await page.context().clearCookies()
+
     // 1. Login sebagai Ketua TI untuk mendapatkan salah satu ID anggota TI
     await page.goto("/login")
     await page.fill('input[type="email"]', ACCOUNTS.ketuaTI.email)

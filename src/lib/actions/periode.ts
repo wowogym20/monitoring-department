@@ -153,6 +153,8 @@ export async function togglePeriodStatusAction(input: TogglePeriodStatusInput) {
   }
 }
 
+import { z } from "zod"
+
 /**
  * Server Action: Hapus Periode Penilaian (Khusus Super Admin)
  */
@@ -160,13 +162,14 @@ export async function deletePeriodAction(id: string) {
   try {
     await requireRole("super_admin")
 
+    const validatedId = z.string().uuid("ID Periode tidak valid").parse(id)
     const supabase = await createClient()
 
     // Cek apakah ada penilaian di periode ini
     const { count, error: countErr } = await supabase
       .from("assessments")
       .select("*", { count: "exact", head: true })
-      .eq("period_id", id)
+      .eq("period_id", validatedId)
 
     if (countErr) {
       return { success: false, error: `Gagal memeriksa penilaian: ${countErr.message}` }
@@ -183,7 +186,7 @@ export async function deletePeriodAction(id: string) {
     const { error: delErr } = await supabase
       .from("assessment_periods")
       .delete()
-      .eq("id", id)
+      .eq("id", validatedId)
 
     if (delErr) {
       return { success: false, error: `Gagal menghapus periode: ${delErr.message}` }

@@ -351,11 +351,21 @@ export function DepartmentTable({
               variant={active ? "default" : "secondary"}
               className={
                 active
-                  ? "bg-emerald-600 text-white hover:bg-emerald-600 dark:bg-emerald-500"
-                  : "bg-muted text-muted-foreground"
+                  ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                  : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
               }
             >
-              {active ? "Aktif" : "Nonaktif"}
+              {active ? (
+                <>
+                  <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                  <span>Aktif</span>
+                </>
+              ) : (
+                <>
+                  <XCircle className="size-3 mr-1 shrink-0" />
+                  <span>Nonaktif</span>
+                </>
+              )}
             </Badge>
           )
         },
@@ -448,6 +458,8 @@ export function DepartmentTable({
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
             <Input
+              id="search-departemen"
+              aria-label="Cari nama atau kode departemen"
               placeholder="Cari nama atau kode departemen..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
@@ -459,7 +471,7 @@ export function DepartmentTable({
             value={currentStatus}
             onValueChange={handleStatusFilterChange}
           >
-            <SelectTrigger className="w-36 text-sm">
+            <SelectTrigger className="w-36 text-sm" aria-label="Filter status departemen">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>

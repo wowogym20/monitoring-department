@@ -44,51 +44,51 @@
   --card-foreground: hsl(160 24% 11%);
   --popover: hsl(0 0% 100%);
   --popover-foreground: hsl(160 24% 11%);
-  --primary: hsl(160 84% 39%);
+  --primary: hsl(160 84% 24%);
   --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(25 95% 53%);
-  --secondary-foreground: hsl(24 95% 10%);
+  --secondary: hsl(24 95% 38%);
+  --secondary-foreground: hsl(0 0% 100%);
   --muted: hsl(150 14% 93%);
-  --muted-foreground: hsl(155 10% 45%);
+  --muted-foreground: hsl(155 12% 32%);
   --accent: hsl(152 76% 95%);
-  --accent-foreground: hsl(164 76% 16%);
-  --warning: hsl(25 95% 53%);
+  --accent-foreground: hsl(164 80% 14%);
+  --warning: hsl(24 95% 38%);
   --warning-foreground: hsl(0 0% 100%);
   --warning-accent: hsl(33 100% 96%);
-  --destructive: hsl(0 84.2% 60.2%);
+  --destructive: hsl(0 84.2% 48%);
   --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(150 12% 89%);
-  --input: hsl(150 12% 89%);
-  --ring: hsl(160 84% 39%);
-  --chart-1: hsl(160 84% 39%);
-  --chart-2: hsl(25 95% 53%);
-  --chart-3: hsl(173 80% 40%);
-  --chart-4: hsl(38 92% 50%);
+  --border: hsl(150 12% 86%);
+  --input: hsl(150 12% 86%);
+  --ring: hsl(160 84% 24%);
+  --chart-1: hsl(160 84% 24%);
+  --chart-2: hsl(24 95% 40%);
+  --chart-3: hsl(173 80% 36%);
+  --chart-4: hsl(38 92% 40%);
   --radius: 0.625rem;
 }
 
 .dark {
   --background: hsl(160 14% 6.5%);
-  --foreground: hsl(150 20% 95%);
+  --foreground: hsl(150 20% 96%);
   --card: hsl(160 12% 10.5%);
-  --card-foreground: hsl(150 20% 95%);
+  --card-foreground: hsl(150 20% 96%);
   --popover: hsl(160 12% 10.5%);
-  --popover-foreground: hsl(150 20% 95%);
-  --primary: hsl(158 64% 52%);
-  --primary-foreground: hsl(160 84% 6%);
-  --secondary: hsl(27 96% 61%);
-  --secondary-foreground: hsl(24 95% 10%);
-  --muted: hsl(160 10% 15%);
-  --muted-foreground: hsl(150 12% 65%);
-  --accent: hsl(160 14% 15%);
-  --accent-foreground: hsl(150 20% 90%);
+  --popover-foreground: hsl(150 20% 96%);
+  --primary: hsl(160 84% 28%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(24 95% 44%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(160 10% 16%);
+  --muted-foreground: hsl(150 15% 82%);
+  --accent: hsl(160 14% 18%);
+  --accent-foreground: hsl(150 25% 96%);
   --warning: hsl(27 96% 61%);
   --warning-foreground: hsl(24 95% 10%);
   --warning-accent: hsl(24 95% 14%);
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(160 10% 18%);
-  --input: hsl(160 10% 18%);
+  --destructive: hsl(0 75% 55%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(160 10% 22%);
+  --input: hsl(160 10% 22%);
   --ring: hsl(158 64% 52%);
   --chart-1: hsl(158 64% 52%);
   --chart-2: hsl(27 96% 61%);
@@ -105,4 +105,65 @@
     color: var(--foreground);
     font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
+  input, textarea, select {
+    color: inherit;
+  }
+
+  /* Elemen interaktif yang berfungsi: Kursor Pointer (Ikon Tangan) */
+  button:not(:disabled):not([aria-disabled="true"]):not([data-disabled]),
+  a[href]:not([aria-disabled="true"]),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  select:not(:disabled),
+  summary,
+  label[for],
+  [role="button"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="tab"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="menuitem"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="menuitemcheckbox"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="menuitemradio"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="option"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="switch"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="checkbox"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="radio"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="combobox"]:not([aria-disabled="true"]):not([data-disabled]),
+  [data-slot="button"]:not(:disabled):not([aria-disabled="true"]):not([data-disabled]),
+  [data-slot="dropdown-menu-item"]:not([data-disabled]),
+  [data-slot="dropdown-menu-trigger"],
+  [data-slot="tabs-trigger"]:not(:disabled):not([data-disabled]),
+  [data-slot="select-trigger"]:not(:disabled),
+  [data-slot="select-item"]:not([data-disabled]),
+  [data-slot="dialog-close"],
+  [data-slot="sheet-close"],
+  [data-slot="popover-trigger"],
+  [data-slot="alert-dialog-action"]:not(:disabled),
+  [data-slot="alert-dialog-cancel"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* Elemen non-aktif (disabled): Kursor Not-Allowed */
+  button:disabled,
+  button[aria-disabled="true"],
+  button[data-disabled],
+  input:disabled,
+  select:disabled,
+  textarea:disabled,
+  a[aria-disabled="true"],
+  [disabled],
+  [aria-disabled="true"],
+  [data-disabled],
+  [data-slot="button"]:disabled,
+  [data-slot="button"][aria-disabled="true"],
+  [data-slot="tabs-trigger"]:disabled,
+  [data-slot="tabs-trigger"][data-disabled],
+  [data-slot="select-trigger"]:disabled,
+  [data-slot="dropdown-menu-item"][data-disabled],
+  [data-slot="select-item"][data-disabled] {
+    cursor: not-allowed;
+  }
 }
+

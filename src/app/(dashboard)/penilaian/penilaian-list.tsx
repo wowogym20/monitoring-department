@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 import {
   Calendar,
   Building2,
@@ -35,7 +36,16 @@ import {
   FileEdit,
   ArrowRight,
   ClipboardList,
+  Filter,
+  RefreshCw,
+  X,
 } from "lucide-react"
+
+// Helper untuk merapikan nama periode agar tidak mengulang kata "Periode Penilaian"
+function formatPeriodDisplay(name: string): string {
+  if (!name) return ""
+  return name.replace(/^Periode\s+Penilaian\s+/i, "").trim()
+}
 
 interface PenilaianListProps {
   initialData: PenilaianDashboardData
@@ -100,66 +110,147 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
 
   return (
     <div className="space-y-6">
-      {/* 1. Header & Filter Bar */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-            Penilaian Anggota
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {userRole === "user"
-              ? "Evaluasi kinerja berkala untuk seluruh anggota di departemen Anda."
-              : "Monitoring dan evaluasi lembar penilaian kinerja anggota seluruh departemen."}
-          </p>
+      {/* 1. Header Halaman */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
+          <ClipboardList className="size-7 text-primary shrink-0" />
+          Penilaian Anggota
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {userRole === "user"
+            ? "Evaluasi kinerja berkala untuk seluruh anggota di departemen Anda."
+            : "Monitoring dan evaluasi lembar penilaian kinerja anggota seluruh departemen."}
+        </p>
+      </div>
+
+      {/* 2. Filter Bar (Periode & Departemen) - Responsif di Semua Device */}
+      <div className="p-4 sm:p-5 bg-card/90 backdrop-blur-xs rounded-xl border border-border shadow-2xs space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="size-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+              <Filter className="size-3.5" />
+            </div>
+            <span className="text-sm font-semibold text-foreground tracking-tight">
+              Filter Penilaian
+            </span>
+          </div>
+
+          {isPending && (
+            <span className="flex items-center gap-1.5 text-xs text-primary font-medium animate-pulse px-2.5 py-1 rounded-md bg-primary/10 self-start sm:self-auto">
+              <RefreshCw className="size-3 animate-spin text-primary" />
+              <span>Memuat data...</span>
+            </span>
+          )}
         </div>
 
-        {/* Selector Periode & Selector Departemen */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div
+          className={cn(
+            "grid gap-3 sm:gap-4 items-end",
+            userRole === "super_admin" || userRole === "admin"
+              ? "grid-cols-1 sm:grid-cols-2"
+              : "grid-cols-1 sm:max-w-md"
+          )}
+        >
           {/* Selector Periode */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-muted-foreground hidden sm:inline flex items-center gap-1">
-              <Calendar className="size-3.5 text-primary" /> Periode:
-            </span>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="select-periode"
+              className="text-xs font-medium text-foreground/85 flex items-center gap-1.5"
+            >
+              <Calendar className="size-3.5 text-primary" />
+              <span>Periode Penilaian</span>
+            </label>
             <Select
               value={selectedPeriode?.id || ""}
               onValueChange={handlePeriodChange}
               disabled={isPending || periodeList.length === 0}
             >
-              <SelectTrigger className="w-[200px] sm:w-[240px] text-xs h-9 font-medium" id="select-periode">
-                <SelectValue placeholder="Pilih Periode..." />
+              <SelectTrigger
+                id="select-periode"
+                aria-label="Pilih periode penilaian"
+                className="w-full h-9.5 text-xs bg-background"
+              >
+                <SelectValue placeholder="Pilih Periode...">
+                  {selectedPeriode ? (
+                    <div className="flex items-center justify-between w-full gap-2">
+                      <span className="truncate font-medium">
+                        {formatPeriodDisplay(selectedPeriode.nama)}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] font-normal px-1.5 py-0 shrink-0",
+                          selectedPeriode.status === "open"
+                            ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30"
+                            : "bg-muted text-muted-foreground border-border"
+                        )}
+                      >
+                        {selectedPeriode.status === "open" ? "Buka" : "Tutup"}
+                      </Badge>
+                    </div>
+                  ) : (
+                    "Pilih Periode..."
+                  )}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {periodeList.map((p) => (
-                  <SelectItem key={p.id} value={p.id} className="text-xs">
-                    <span className="font-medium">{p.nama}</span>{" "}
-                    <span className="text-muted-foreground text-[10px]">
-                      ({p.status === "open" ? "Buka" : "Tutup"})
-                    </span>
-                  </SelectItem>
-                ))}
+                {periodeList.map((p) => {
+                  const cleanName = formatPeriodDisplay(p.nama)
+                  return (
+                    <SelectItem key={p.id} value={p.id} className="text-xs py-2">
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <span className="font-medium truncate">{cleanName}</span>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-normal px-1.5 py-0 shrink-0",
+                            p.status === "open"
+                              ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/30"
+                              : "bg-muted text-muted-foreground border-border"
+                          )}
+                        >
+                          {p.status === "open" ? "Buka" : "Tutup"}
+                        </Badge>
+                      </div>
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Filter Departemen (Khusus Admin & Super Admin) */}
+          {/* Selector Departemen (Khusus Admin & Super Admin) */}
           {(userRole === "super_admin" || userRole === "admin") && (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground hidden sm:inline flex items-center gap-1">
-                <Building2 className="size-3.5 text-secondary" /> Dept:
-              </span>
+            <div className="space-y-1.5">
+              <label
+                htmlFor="select-filter-dept"
+                className="text-xs font-medium text-foreground/85 flex items-center gap-1.5"
+              >
+                <Building2 className="size-3.5 text-primary" />
+                <span>Departemen</span>
+              </label>
               <Select
                 value={selectedDepartmentId || "all"}
                 onValueChange={handleDepartmentChange}
                 disabled={isPending}
               >
-                <SelectTrigger className="w-[180px] sm:w-[220px] text-xs h-9 font-medium" id="select-filter-dept">
+                <SelectTrigger
+                  id="select-filter-dept"
+                  aria-label="Pilih departemen penilaian"
+                  className="w-full h-9.5 text-xs bg-background"
+                >
                   <SelectValue placeholder="Semua Departemen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all" className="text-xs">Semua Departemen</SelectItem>
+                  <SelectItem value="all" className="text-xs py-2">
+                    Semua Departemen
+                  </SelectItem>
                   {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id} className="text-xs">
-                      {d.nama}
+                    <SelectItem key={d.id} value={d.id} className="text-xs py-2">
+                      <span className="font-medium">{d.nama}</span>{" "}
+                      <span className="text-muted-foreground text-[10px] font-mono">
+                        ({d.kode})
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -169,15 +260,15 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
         </div>
       </div>
 
-      {/* 2. Ringkasan Progres Penilaian (Card dengan top gradient & progress emerald) */}
+      {/* 3. Ringkasan Progres Penilaian */}
       {selectedPeriode ? (
-        <Card className="border border-border/80 shadow-xs overflow-hidden relative border-t-4 border-t-emerald-600">
-          <CardHeader className="pb-3">
+        <Card className="border border-border/80 shadow-xs overflow-hidden relative border-t-4 border-t-primary">
+          <CardHeader className="p-4 sm:p-5 pb-3">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
-                  <ClipboardList className="size-4 text-emerald-600" />
-                  Progres Penilaian: {selectedPeriode.nama}
+                  <ClipboardList className="size-4 text-primary" />
+                  Progres Penilaian: {formatPeriodDisplay(selectedPeriode.nama)}
                 </CardTitle>
                 <CardDescription className="text-xs mt-0.5">
                   Status periode saat ini:{" "}
@@ -185,18 +276,18 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                     variant={selectedPeriode.status === "open" ? "default" : "secondary"}
                     className={
                       selectedPeriode.status === "open"
-                        ? "bg-emerald-600/10 text-emerald-800 dark:text-emerald-300 border-emerald-300 font-medium text-[11px] ml-1"
+                        ? "bg-primary/10 text-primary border-primary/20 font-medium text-[11px] ml-1"
                         : "text-[11px] ml-1"
                     }
                   >
-                    {selectedPeriode.status === "open" ? "Terbuka (Open)" : "Ditutup (Closed)"}
+                    {selectedPeriode.status === "open" ? "Terbuka (Buka)" : "Ditutup (Tutup)"}
                   </Badge>
                 </CardDescription>
               </div>
 
               {/* Progress Count Badge */}
               <div className="flex items-baseline gap-1.5 self-start sm:self-center">
-                <span className="text-2xl font-bold tracking-tight text-emerald-700 dark:text-emerald-400">
+                <span className="text-2xl font-bold tracking-tight text-primary">
                   {summary.submittedCount}
                 </span>
                 <span className="text-xs font-medium text-muted-foreground">
@@ -205,9 +296,9 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {/* Progress bar emerald */}
-            <div className="space-y-1">
+          <CardContent className="p-4 sm:p-5 pt-0 space-y-3">
+            {/* Progress bar */}
+            <div className="space-y-1.5">
               <div className="flex justify-between text-xs text-muted-foreground font-medium">
                 <span>Capaian Penilaian</span>
                 <span className="font-semibold text-foreground">
@@ -216,20 +307,20 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
               </div>
               <Progress
                 value={summary.percentage}
-                className="h-2.5 bg-slate-100 dark:bg-slate-800 [&>div]:bg-emerald-600 transition-all"
+                className="h-2.5 bg-muted [&>div]:bg-primary transition-all"
               />
             </div>
 
             {/* Breakdown Mini Badges */}
             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-medium border border-emerald-200 dark:border-emerald-900">
-                <CheckCircle2 className="size-3.5 text-emerald-600" /> {summary.submittedCount} Selesai / Terkirim
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium border border-primary/20">
+                <CheckCircle2 className="size-3.5" /> {summary.submittedCount} Selesai / Terkirim
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 font-medium border border-slate-200 dark:border-slate-700">
-                <FileEdit className="size-3.5 text-slate-600" /> {summary.draftCount} Masih Draf
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-muted-foreground font-medium border border-border">
+                <FileEdit className="size-3.5 text-muted-foreground" /> {summary.draftCount} Masih Draf
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-50 text-orange-800 dark:bg-orange-950/40 dark:text-orange-300 font-medium border border-orange-200 dark:border-orange-900">
-                <AlertCircle className="size-3.5 text-orange-600" /> {summary.unassessedCount} Belum Dinilai
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium border border-amber-500/20">
+                <AlertCircle className="size-3.5" /> {summary.unassessedCount} Belum Dinilai
               </span>
             </div>
           </CardContent>
@@ -240,25 +331,39 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
         </Card>
       )}
 
-      {/* 3. Filter Pencarian & Status Tab */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+      {/* 4. Filter Pencarian & Status Tab */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Cari nama, NIP, atau jabatan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 text-xs h-9"
+            className="pl-9 pr-8 text-xs h-9.5 bg-background w-full"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+              aria-label="Hapus kata kunci pencarian"
+              title="Hapus pencarian"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Filter Pill Status */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 flex-nowrap sm:flex-wrap">
           <Button
             size="sm"
             variant={statusFilter === "all" ? "default" : "outline"}
             onClick={() => setStatusFilter("all")}
-            className={`h-8 text-xs ${statusFilter === "all" ? "bg-primary text-primary-foreground" : ""}`}
+            className={cn(
+              "h-8 text-xs shrink-0 rounded-lg",
+              statusFilter === "all" && "bg-primary text-primary-foreground font-semibold"
+            )}
           >
             Semua ({members.length})
           </Button>
@@ -266,7 +371,10 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             size="sm"
             variant={statusFilter === "unassessed" ? "default" : "outline"}
             onClick={() => setStatusFilter("unassessed")}
-            className={`h-8 text-xs ${statusFilter === "unassessed" ? "bg-orange-600 text-white" : ""}`}
+            className={cn(
+              "h-8 text-xs shrink-0 rounded-lg",
+              statusFilter === "unassessed" && "bg-amber-600 hover:bg-amber-700 text-white font-semibold"
+            )}
           >
             Belum Dinilai ({summary.unassessedCount})
           </Button>
@@ -274,7 +382,10 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             size="sm"
             variant={statusFilter === "draft" ? "default" : "outline"}
             onClick={() => setStatusFilter("draft")}
-            className={`h-8 text-xs ${statusFilter === "draft" ? "bg-slate-700 text-white" : ""}`}
+            className={cn(
+              "h-8 text-xs shrink-0 rounded-lg",
+              statusFilter === "draft" && "bg-slate-700 hover:bg-slate-800 text-white font-semibold"
+            )}
           >
             Draf ({summary.draftCount})
           </Button>
@@ -282,7 +393,10 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             size="sm"
             variant={statusFilter === "submitted" ? "default" : "outline"}
             onClick={() => setStatusFilter("submitted")}
-            className={`h-8 text-xs ${statusFilter === "submitted" ? "bg-emerald-600 text-white" : ""}`}
+            className={cn(
+              "h-8 text-xs shrink-0 rounded-lg",
+              statusFilter === "submitted" && "bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+            )}
           >
             Sudah Dinilai ({summary.submittedCount})
           </Button>
@@ -344,7 +458,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                           variant={member.status === "unassessed" ? "default" : "outline"}
                           className={
                             member.status === "unassessed"
-                              ? "bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs font-semibold"
+                              ? "bg-emerald-700 hover:bg-emerald-800 text-white h-8 text-xs font-semibold"
                               : "h-8 text-xs font-medium"
                           }
                           data-testid={`btn-nilai-${member.id}`}
@@ -417,7 +531,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                       variant={member.status === "unassessed" ? "default" : "outline"}
                       className={
                         member.status === "unassessed"
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white h-8 text-xs font-semibold"
+                          ? "bg-emerald-700 hover:bg-emerald-800 text-white h-8 text-xs font-semibold"
                           : "h-8 text-xs font-medium"
                       }
                       data-testid={`btn-nilai-mobile-${member.id}`}

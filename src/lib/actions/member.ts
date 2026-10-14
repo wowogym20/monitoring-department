@@ -14,6 +14,7 @@ import {
   type UpdateMemberInput,
 } from "@/lib/validations/member"
 import ExcelJS from "exceljs"
+import { z } from "zod"
 
 export interface MemberListItem {
   id: string
@@ -385,12 +386,14 @@ export async function updateMemberAction(input: UpdateMemberInput) {
 export async function toggleMemberStatusAction(id: string, is_active: boolean) {
   try {
     const currentUser = await requireRole("super_admin", "user")
+    const validatedId = z.string().uuid("ID Anggota tidak valid").parse(id)
+    const validatedActive = z.boolean().parse(is_active)
     const supabase = await createClient()
 
     const { data: member, error: fetchError } = await supabase
       .from("members")
       .select("id, department_id, nama, deleted_at")
-      .eq("id", id)
+      .eq("id", validatedId)
       .maybeSingle()
 
     if (fetchError || !member || member.deleted_at) {
@@ -410,10 +413,10 @@ export async function toggleMemberStatusAction(id: string, is_active: boolean) {
     const { error: updateError } = await supabase
       .from("members")
       .update({
-        is_active,
+        is_active: validatedActive,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id)
+      .eq("id", validatedId)
 
     if (updateError) {
       return {
@@ -426,7 +429,7 @@ export async function toggleMemberStatusAction(id: string, is_active: boolean) {
     return {
       success: true,
       message: `Status anggota '${member.nama}' berhasil diubah menjadi ${
-        is_active ? "Aktif" : "Nonaktif"
+        validatedActive ? "Aktif" : "Nonaktif"
       }.`,
     }
   } catch (err: unknown) {
@@ -444,12 +447,13 @@ export async function toggleMemberStatusAction(id: string, is_active: boolean) {
 export async function deleteMemberAction(id: string) {
   try {
     const currentUser = await requireRole("super_admin", "user")
+    const validatedId = z.string().uuid("ID Anggota tidak valid").parse(id)
     const supabase = await createClient()
 
     const { data: member, error: fetchError } = await supabase
       .from("members")
       .select("id, department_id, nama, deleted_at")
-      .eq("id", id)
+      .eq("id", validatedId)
       .maybeSingle()
 
     if (fetchError || !member || member.deleted_at) {
@@ -470,7 +474,7 @@ export async function deleteMemberAction(id: string) {
     const { count: assessmentCount, error: countErr } = await supabase
       .from("assessments")
       .select("*", { count: "exact", head: true })
-      .eq("member_id", id)
+      .eq("member_id", validatedId)
       .is("deleted_at", null)
 
     if (countErr) {
@@ -496,7 +500,7 @@ export async function deleteMemberAction(id: string) {
         is_active: false,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id)
+      .eq("id", validatedId)
 
     if (deleteError) {
       return {

@@ -1,11 +1,29 @@
 import { NextResponse } from "next/server"
 import ExcelJS from "exceljs"
 import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/auth"
+import { z } from "zod"
+
+const templateFormatSchema = z.enum(["xlsx", "csv"]).catch("xlsx")
 
 export async function GET(request: Request) {
   try {
+    const user = await getCurrentUser()
+    if (!user || !user.is_active) {
+      return new NextResponse("Unauthorized: Silakan login terlebih dahulu.", {
+        status: 401,
+      })
+    }
+
+    if (!["super_admin", "admin"].includes(user.role)) {
+      return new NextResponse(
+        "Forbidden: Anda tidak memiliki hak akses untuk mengunduh template anggota.",
+        { status: 403 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
-    const format = searchParams.get("format") || "xlsx"
+    const format = templateFormatSchema.parse(searchParams.get("format"))
 
     const supabase = await createClient()
     const { data: depts } = await supabase

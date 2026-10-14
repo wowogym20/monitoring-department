@@ -235,7 +235,7 @@ export function PeriodeManager({
                     </TableCell>
                     <TableCell>
                       {isOpen ? (
-                        <Badge className="bg-emerald-600 text-white hover:bg-emerald-600 dark:bg-emerald-500 flex items-center gap-1.5 w-fit">
+                        <Badge className="bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 flex items-center gap-1.5 w-fit">
                           <span className="size-1.5 rounded-full bg-white animate-pulse" />
                           Terbuka (Open)
                         </Badge>
@@ -529,7 +529,7 @@ export function PeriodeManager({
               className={
                 statusDialog?.targetStatus === "closed"
                   ? "bg-amber-600 hover:bg-amber-700 text-white"
-                  : "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-emerald-700 hover:bg-emerald-800 text-white"
               }
               onClick={handleConfirmToggleStatus}
               disabled={isSubmitting}

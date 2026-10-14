@@ -19,6 +19,7 @@ import {
   AssessmentStatus,
   UserRole,
 } from "@/types/database"
+import { z } from "zod"
 
 export interface RekapTableItem {
   id: string // assessment_id
@@ -340,10 +341,13 @@ export async function getRekapDataServer(rawFilter: Partial<RekapFilterInput>): 
   }
 }
 
+import { calculateDepartmentSummaries } from "@/lib/export/data"
+
 /**
  * Helper internal untuk menghitung ringkasan departemen (US-10 penanda oren bila belum selesai menilai).
+ * Diekspor untuk digunakan bersama oleh modul rekap dan ekspor.
  */
-async function getDepartmentSummariesInternal(
+export async function getDepartmentSummaries(
   periodId: string | null,
   restrictDeptId: string | null
 ): Promise<DepartmentRekapSummary[]> {
@@ -382,9 +386,7 @@ async function getDepartmentSummariesInternal(
   }
 
   // 3. Ambil seluruh penilaian pada periode ini
-  const deptAssessedCountMap = new Map<string, number>()
-  const deptDraftCountMap = new Map<string, number>()
-  const deptScoresSumMap = new Map<string, { sum: number; count: number }>()
+  let assessList: Array<{ department_id: string; status: AssessmentStatus; skor_rata: number | null }> = []
 
   if (periodId) {
     let assessQuery = adminClient
@@ -397,47 +399,19 @@ async function getDepartmentSummariesInternal(
       assessQuery = assessQuery.eq("department_id", restrictDeptId)
     }
 
-    const { data: assessList } = await assessQuery
-
-    for (const a of assessList || []) {
-      if (a.status === "draft") {
-        deptDraftCountMap.set(a.department_id, (deptDraftCountMap.get(a.department_id) || 0) + 1)
-      } else {
-        // Dinilai = submitted, approved, revision_requested
-        deptAssessedCountMap.set(a.department_id, (deptAssessedCountMap.get(a.department_id) || 0) + 1)
-
-        if (a.skor_rata !== null && a.skor_rata !== undefined) {
-          const current = deptScoresSumMap.get(a.department_id) || { sum: 0, count: 0 }
-          deptScoresSumMap.set(a.department_id, {
-            sum: current.sum + Number(a.skor_rata),
-            count: current.count + 1,
-          })
-        }
-      }
-    }
+    const { data: rawAssess } = await assessQuery
+    assessList = (rawAssess || []) as Array<{ department_id: string; status: AssessmentStatus; skor_rata: number | null }>
   }
 
-  // 4. Susun ringkasan departemen
-  return deptList.map((d) => {
-    const totalMembers = deptMembersCountMap.get(d.id) || 0
-    const assessedCount = deptAssessedCountMap.get(d.id) || 0
-    const draftCount = deptDraftCountMap.get(d.id) || 0
-    const scoreAgg = deptScoresSumMap.get(d.id)
-    const averageScore = scoreAgg && scoreAgg.count > 0 ? Number((scoreAgg.sum / scoreAgg.count).toFixed(2)) : null
-    const isIncomplete = assessedCount < totalMembers
-
-    return {
-      id: d.id,
-      nama: d.nama,
-      kode: d.kode,
-      total_members: totalMembers,
-      assessed_count: assessedCount,
-      draft_count: draftCount,
-      average_score: averageScore,
-      is_incomplete: isIncomplete,
-    }
+  // 4. Hitung ringkasan departemen menggunakan logika kalkulasi bersama
+  return calculateDepartmentSummaries({
+    departments: deptList,
+    members: (membersList || []).map((m) => ({ id: m.id, department_id: m.department_id })),
+    assessments: assessList,
   })
 }
+
+const getDepartmentSummariesInternal = getDepartmentSummaries
 
 /**
  * 2. Mengambil detail lengkap penilaian: 7 Aspek, Komentar Utas, dan Audit Log berlabel aspek.
@@ -981,6 +955,7 @@ export async function createCommentAction(input: CreateCommentInput) {
 export async function markCommentsAsReadAction(assessmentId: string) {
   try {
     const currentUser = await requireRole("super_admin", "admin", "user")
+    const validatedId = z.string().uuid("ID Penilaian tidak valid").parse(assessmentId)
     if (currentUser.role !== "user") {
       return { success: true, count: 0 }
     }
@@ -990,7 +965,7 @@ export async function markCommentsAsReadAction(assessmentId: string) {
     const { error } = await adminClient
       .from("assessment_comments")
       .update({ dibaca_at: new Date().toISOString() })
-      .eq("assessment_id", assessmentId)
+      .eq("assessment_id", validatedId)
       .neq("author_id", currentUser.id)
       .is("dibaca_at", null)
 
@@ -999,7 +974,7 @@ export async function markCommentsAsReadAction(assessmentId: string) {
       return { success: false, error: error.message }
     }
 
-    revalidatePath(`/rekap/${assessmentId}`)
+    revalidatePath(`/rekap/${validatedId}`)
     return { success: true }
   } catch (err: unknown) {
     return { success: false, error: err instanceof Error ? err.message : "Gagal" }

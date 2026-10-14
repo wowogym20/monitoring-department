@@ -96,6 +96,8 @@ export async function updateAspectAction(input: UpdateAspectInput) {
   }
 }
 
+import { z } from "zod"
+
 /**
  * Server Action: Toggle Aktif/Nonaktif Aspek (Khusus Super Admin)
  */
@@ -103,11 +105,14 @@ export async function toggleAspectStatusAction(id: string, is_active: boolean) {
   try {
     await requireRole("super_admin")
 
+    const validatedId = z.string().uuid("ID Aspek tidak valid").parse(id)
+    const validatedActive = z.boolean().parse(is_active)
+
     const supabase = await createClient()
     const { error } = await supabase
       .from("assessment_aspects")
-      .update({ is_active })
-      .eq("id", id)
+      .update({ is_active: validatedActive })
+      .eq("id", validatedId)
 
     if (error) {
       return { success: false, error: `Gagal mengubah status aspek: ${error.message}` }
@@ -198,13 +203,14 @@ export async function deleteAspectAction(id: string) {
   try {
     await requireRole("super_admin")
 
+    const validatedId = z.string().uuid("ID Aspek tidak valid").parse(id)
     const supabase = await createClient()
 
     // Cek apakah aspek sudah digunakan dalam lembar penilaian
     const { count, error: countErr } = await supabase
       .from("assessment_scores")
       .select("*", { count: "exact", head: true })
-      .eq("aspect_id", id)
+      .eq("aspect_id", validatedId)
 
     if (countErr) {
       return { success: false, error: `Gagal memeriksa riwayat penilaian: ${countErr.message}` }
@@ -221,7 +227,7 @@ export async function deleteAspectAction(id: string) {
     const { error: delErr } = await supabase
       .from("assessment_aspects")
       .delete()
-      .eq("id", id)
+      .eq("id", validatedId)
 
     if (delErr) {
       return { success: false, error: `Gagal menghapus aspek: ${delErr.message}` }

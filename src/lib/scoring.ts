@@ -43,7 +43,7 @@ export function kategoriSkor(skor: number | null | undefined): KategoriSkorResul
       kategori: "Sangat Baik",
       skorFormatted: formatted,
       skorRounded: rounded,
-      badgeClass: "bg-emerald-600 text-white border-emerald-700 hover:bg-emerald-600",
+      badgeClass: "bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-700",
       meaning: "Capaian istimewa, konsisten melampaui standar",
     }
   }
@@ -82,7 +82,7 @@ export function kategoriSkor(skor: number | null | undefined): KategoriSkorResul
     kategori: "Sangat Kurang",
     skorFormatted: formatted,
     skorRounded: rounded,
-    badgeClass: "bg-orange-600 text-white border-orange-700 dark:bg-orange-700 dark:border-orange-800 hover:bg-orange-600",
+    badgeClass: "bg-orange-700 text-white border-orange-800 dark:bg-orange-800 dark:border-orange-900 hover:bg-orange-700",
     meaning: "Memerlukan intervensi & pendampingan intensif",
   }
 }

@@ -18,7 +18,7 @@ describe("Utilitas Scoring & Kategori Skor Akhir (PRD Bagian 8)", () => {
       const atMax = kategoriSkor(5.0)
       expect(atMax.kategori).toBe("Sangat Baik")
       expect(atMax.skorFormatted).toBe("5.00")
-      expect(atMax.badgeClass).toContain("bg-emerald-600")
+      expect(atMax.badgeClass).toContain("bg-emerald-700")
 
       const atThreshold = kategoriSkor(4.50)
       expect(atThreshold.kategori).toBe("Sangat Baik")
@@ -70,7 +70,7 @@ describe("Utilitas Scoring & Kategori Skor Akhir (PRD Bagian 8)", () => {
       const justBelow = kategoriSkor(1.49)
       expect(justBelow.kategori).toBe("Sangat Kurang")
       expect(justBelow.skorFormatted).toBe("1.49")
-      expect(justBelow.badgeClass).toContain("bg-orange-600")
+      expect(justBelow.badgeClass).toContain("bg-orange-700")
 
       const atMinThreshold = kategoriSkor(1.00)
       expect(atMinThreshold.kategori).toBe("Sangat Kurang")

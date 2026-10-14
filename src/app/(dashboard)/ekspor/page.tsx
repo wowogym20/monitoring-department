@@ -1,41 +1,48 @@
 import { requireRole } from "@/lib/auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { EXPORT_ROLES } from "@/lib/validations/export"
+import { createClient } from "@/lib/supabase/server"
+import { AssessmentPeriod } from "@/types/database"
+import { EksporClient } from "./ekspor-client"
 import { FileSpreadsheet } from "lucide-react"
 
 export default async function EksporPage() {
-  await requireRole("super_admin", "admin")
+  // Hanya super_admin dan admin yang berhak mengakses (konstanta izin EXPORT_ROLES)
+  await requireRole(...EXPORT_ROLES)
+
+  const supabase = await createClient()
+
+  // Ambil daftar periode penilaian
+  const { data: periodsData } = await supabase
+    .from("assessment_periods")
+    .select("*")
+    .order("tanggal_mulai", { ascending: false })
+
+  const periods: AssessmentPeriod[] = periodsData || []
+
+  // Ambil daftar departemen aktif
+  const { data: deptData } = await supabase
+    .from("departments")
+    .select("id, nama, kode")
+    .eq("is_active", true)
+    .order("nama", { ascending: true })
+
+  const departments = deptData || []
 
   return (
     <div className="space-y-6">
+      {/* Header Halaman */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Ekspor Laporan
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
+          <FileSpreadsheet className="size-7 text-primary" />
+          Ekspor Laporan Penilaian
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Unduh laporan penilaian dan rekap departemen dalam format Excel / CSV.
+          Unduh laporan rekapitulasi kinerja departemen dalam format lembar kerja Excel (.xlsx) dan dokumen cetak PDF (.pdf).
         </p>
       </div>
 
-      <Card className="border border-border shadow-xs">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <FileSpreadsheet className="h-5 w-5 text-primary" />
-              Modul Ekspor Laporan
-            </CardTitle>
-            <Badge variant="secondary">Fase 4</Badge>
-          </div>
-          <CardDescription>
-            Fitur ekspor data nilai, audit log, dan rekapitulasi anggota per periode.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Fitur unduh spreadsheet terintegrasi akan diimplementasikan pada Fase 4.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Komponen Interaktif Ekspor */}
+      <EksporClient periods={periods} departments={departments} />
     </div>
   )
 }

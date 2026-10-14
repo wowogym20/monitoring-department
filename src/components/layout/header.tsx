@@ -135,14 +135,16 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           className="flex md:hidden items-center gap-2 min-w-0 hover:opacity-90 transition-opacity"
           title="Monitoring Departemen - Halaman Utama"
         >
-          <Image
-            src="/logo.png"
-            alt="Logo Tazakka"
-            width={28}
-            height={28}
-            className="size-7 object-contain shrink-0"
-            priority
-          />
+          <div className="size-7 rounded-full overflow-hidden shrink-0 border border-border/80 shadow-2xs bg-muted/20 flex items-center justify-center">
+            <Image
+              src="/Logo.jpeg"
+              alt="Logo Tazakka"
+              width={28}
+              height={28}
+              className="size-full object-cover aspect-square"
+              priority
+            />
+          </div>
           <div className="flex flex-col min-w-0">
             <span className="font-bold text-xs sm:text-sm tracking-tight leading-tight truncate">
               Monitoring Dept

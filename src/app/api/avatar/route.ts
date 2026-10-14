@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { z } from "zod"
+
+const avatarPathSchema = z
+  .string()
+  .min(1, "Path avatar wajib diisi")
+  .regex(/^[a-zA-Z0-9_\-\.\/]+$/, "Format path avatar tidak valid")
+  .refine((p) => !p.includes(".."), "Path traversal tidak diizinkan")
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const path = searchParams.get("path")
+  const parseResult = avatarPathSchema.safeParse(searchParams.get("path"))
 
-  if (!path) {
-    return new NextResponse("Path avatar tidak ditemukan", { status: 400 })
+  if (!parseResult.success) {
+    return new NextResponse(parseResult.error.errors[0]?.message || "Path avatar tidak valid", {
+      status: 400,
+    })
   }
+
+  const path = parseResult.data
 
   const supabase = await createClient()
   const {

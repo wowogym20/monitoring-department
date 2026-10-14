@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const gradientButtonVariants = cva(
   [
     // Layout
-    'relative inline-flex shrink-0 items-center justify-center',
+    'relative inline-flex shrink-0 items-center justify-center cursor-pointer',
     'gap-2 whitespace-nowrap rounded-full border',
     'font-semibold outline-none',
     'transition-all duration-300 ease-in-out',
@@ -19,7 +19,7 @@ const gradientButtonVariants = cva(
     'focus-visible:ring-offset-background',
 
     // Disabled
-    'disabled:pointer-events-none',
+    'disabled:cursor-not-allowed',
     'disabled:opacity-50',
 
     // Icon

@@ -53,14 +53,16 @@ export function AppShell({ children, user }: AppShellProps) {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-72 p-0 flex flex-col">
           <SheetHeader className="h-16 px-4 border-b border-border flex flex-row items-center gap-3 space-y-0 text-left shrink-0">
-            <Image
-              src="/logo.png"
-              alt="Logo Tazakka"
-              width={36}
-              height={36}
-              className="size-9 object-contain shrink-0"
-              priority
-            />
+            <div className="size-9 rounded-full overflow-hidden shrink-0 border border-border/80 shadow-2xs bg-muted/20 flex items-center justify-center">
+              <Image
+                src="/Logo.jpeg"
+                alt="Logo Tazakka"
+                width={36}
+                height={36}
+                className="size-full object-cover aspect-square"
+                priority
+              />
+            </div>
             <div className="flex flex-col min-w-0">
               <SheetTitle className="text-sm font-bold tracking-tight leading-tight">
                 Monitoring Departemen
@@ -130,17 +132,21 @@ export function AppShell({ children, user }: AppShellProps) {
             )}
             title="Monitoring Departemen"
           >
-            <Image
-              src="/logo.png"
-              alt="Logo Tazakka"
-              width={isCollapsed ? 32 : 36}
-              height={isCollapsed ? 32 : 36}
+            <div
               className={cn(
-                "object-contain shrink-0",
+                "rounded-full overflow-hidden shrink-0 border border-border/80 shadow-2xs bg-muted/20 flex items-center justify-center",
                 isCollapsed ? "size-8" : "size-9"
               )}
-              priority
-            />
+            >
+              <Image
+                src="/Logo.jpeg"
+                alt="Logo Tazakka"
+                width={isCollapsed ? 32 : 36}
+                height={isCollapsed ? 32 : 36}
+                className="size-full object-cover aspect-square"
+                priority
+              />
+            </div>
             {!isCollapsed && (
               <div className="flex flex-col min-w-0 overflow-hidden">
                 <h1 className="font-bold text-sm tracking-tight leading-tight truncate text-foreground">

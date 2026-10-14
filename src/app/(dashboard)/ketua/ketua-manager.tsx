@@ -229,7 +229,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                               className="object-cover"
                             />
                           )}
-                          <AvatarFallback className="text-xs bg-primary/20 text-primary font-bold">
+                          <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
@@ -269,11 +269,21 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                         variant={account.is_active ? "default" : "secondary"}
                         className={
                           account.is_active
-                            ? "bg-emerald-600 text-white hover:bg-emerald-600"
-                            : "bg-muted text-muted-foreground"
+                            ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                            : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
                         }
                       >
-                        {account.is_active ? "Aktif" : "Nonaktif"}
+                        {account.is_active ? (
+                          <>
+                            <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                            <span>Aktif</span>
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="size-3 mr-1 shrink-0" />
+                            <span>Nonaktif</span>
+                          </>
+                        )}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">

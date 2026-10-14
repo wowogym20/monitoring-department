@@ -196,7 +196,7 @@ export function AspekManager({
       nilai: 5,
       label: "Sangat Baik",
       arti: "Konsisten melampaui harapan, layak jadi teladan",
-      badgeClass: "bg-emerald-600 text-white dark:bg-emerald-500",
+      badgeClass: "bg-emerald-700 text-white dark:bg-emerald-700",
     },
     {
       nilai: 4,
@@ -223,7 +223,7 @@ export function AspekManager({
       nilai: 1,
       label: "Sangat Kurang",
       arti: "Jauh di bawah harapan, perlu pembinaan serius",
-      badgeClass: "bg-orange-600 text-white dark:bg-orange-700",
+      badgeClass: "bg-orange-700 text-white dark:bg-orange-800",
     },
   ]
 
@@ -299,11 +299,21 @@ export function AspekManager({
                           variant={aspect.is_active ? "default" : "secondary"}
                           className={
                             aspect.is_active
-                              ? "bg-emerald-600 text-white hover:bg-emerald-600"
-                              : "bg-muted text-muted-foreground"
+                              ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                              : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
                           }
                         >
-                          {aspect.is_active ? "Aktif" : "Nonaktif"}
+                          {aspect.is_active ? (
+                            <>
+                              <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                              <span>Aktif</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="size-3 mr-1 shrink-0" />
+                              <span>Nonaktif</span>
+                            </>
+                          )}
                         </Badge>
                       </TableCell>
                       {isSuperAdmin && (

@@ -524,7 +524,7 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
                         <div className="flex items-center gap-2.5">
                           <Avatar className="size-7 sm:size-8 border border-border/60">
                             <AvatarImage src={comment.author_foto || undefined} />
-                            <AvatarFallback className="text-[11px] bg-primary/10 text-primary font-bold">
+                            <AvatarFallback className="text-[11px] bg-primary text-primary-foreground font-bold">
                               {comment.author_nama.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>

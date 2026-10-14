@@ -34,10 +34,13 @@ export interface DepartmentFilterParams {
   pageSize?: number
 }
 
+import { z } from "zod"
+
 /**
  * Mengambil daftar departemen dengan filter status, pencarian, dan paginasi sisi server.
  */
 export async function getDepartmentsServer(params: DepartmentFilterParams = {}) {
+  await requireRole("super_admin", "admin")
   const supabase = await createClient()
 
   const { search = "", status = "all", page = 1, pageSize = 10 } = params
@@ -125,6 +128,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
  * Belum memegang departemen manapun, atau saat ini memegang departemen tertentu (currentDepartmentId).
  */
 export async function getEligibleKetuaList(currentDepartmentId?: string | null) {
+  await requireRole("super_admin")
   const supabase = await createClient()
 
   // Ambil semua departemen yang sudah memiliki ketua
@@ -304,11 +308,14 @@ export async function toggleDepartmentStatusAction(id: string, is_active: boolea
   try {
     await requireRole("super_admin")
 
+    const validatedId = z.string().uuid("ID Departemen tidak valid").parse(id)
+    const validatedActive = z.boolean().parse(is_active)
+
     const supabase = await createClient()
     const { error } = await supabase
       .from("departments")
-      .update({ is_active })
-      .eq("id", id)
+      .update({ is_active: validatedActive })
+      .eq("id", validatedId)
 
     if (error) {
       return { success: false, error: `Gagal mengubah status: ${error.message}` }
@@ -317,7 +324,7 @@ export async function toggleDepartmentStatusAction(id: string, is_active: boolea
     revalidatePath("/departemen")
     return {
       success: true,
-      message: `Status departemen berhasil diubah menjadi ${is_active ? "Aktif" : "Nonaktif"}.`,
+      message: `Status departemen berhasil diubah menjadi ${validatedActive ? "Aktif" : "Nonaktif"}.`,
     }
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server"
@@ -334,13 +341,14 @@ export async function deleteDepartmentAction(id: string) {
   try {
     await requireRole("super_admin")
 
+    const validatedId = z.string().uuid("ID Departemen tidak valid").parse(id)
     const supabase = await createClient()
 
     // 1. Cek riwayat penilaian
     const { count: assessmentCount, error: countErr } = await supabase
       .from("assessments")
       .select("*", { count: "exact", head: true })
-      .eq("department_id", id)
+      .eq("department_id", validatedId)
 
     if (countErr) {
       return { success: false, error: `Gagal memeriksa riwayat penilaian: ${countErr.message}` }
@@ -358,7 +366,7 @@ export async function deleteDepartmentAction(id: string) {
     const { count: memberCount } = await supabase
       .from("members")
       .select("*", { count: "exact", head: true })
-      .eq("department_id", id)
+      .eq("department_id", validatedId)
       .is("deleted_at", null)
 
     if (memberCount && memberCount > 0) {
@@ -370,7 +378,7 @@ export async function deleteDepartmentAction(id: string) {
     }
 
     // 3. Hapus departemen
-    const { error: deleteErr } = await supabase.from("departments").delete().eq("id", id)
+    const { error: deleteErr } = await supabase.from("departments").delete().eq("id", validatedId)
 
     if (deleteErr) {
       return { success: false, error: `Gagal menghapus departemen: ${deleteErr.message}` }

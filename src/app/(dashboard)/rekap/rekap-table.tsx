@@ -3,6 +3,7 @@
 import React, { useTransition } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { cn } from "@/lib/utils"
 import {
   ColumnDef,
   flexRender,
@@ -47,6 +48,7 @@ import {
   Calendar,
   Layers,
   User,
+  X,
 } from "lucide-react"
 
 interface RekapTableProps {
@@ -62,6 +64,12 @@ interface RekapTableProps {
   currentStatus: string
   currentSearch: string
   userRole: UserRole
+}
+
+// Helper untuk merapikan nama periode agar tidak mengulang kata "Periode Penilaian"
+function formatPeriodDisplay(name: string): string {
+  if (!name) return ""
+  return name.replace(/^Periode\s+Penilaian\s+/i, "").trim()
 }
 
 export function RekapTable({
@@ -266,83 +274,123 @@ export function RekapTable({
     <div className="space-y-4">
       {/* Bar Filter & Pencarian Sisi Server */}
       <div className="p-4 sm:p-5 bg-card/80 backdrop-blur-xs rounded-xl border border-border shadow-2xs space-y-3.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
-          <div className="flex items-center gap-2">
-            <Filter className="size-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground">Filter & Pencarian Rekap</span>
-            {hasActiveFilters && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                Filter Aktif
-              </Badge>
-            )}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/60 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="size-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+              <Filter className="size-3.5" />
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-foreground tracking-tight">
+                Filter &amp; Pencarian Rekap
+              </span>
+              {hasActiveFilters && (
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 h-5 bg-primary/10 text-primary border border-primary/20 font-medium">
+                  Filter Aktif
+                </Badge>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             {hasActiveFilters && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={handleResetFilters}
-                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:border-destructive/40 hover:bg-destructive/10 gap-1.5 transition-colors"
+                title="Reset semua filter ke default"
               >
                 <RotateCcw className="size-3" />
-                <span>Reset</span>
+                <span>Reset Filter</span>
               </Button>
             )}
 
             {isPending && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground animate-pulse">
+              <span className="flex items-center gap-1.5 text-xs text-primary font-medium animate-pulse px-2.5 py-1 rounded-md bg-primary/10">
                 <RefreshCw className="size-3 animate-spin text-primary" />
-                Memuat data...
+                <span>Memuat data...</span>
               </span>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div
+          className={cn(
+            "grid gap-3 sm:gap-4 items-end",
+            userRole === "user"
+              ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-12"
+              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-12"
+          )}
+        >
           {/* 1. Filter Periode */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-              <Calendar className="size-3" />
+          <div
+            className={cn(
+              "space-y-1.5",
+              userRole === "user" ? "sm:col-span-1 lg:col-span-5" : "lg:col-span-4"
+            )}
+          >
+            <label
+              htmlFor="select-filter-periode"
+              className="text-xs font-medium text-foreground/85 flex items-center gap-1.5"
+            >
+              <Calendar className="size-3.5 text-primary" />
               <span>Periode Penilaian</span>
             </label>
             <Select
               value={selectedPeriodId || ""}
               onValueChange={(val) => updateQuery({ periodeId: val, page: "1" })}
             >
-              <SelectTrigger id="select-filter-periode" className="h-9 text-xs bg-background">
+              <SelectTrigger id="select-filter-periode" aria-label="Filter periode penilaian" className="h-9.5 text-xs bg-background w-full">
                 <SelectValue placeholder="Pilih Periode" />
               </SelectTrigger>
               <SelectContent>
-                {periods.map((p) => (
-                  <SelectItem key={p.id} value={p.id} className="text-xs">
-                    {p.nama} {p.status === "open" ? "(Aktif)" : "(Tutup)"}
-                  </SelectItem>
-                ))}
+                {periods.map((p) => {
+                  const cleanName = formatPeriodDisplay(p.nama)
+                  return (
+                    <SelectItem key={p.id} value={p.id} className="text-xs py-2">
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <span className="truncate font-medium">{cleanName}</span>
+                        <span
+                          className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0",
+                            p.status === "open"
+                              ? "bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30"
+                              : "bg-muted text-muted-foreground border border-border"
+                          )}
+                        >
+                          {p.status === "open" ? "Aktif" : "Tutup"}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           </div>
 
           {/* 2. Filter Departemen (Hanya untuk super_admin & admin) */}
           {userRole !== "user" && (
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-                <Building className="size-3" />
+            <div className="space-y-1.5 lg:col-span-3">
+              <label
+                htmlFor="select-filter-dept"
+                className="text-xs font-medium text-foreground/85 flex items-center gap-1.5"
+              >
+                <Building className="size-3.5 text-primary" />
                 <span>Departemen</span>
               </label>
               <Select
                 value={selectedDepartmentId || "all"}
                 onValueChange={(val) => updateQuery({ departmentId: val, page: "1" })}
               >
-                <SelectTrigger id="select-filter-dept" className="h-9 text-xs bg-background">
+                <SelectTrigger id="select-filter-dept" aria-label="Filter departemen penilaian" className="h-9.5 text-xs bg-background w-full">
                   <SelectValue placeholder="Semua Departemen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all" className="text-xs">
+                  <SelectItem value="all" className="text-xs py-2">
                     Semua Departemen
                   </SelectItem>
                   {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id} className="text-xs">
+                    <SelectItem key={d.id} value={d.id} className="text-xs py-2">
                       {d.nama} ({d.kode})
                     </SelectItem>
                   ))}
@@ -352,56 +400,103 @@ export function RekapTable({
           )}
 
           {/* 3. Filter Status */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-              <Layers className="size-3" />
+          <div
+            className={cn(
+              "space-y-1.5",
+              userRole === "user" ? "sm:col-span-1 lg:col-span-3" : "lg:col-span-2"
+            )}
+          >
+            <label
+              htmlFor="select-filter-status"
+              className="text-xs font-medium text-foreground/85 flex items-center gap-1.5"
+            >
+              <Layers className="size-3.5 text-primary" />
               <span>Status Penilaian</span>
             </label>
             <Select
               value={currentStatus || "all"}
               onValueChange={(val) => updateQuery({ status: val, page: "1" })}
             >
-              <SelectTrigger id="select-filter-status" className="h-9 text-xs bg-background">
+              <SelectTrigger id="select-filter-status" aria-label="Filter status penilaian" className="h-9.5 text-xs bg-background w-full">
                 <SelectValue placeholder="Semua Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="text-xs">
-                  Semua Status
+                <SelectItem value="all" className="text-xs py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-muted-foreground/40 shrink-0" />
+                    <span>Semua Status</span>
+                  </div>
                 </SelectItem>
                 {userRole !== "admin" && (
-                  <SelectItem value="draft" className="text-xs">
-                    Draft
+                  <SelectItem value="draft" className="text-xs py-2">
+                    <div className="flex items-center gap-2">
+                      <span className="size-2 rounded-full bg-slate-400 shrink-0" />
+                      <span>Draft</span>
+                    </div>
                   </SelectItem>
                 )}
-                <SelectItem value="submitted" className="text-xs">
-                  Submitted
+                <SelectItem value="submitted" className="text-xs py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-blue-500 shrink-0" />
+                    <span>Submitted</span>
+                  </div>
                 </SelectItem>
-                <SelectItem value="revision_requested" className="text-xs">
-                  Revision Requested
+                <SelectItem value="revision_requested" className="text-xs py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-amber-500 shrink-0" />
+                    <span>Revision Requested</span>
+                  </div>
                 </SelectItem>
-                <SelectItem value="approved" className="text-xs">
-                  Approved
+                <SelectItem value="approved" className="text-xs py-2">
+                  <div className="flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span>Approved</span>
+                  </div>
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* 4. Pencarian Nama / NIP */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
-              <Search className="size-3" />
+          <div
+            className={cn(
+              "space-y-1.5",
+              userRole === "user"
+                ? "sm:col-span-2 lg:col-span-4"
+                : "sm:col-span-2 lg:col-span-3"
+            )}
+          >
+            <label
+              htmlFor="input-search-nama"
+              className="text-xs font-medium text-foreground/85 flex items-center gap-1.5"
+            >
+              <Search className="size-3.5 text-primary" />
               <span>Cari Anggota</span>
             </label>
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="input-search-nama"
                 type="text"
                 placeholder="Ketik nama atau NIP..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="h-9 pl-9 text-xs bg-background"
+                className="h-9.5 pl-9 pr-8 text-xs bg-background w-full"
               />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchInput("")
+                    updateQuery({ search: null, page: "1" })
+                  }}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                  aria-label="Hapus kata kunci pencarian"
+                  title="Hapus pencarian"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -487,7 +582,7 @@ export function RekapTable({
               value={String(pageSize)}
               onValueChange={(val) => updateQuery({ pageSize: val, page: "1" })}
             >
-              <SelectTrigger className="h-8 w-18 text-xs bg-card">
+              <SelectTrigger className="h-8 w-18 text-xs bg-card" aria-label="Pilih jumlah baris per halaman">
                 <SelectValue placeholder={String(pageSize)} />
               </SelectTrigger>
               <SelectContent>

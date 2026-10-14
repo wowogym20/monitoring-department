@@ -13,6 +13,8 @@ export interface CurrentUser {
   department: Department | null
 }
 
+export { EXPORT_ROLES, type ExportRole } from "@/lib/validations/export"
+
 /**
  * Mengambil informasi pengguna yang sedang login beserta profil dan departemennya.
  * Mengembalikan null HANYA jika pengguna benar-benar belum login di Supabase Auth.

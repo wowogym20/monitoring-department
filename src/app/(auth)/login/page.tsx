@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
 import { toast } from "sonner"
 import { loginSchema, LoginInput } from "@/lib/validations/auth"
 import { loginAction } from "@/lib/actions/auth"
@@ -20,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Loader2, Lock, Mail, ShieldAlert } from "lucide-react"
+import { Loader2, Lock, Mail, ShieldAlert, Eye, EyeOff } from "lucide-react"
 
 function LoginForm() {
   const router = useRouter()
@@ -29,6 +30,7 @@ function LoginForm() {
   const errorParam = searchParams.get("error")
 
   const [isLoading, setIsLoading] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
 
   const {
     register,
@@ -109,21 +111,35 @@ function LoginForm() {
               </Label>
               <Link
                 href="/lupa-password"
-                className="text-xs text-primary hover:underline font-medium"
+                className="text-xs text-primary hover:underline font-medium dark:text-emerald-400"
               >
                 Lupa kata sandi?
               </Link>
             </div>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
-                className="pl-9"
+                className="pl-9 pr-10"
                 disabled={isLoading}
                 {...register("password")}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                title={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
+                tabIndex={0}
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
             </div>
             {errors.password && (
               <p className="text-xs text-destructive flex items-center gap-1">
@@ -164,17 +180,25 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md space-y-6">
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 mb-1">
-            <span className="size-3.5 rounded-full bg-primary inline-block" />
-            <span className="size-3.5 rounded-full bg-secondary inline-block" />
-            <span className="font-extrabold text-xl sm:text-2xl tracking-tight">
-              Monitoring Departemen
-            </span>
+        <div className="text-center space-y-3 flex flex-col items-center">
+          <div className="size-16 sm:size-20 rounded-full overflow-hidden border-2 border-primary/25 shadow-sm bg-muted/20 shrink-0 flex items-center justify-center">
+            <Image
+              src="/Logo.jpeg"
+              alt="Logo Tazakka"
+              width={80}
+              height={80}
+              className="size-full object-cover aspect-square"
+              priority
+            />
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Standarisasi Penilaian dan Pemantauan Kinerja Internal
-          </p>
+          <div className="space-y-1">
+            <h1 className="font-extrabold text-xl sm:text-2xl tracking-tight text-foreground">
+              Monitoring Departemen
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Standarisasi Penilaian dan Pemantauan Kinerja Internal
+            </p>
+          </div>
         </div>
 
         {/* Suspense wrapper for Client Component reading searchParams */}

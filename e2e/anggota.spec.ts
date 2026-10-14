@@ -112,7 +112,7 @@ test.describe("Alur Manajemen Anggota: Ketua (Mobile 360px) & Admin SDM (Impor M
     await page.waitForURL("**/dashboard")
 
     // 2. Navigasi ke /anggota
-    await page.goto("/anggota")
+    await page.goto("/anggota", { waitUntil: "domcontentloaded" })
     await page.waitForURL("**/anggota")
 
     // Admin dapat melihat filter departemen

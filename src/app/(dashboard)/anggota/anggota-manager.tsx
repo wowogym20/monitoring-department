@@ -18,6 +18,8 @@ import {
   Phone,
   Briefcase,
   IdCard,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -259,6 +261,7 @@ export function AnggotaManager({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="search-anggota"
+                aria-label="Cari nama atau NIP anggota"
                 placeholder="Cari berdasarkan nama atau NIP..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -276,7 +279,7 @@ export function AnggotaManager({
                     setPage(1)
                   }}
                 >
-                  <SelectTrigger id="filter-departemen" className="w-full">
+                  <SelectTrigger id="filter-departemen" aria-label="Filter berdasarkan departemen" className="w-full">
                     <SelectValue placeholder="Pilih Departemen" />
                   </SelectTrigger>
                   <SelectContent>
@@ -300,7 +303,7 @@ export function AnggotaManager({
                   setPage(1)
                 }}
               >
-                <SelectTrigger id="filter-status" className="w-full">
+                <SelectTrigger id="filter-status" aria-label="Filter status keaktifan" className="w-full">
                   <SelectValue placeholder="Status Aktif" />
                 </SelectTrigger>
                 <SelectContent>
@@ -384,16 +387,18 @@ export function AnggotaManager({
                       {member.is_active ? (
                         <Badge
                           variant="secondary"
-                          className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200"
+                          className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800"
                         >
-                          Aktif
+                          <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                          <span>Aktif</span>
                         </Badge>
                       ) : (
                         <Badge
                           variant="secondary"
-                          className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                          className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-200 dark:border-slate-700"
                         >
-                          Nonaktif
+                          <XCircle className="size-3 mr-1 shrink-0" />
+                          <span>Nonaktif</span>
                         </Badge>
                       )}
                     </TableCell>
@@ -482,16 +487,18 @@ export function AnggotaManager({
                   {member.is_active ? (
                     <Badge
                       variant="secondary"
-                      className="bg-emerald-100 text-emerald-800 text-[11px] font-medium border-emerald-200"
+                      className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 text-[11px] font-medium border-emerald-200 dark:border-emerald-800"
                     >
-                      Aktif
+                      <CheckCircle2 className="size-3 mr-1 shrink-0" />
+                      <span>Aktif</span>
                     </Badge>
                   ) : (
                     <Badge
                       variant="secondary"
-                      className="bg-slate-100 text-slate-700 text-[11px] font-medium"
+                      className="bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-[11px] font-medium border-slate-200 dark:border-slate-700"
                     >
-                      Nonaktif
+                      <XCircle className="size-3 mr-1 shrink-0" />
+                      <span>Nonaktif</span>
                     </Badge>
                   )}
                 </div>
@@ -586,7 +593,7 @@ export function AnggotaManager({
               setPage(1)
             }}
           >
-            <SelectTrigger className="h-8 w-24 text-xs">
+            <SelectTrigger className="h-8 w-24 text-xs" aria-label="Pilih jumlah baris per halaman">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

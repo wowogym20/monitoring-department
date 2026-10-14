@@ -42,14 +42,14 @@ const STATUS_CONFIG: Record<ExtendedAssessmentStatus, StatusConfig> = {
     label: "Revision Requested",
     icon: AlertCircle,
     badgeClass:
-      "bg-orange-500 text-white border-orange-600 dark:bg-orange-600 dark:border-orange-700 hover:bg-orange-500 dark:hover:bg-orange-600 shadow-2xs",
+      "bg-orange-700 text-white border-orange-800 dark:bg-orange-800 dark:border-orange-900 hover:bg-orange-700 dark:hover:bg-orange-800 shadow-2xs",
     description: "SDM meminta perbaikan",
   },
   approved: {
     label: "Approved",
     icon: CheckCircle2,
     badgeClass:
-      "bg-emerald-600 text-white border-emerald-700 dark:bg-emerald-700 dark:border-emerald-800 hover:bg-emerald-600 shadow-2xs",
+      "bg-emerald-700 text-white border-emerald-800 dark:bg-emerald-700 dark:border-emerald-800 hover:bg-emerald-700 shadow-2xs",
     description: "Disetujui SDM",
   },
   unassessed: {
