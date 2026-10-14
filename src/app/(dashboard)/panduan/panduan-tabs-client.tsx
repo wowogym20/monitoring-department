@@ -41,20 +41,21 @@ import { cn } from "@/lib/utils"
 
 // 14 Departemen Resmi Pondok Modern Tazakka
 const DEPARTEMEN_LIST = [
-  { kode: "DEP-01", nama: "Departemen Pengasuhan Santri" },
-  { kode: "DEP-02", nama: "Departemen Pengajaran & Kurikulum (KMI)" },
-  { kode: "DEP-03", nama: "Departemen Keuangan & Akuntansi" },
-  { kode: "DEP-04", nama: "Departemen Pembangunan & Sarpras" },
-  { kode: "DEP-05", nama: "Departemen Dapur & Konsumsi" },
-  { kode: "DEP-06", nama: "Departemen Kesehatan & Poskestren" },
-  { kode: "DEP-07", nama: "Departemen Keamanan & Ketertiban" },
-  { kode: "DEP-08", nama: "Departemen Penerimaan Santri Baru (PSB)" },
-  { kode: "DEP-09", nama: "Departemen Hubungan Masyarakat & Media" },
-  { kode: "DEP-10", nama: "Departemen Teknologi Informasi (TI)" },
-  { kode: "DEP-11", nama: "Departemen Usaha & Ekonomi Mandiri" },
-  { kode: "DEP-12", nama: "Departemen Bahasa (Arab & Inggris)" },
-  { kode: "DEP-13", nama: "Departemen Perpustakaan & Literasi" },
-  { kode: "DEP-14", nama: "Departemen Olahraga & Seni Budaya" },
+  { kode: "DEP-01", nama: "Departemen Penelitian dan Pengembangan Akademik" },
+  { kode: "DEP-02", nama: "Departemen Pendidikan dan Pengajaran" },
+  { kode: "DEP-03", nama: "Departemen Pusat Data & Statistik" },
+  { kode: "DEP-04", nama: "Departemen Pengasuhan Santri" },
+  { kode: "DEP-05", nama: "Departemen Lazis Tazakka" },
+  { kode: "DEP-06", nama: "Departemen Wakaf Tazakka" },
+  { kode: "DEP-07", nama: "Departemen Pengembangan Amal Usaha" },
+  { kode: "DEP-08", nama: "Departemen Pengembangan TI" },
+  { kode: "DEP-09", nama: "Departemen SDM" },
+  { kode: "DEP-10", nama: "Departemen Kesekretariatan" },
+  { kode: "DEP-11", nama: "Departemen Keuangan" },
+  { kode: "DEP-12", nama: "Departemen Kehumasan" },
+  { kode: "DEP-13", nama: "Departemen Pengembangan Perguruan Tinggi" },
+  { kode: "DEP-14", nama: "Departemen Pekerjaan Umum" },
+  { kode: "DEP-15", nama: "IKAT" },
 ]
 
 // 7 Aspek Penilaian Terstandar
