@@ -689,11 +689,11 @@ export function PanduanTabsClient() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-muted-foreground pt-1">
                 <div className="p-3 rounded-lg bg-muted/40 border border-border/80">
-                  <span className="font-semibold text-foreground block mb-1">Rotasi Ketua (/ketua)</span>
+                  <span className="font-semibold text-foreground block mb-1">Rotasi Kadep (Kadep)</span>
                   Menetapkan akun Kadep baru untuk departemen tertentu tanpa menghapus data penilaian lama.
                 </div>
                 <div className="p-3 rounded-lg bg-muted/40 border border-border/80">
-                  <span className="font-semibold text-foreground block mb-1">Kalender Periode (/periode)</span>
+                  <span className="font-semibold text-foreground block mb-1">Kalender Periode (Periode)</span>
                   Membuka masa evaluasi baru atau menutup (Closed) periode agar data nilai terkunci paten.
                 </div>
                 <div className="p-3 rounded-lg bg-muted/40 border border-border/80">
