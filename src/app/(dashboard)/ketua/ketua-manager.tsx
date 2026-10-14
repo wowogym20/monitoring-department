@@ -378,7 +378,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
                 id="ketua-email"
                 type="email"
                 required
-                placeholder="contoh: ketua.kehumasan@tazakka.id"
+                placeholder="contoh: ketua.kehumasan@tazakka.or.id"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

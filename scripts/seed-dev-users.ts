@@ -50,26 +50,26 @@ interface DevUserSeed {
 
 const DEV_USERS: DevUserSeed[] = [
   {
-    email: "superadmin@tazakka.id",
+    email: "superadmin@tazakka.or.id",
     password: "Password123!",
     nama: "KH. Anang Rikza Masyhadi, M.A.",
     role: "super_admin",
   },
   {
-    email: "admin.sdm@tazakka.id",
+    email: "admin.sdm@tazakka.or.id",
     password: "Password123!",
     nama: "Ustadz Haris (SDM)",
     role: "admin",
   },
   {
-    email: "ketua.pendidikan@tazakka.id",
+    email: "ketua.pendidikan@tazakka.or.id",
     password: "Password123!",
     nama: "Ustadz Hakim (Ketua Pendidikan)",
     role: "user",
     deptKode: "PEND-AJAR",
   },
   {
-    email: "ketua.ti@tazakka.id",
+    email: "ketua.ti@tazakka.or.id",
     password: "Password123!",
     nama: "Ustadz Fajar (Ketua TI)",
     role: "user",
@@ -78,12 +78,12 @@ const DEV_USERS: DevUserSeed[] = [
 ]
 
 async function seedDevUsers() {
-  console.log("🚀 Memulai proses seeding akun dev pengguna...")
+  console.log("🚀 Memulai proses seeding akun dev pengguna (@tazakka.or.id)...")
 
   for (const item of DEV_USERS) {
     console.log(`\nMemproses akun: ${item.email} (${item.role})...`)
 
-    // 1. Cek apakah user sudah ada di auth.users
+    // 1. Cek apakah user sudah ada di auth.users (baik email baru maupun email lama)
     const { data: listData, error: listError } = await supabase.auth.admin.listUsers()
     if (listError) {
       console.error(`Gagal mengambil daftar user:`, listError.message)
@@ -91,17 +91,32 @@ async function seedDevUsers() {
     }
 
     let userId: string | null = null
-    const existing = listData.users.find((u) => u.email?.toLowerCase() === item.email.toLowerCase())
+    const existingNew = listData.users.find((u) => u.email?.toLowerCase() === item.email.toLowerCase())
+    const oldEmail = item.email.replace("@tazakka.or.id", "@tazakka.id")
+    const existingOld = listData.users.find((u) => u.email?.toLowerCase() === oldEmail.toLowerCase())
 
-    if (existing) {
-      userId = existing.id
-      console.log(`✓ User auth sudah ada (ID: ${userId}). Memperbarui password...`)
+    if (existingNew) {
+      userId = existingNew.id
+      console.log(`✓ User auth @tazakka.or.id sudah ada (ID: ${userId}). Memperbarui password...`)
       const { error: updateAuthError } = await supabase.auth.admin.updateUserById(userId, {
         password: item.password,
         email_confirm: true,
       })
       if (updateAuthError) {
         console.warn(`Peringatan: Gagal memperbarui password user auth:`, updateAuthError.message)
+      }
+    } else if (existingOld) {
+      userId = existingOld.id
+      console.log(`🔄 Migrasi in-place user auth dari ${oldEmail} ke ${item.email} (ID: ${userId})...`)
+      const { error: updateAuthError } = await supabase.auth.admin.updateUserById(userId, {
+        email: item.email,
+        password: item.password,
+        email_confirm: true,
+      })
+      if (updateAuthError) {
+        console.warn(`Peringatan: Gagal memigrasikan email user auth:`, updateAuthError.message)
+      } else {
+        console.log(`✓ Email user auth berhasil dimigrasikan ke ${item.email}`)
       }
     } else {
       console.log(`+ Membuat user baru di auth.users...`)
@@ -163,10 +178,10 @@ async function seedDevUsers() {
   console.log("\n=======================================================")
   console.log("🎉 Seeding 4 Akun Dev Berhasil Selesai!")
   console.log("Daftar Akun Dev (Password untuk semua: Password123!):")
-  console.log("1. Super Admin : superadmin@tazakka.id")
-  console.log("2. Admin (SDM) : admin.sdm@tazakka.id")
-  console.log("3. Ketua DIK   : ketua.pendidikan@tazakka.id (Dept. Pendidikan)")
-  console.log("4. Ketua TI    : ketua.ti@tazakka.id (Dept. Pengembangan TI)")
+  console.log("1. Super Admin : superadmin@tazakka.or.id")
+  console.log("2. Admin (SDM) : admin.sdm@tazakka.or.id")
+  console.log("3. Ketua DIK   : ketua.pendidikan@tazakka.or.id (Dept. Pendidikan)")
+  console.log("4. Ketua TI    : ketua.ti@tazakka.or.id (Dept. Pengembangan TI)")
   console.log("=======================================================\n")
 }
 

@@ -1,14 +1,14 @@
 import { test, expect } from "@playwright/test"
 
 const SUPER_ADMIN = {
-  email: "superadmin@tazakka.id",
+  email: "superadmin@tazakka.or.id",
   password: "Password123!",
 }
 
 test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Periode", () => {
   const timestamp = Date.now().toString().slice(-6)
   const ketuaNama = `Ustadz E2E ${timestamp}`
-  const ketuaEmail = `ketua.e2e.${timestamp}@tazakka.id`
+  const ketuaEmail = `ketua.e2e.${timestamp}@tazakka.or.id`
   const periodeNama = `Periode Evaluasi E2E ${timestamp}`
 
   test("Super-Admin membuat ketua, menetapkannya ke departemen, dan membuat periode penilaian", async ({
@@ -42,10 +42,10 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     await page.click('button[type="submit"]:has-text("Buat Akun")')
 
     // Verifikasi akun ketua baru muncul di tabel
-    await expect(page.locator(`text=${ketuaNama}`)).toBeVisible({ timeout: 10000 })
+    await expect(page.locator("table").locator(`text=${ketuaNama}`)).toBeVisible({ timeout: 10000 })
 
     // 3. Navigasi ke /departemen dan Tetapkan Ketua ke Departemen
-    await page.goto("/departemen")
+    await page.goto("/departemen", { waitUntil: "domcontentloaded" })
     await page.waitForURL("**/departemen")
     await expect(page.locator('main h1:has-text("Departemen")')).toBeVisible()
 
@@ -75,7 +75,7 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     await expect(page.locator(`text=${ketuaNama}`).first()).toBeVisible({ timeout: 10000 })
 
     // 4. Navigasi ke /periode dan Buat Periode Penilaian Baru
-    await page.goto("/periode")
+    await page.goto("/periode", { waitUntil: "domcontentloaded" })
     await page.waitForURL("**/periode")
     await expect(page.locator('main h1:has-text("Periode Penilaian")')).toBeVisible()
 
@@ -92,7 +92,7 @@ test.describe("Alur Master Data: Super Admin Mengelola Ketua, Departemen, dan Pe
     await page.click('button[type="submit"]:has-text("Buat Periode")')
 
     // Verifikasi periode baru muncul di tabel dengan status Terbuka (Open)
-    await expect(page.locator(`text=${periodeNama}`)).toBeVisible({ timeout: 10000 })
+    await expect(page.locator("table").locator(`text=${periodeNama}`)).toBeVisible({ timeout: 10000 })
     await expect(page.locator("text=Terbuka (Open)").first()).toBeVisible()
   })
 })

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test"
 
 const ADMIN_ACCOUNT = {
-  email: "superadmin@tazakka.id",
+  email: "superadmin@tazakka.or.id",
   password: "Password123!",
 }
 

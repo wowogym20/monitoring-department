@@ -89,7 +89,7 @@ function LoginForm() {
               <Input
                 id="email"
                 type="email"
-                placeholder="nama@tazakka.id"
+                placeholder="nama@tazakka.or.id"
                 className="pl-9"
                 disabled={isLoading}
                 {...register("email")}

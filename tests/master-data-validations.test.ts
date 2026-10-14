@@ -70,14 +70,14 @@ describe("Unit Test Skema Validasi Zod Master Data", () => {
     it("menerima pembuatan akun ketua yang valid", () => {
       const valid = {
         nama: "Ustadz Haris",
-        email: "haris@tazakka.id",
+        email: "haris@tazakka.or.id",
         password: "Password123!",
         no_hp: "081234567890",
       }
       const res = createKetuaSchema.safeParse(valid)
       expect(res.success).toBe(true)
       if (res.success) {
-        expect(res.data.email).toBe("haris@tazakka.id")
+        expect(res.data.email).toBe("haris@tazakka.or.id")
         expect(res.data.no_hp).toBe("081234567890")
       }
     })
@@ -92,7 +92,7 @@ describe("Unit Test Skema Validasi Zod Master Data", () => {
 
       const invalidPassword = createKetuaSchema.safeParse({
         nama: "Ketua",
-        email: "ketua@tazakka.id",
+        email: "ketua@tazakka.or.id",
         password: "12345",
       })
       expect(invalidPassword.success).toBe(false)

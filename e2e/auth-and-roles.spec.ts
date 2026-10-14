@@ -2,15 +2,15 @@ import { test, expect } from "@playwright/test"
 
 const ACCOUNTS = {
   superAdmin: {
-    email: "superadmin@tazakka.id",
+    email: "superadmin@tazakka.or.id",
     password: "Password123!",
   },
   admin: {
-    email: "admin.sdm@tazakka.id",
+    email: "admin.sdm@tazakka.or.id",
     password: "Password123!",
   },
   ketua: {
-    email: "ketua.pendidikan@tazakka.id",
+    email: "ketua.pendidikan@tazakka.or.id",
     password: "Password123!",
   },
 }
