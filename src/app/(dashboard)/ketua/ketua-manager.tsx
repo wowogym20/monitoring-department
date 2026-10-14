@@ -58,6 +58,7 @@ import {
   MoreHorizontal,
   Loader2,
   Search,
+  X,
   Building,
   Pencil,
   Trash2,
@@ -84,7 +85,22 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
   const router = useRouter()
 
   const [search, setSearch] = React.useState("")
+  const [sortBy, setSortBy] = React.useState<
+    "nama" | "email" | "no_hp" | "department" | "is_active" | "created_at"
+  >("nama")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
+
+  const handleSort = (
+    col: "nama" | "email" | "no_hp" | "department" | "is_active" | "created_at"
+  ) => {
+    if (sortBy === col) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortBy(col)
+      setSortOrder("asc")
+    }
+  }
+
   const [createOpen, setCreateOpen] = React.useState(false)
   const [editAccount, setEditAccount] = React.useState<KetuaAccountItem | null>(null)
   const [deleteAccount, setDeleteAccount] = React.useState<KetuaAccountItem | null>(null)
@@ -121,10 +137,25 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
       )
     }
     return [...result].sort((a, b) => {
-      const cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      let cmp = 0
+      if (sortBy === "nama") {
+        cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      } else if (sortBy === "email") {
+        cmp = a.email.localeCompare(b.email, "id", { sensitivity: "base" })
+      } else if (sortBy === "no_hp") {
+        cmp = (a.no_hp || "").localeCompare(b.no_hp || "", "id", { sensitivity: "base" })
+      } else if (sortBy === "department") {
+        const deptA = a.department?.nama || ""
+        const deptB = b.department?.nama || ""
+        cmp = deptA.localeCompare(deptB, "id", { sensitivity: "base" })
+      } else if (sortBy === "is_active") {
+        cmp = (a.is_active ? 1 : 0) - (b.is_active ? 1 : 0)
+      } else if (sortBy === "created_at") {
+        cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      }
       return sortOrder === "asc" ? cmp : -cmp
     })
-  }, [initialAccounts, search, sortOrder])
+  }, [initialAccounts, search, sortBy, sortOrder])
 
   // Opsi departemen yang belum memiliki ketua (untuk create)
   const availableDeptsForCreate = React.useMemo(() => {
@@ -279,13 +310,24 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
           <Input
             placeholder="Cari nama, email, atau departemen..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 text-sm"
+            className="pl-8 pr-8 text-sm"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+              aria-label="Hapus kata kunci pencarian"
+              title="Hapus pencarian"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
         </div>
 
         <Button
@@ -314,17 +356,48 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
                 <TableHead>
                   <SortableHeader
                     label="Nama Kepala"
-                    direction={sortOrder}
-                    onToggle={() =>
-                      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-                    }
+                    direction={sortBy === "nama" ? sortOrder : false}
+                    onToggle={() => handleSort("nama")}
                   />
                 </TableHead>
-                <TableHead>Email Login</TableHead>
-                <TableHead>No. HP</TableHead>
-                <TableHead>Departemen Terkait</TableHead>
-                <TableHead>Status Akun</TableHead>
-                <TableHead>Terdaftar</TableHead>
+                <TableHead>
+                  <SortableHeader
+                    label="Email Login"
+                    direction={sortBy === "email" ? sortOrder : false}
+                    onToggle={() => handleSort("email")}
+                  />
+                </TableHead>
+                <TableHead>
+                  <SortableHeader
+                    label="No. HP"
+                    type="general"
+                    direction={sortBy === "no_hp" ? sortOrder : false}
+                    onToggle={() => handleSort("no_hp")}
+                  />
+                </TableHead>
+                <TableHead>
+                  <SortableHeader
+                    label="Departemen Terkait"
+                    direction={sortBy === "department" ? sortOrder : false}
+                    onToggle={() => handleSort("department")}
+                  />
+                </TableHead>
+                <TableHead>
+                  <SortableHeader
+                    label="Status Akun"
+                    type="general"
+                    direction={sortBy === "is_active" ? sortOrder : false}
+                    onToggle={() => handleSort("is_active")}
+                  />
+                </TableHead>
+                <TableHead>
+                  <SortableHeader
+                    label="Terdaftar"
+                    type="date"
+                    direction={sortBy === "created_at" ? sortOrder : false}
+                    onToggle={() => handleSort("created_at")}
+                  />
+                </TableHead>
                 <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>

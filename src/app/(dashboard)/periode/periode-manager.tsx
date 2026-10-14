@@ -79,16 +79,40 @@ export function PeriodeManager({
   const [tanggalMulai, setTanggalMulai] = React.useState("")
   const [tanggalAkhir, setTanggalAkhir] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [sortOrder, setSortOrder] = React.useState<"none" | "asc" | "desc">("none")
+  const [sortBy, setSortBy] = React.useState<
+    "nama" | "tanggal_mulai" | "tanggal_akhir" | "status" | "created_at"
+  >("created_at")
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc")
 
-  // Urutkan periode sesuai abjad nama atau default urutan tanggal sistem
+  const handleSort = (
+    col: "nama" | "tanggal_mulai" | "tanggal_akhir" | "status" | "created_at"
+  ) => {
+    if (sortBy === col) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortBy(col)
+      setSortOrder("asc")
+    }
+  }
+
+  // Urutkan periode sesuai kolom yang dipilih atau default urutan dibuat
   const sortedPeriods = React.useMemo(() => {
-    if (sortOrder === "none") return initialPeriods
     return [...initialPeriods].sort((a, b) => {
-      const cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      let cmp = 0
+      if (sortBy === "nama") {
+        cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      } else if (sortBy === "tanggal_mulai") {
+        cmp = a.tanggal_mulai.localeCompare(b.tanggal_mulai)
+      } else if (sortBy === "tanggal_akhir") {
+        cmp = a.tanggal_akhir.localeCompare(b.tanggal_akhir)
+      } else if (sortBy === "status") {
+        cmp = a.status.localeCompare(b.status)
+      } else if (sortBy === "created_at") {
+        cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      }
       return sortOrder === "asc" ? cmp : -cmp
     })
-  }, [initialPeriods, sortOrder])
+  }, [initialPeriods, sortBy, sortOrder])
 
   // Action: Buat Periode Baru
   const handleCreatePeriod = async (e: React.FormEvent) => {
@@ -345,18 +369,42 @@ export function PeriodeManager({
               <TableHead>
                 <SortableHeader
                   label="Nama Periode"
-                  direction={sortOrder}
-                  onToggle={() =>
-                    setSortOrder((prev) =>
-                      prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
-                    )
-                  }
+                  direction={sortBy === "nama" ? sortOrder : false}
+                  onToggle={() => handleSort("nama")}
                 />
               </TableHead>
-              <TableHead>Tanggal Mulai</TableHead>
-              <TableHead>Tanggal Akhir</TableHead>
-              <TableHead>Status Periode</TableHead>
-              <TableHead>Dibuat</TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="Tanggal Mulai"
+                  type="date"
+                  direction={sortBy === "tanggal_mulai" ? sortOrder : false}
+                  onToggle={() => handleSort("tanggal_mulai")}
+                />
+              </TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="Tanggal Akhir"
+                  type="date"
+                  direction={sortBy === "tanggal_akhir" ? sortOrder : false}
+                  onToggle={() => handleSort("tanggal_akhir")}
+                />
+              </TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="Status Periode"
+                  type="general"
+                  direction={sortBy === "status" ? sortOrder : false}
+                  onToggle={() => handleSort("status")}
+                />
+              </TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="Dibuat"
+                  type="date"
+                  direction={sortBy === "created_at" ? sortOrder : false}
+                  onToggle={() => handleSort("created_at")}
+                />
+              </TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>

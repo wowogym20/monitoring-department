@@ -260,13 +260,17 @@ export async function getRekapDataServer(rawFilter: Partial<RekapFilterInput>): 
   }
 
   // Paginasi sisi server
-  const from = (validated.page - 1) * validated.pageSize
-  const to = from + validated.pageSize - 1
+  const isAll = validated.pageSize === -1
 
   query = query
     .order("submitted_at", { ascending: false, nullsFirst: false })
     .order("updated_at", { ascending: false })
-    .range(from, to)
+
+  if (!isAll) {
+    const from = (validated.page - 1) * validated.pageSize
+    const to = from + validated.pageSize - 1
+    query = query.range(from, to)
+  }
 
   const { data: rows, count, error } = await query
 
@@ -275,7 +279,7 @@ export async function getRekapDataServer(rawFilter: Partial<RekapFilterInput>): 
   }
 
   const totalCount = count || 0
-  const pageCount = Math.ceil(totalCount / validated.pageSize)
+  const pageCount = isAll ? 1 : Math.ceil(totalCount / validated.pageSize)
 
   interface AssessmentJoinedRow {
     id: string
@@ -330,8 +334,8 @@ export async function getRekapDataServer(rawFilter: Partial<RekapFilterInput>): 
     items,
     totalCount,
     pageCount,
-    currentPage: validated.page,
-    pageSize: validated.pageSize,
+    currentPage: isAll ? 1 : validated.page,
+    pageSize: isAll ? totalCount : validated.pageSize,
     periods,
     selectedPeriod,
     departments,

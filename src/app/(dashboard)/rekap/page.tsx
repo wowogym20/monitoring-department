@@ -20,7 +20,8 @@ export default async function RekapPage({
   const params = await searchParams
 
   const page = params.page ? parseInt(params.page, 10) : 1
-  const pageSize = params.pageSize ? parseInt(params.pageSize, 10) : 10
+  const rawPageSize = params.pageSize === "all" ? -1 : params.pageSize ? parseInt(params.pageSize, 10) : 10
+  const pageSize = isNaN(rawPageSize) ? 10 : rawPageSize
 
   const rekapData = await getRekapDataServer({
     periodeId: params.periodeId,
@@ -28,7 +29,7 @@ export default async function RekapPage({
     status: params.status,
     search: params.search,
     page: isNaN(page) ? 1 : page,
-    pageSize: isNaN(pageSize) ? 10 : pageSize,
+    pageSize,
   })
 
   return (

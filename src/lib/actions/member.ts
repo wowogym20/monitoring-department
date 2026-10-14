@@ -142,10 +142,28 @@ export async function getMembersServer(
   }
 
   // Paginasi sisi server
-  const from = (parsed.page - 1) * parsed.pageSize
-  const to = from + parsed.pageSize - 1
+  const isAll = parsed.pageSize === -1
   const isAscending = parsed.sortOrder !== "desc"
-  query = query.order("nama", { ascending: isAscending }).range(from, to)
+
+  if (parsed.sortBy === "nip") {
+    query = query.order("nip", { ascending: isAscending, nullsFirst: false })
+  } else if (parsed.sortBy === "jabatan") {
+    query = query.order("jabatan", { ascending: isAscending })
+  } else if (parsed.sortBy === "no_hp") {
+    query = query.order("no_hp", { ascending: isAscending, nullsFirst: false })
+  } else if (parsed.sortBy === "is_active") {
+    query = query.order("is_active", { ascending: isAscending })
+  } else if (parsed.sortBy === "department") {
+    query = query.order("department_id", { ascending: isAscending })
+  } else {
+    query = query.order("nama", { ascending: isAscending })
+  }
+
+  if (!isAll) {
+    const from = (parsed.page - 1) * parsed.pageSize
+    const to = from + parsed.pageSize - 1
+    query = query.range(from, to)
+  }
 
   const { data, count, error } = await query
 
@@ -154,8 +172,8 @@ export async function getMembersServer(
     return {
       data: [],
       total: 0,
-      page: parsed.page,
-      pageSize: parsed.pageSize,
+      page: isAll ? 1 : parsed.page,
+      pageSize: isAll ? 0 : parsed.pageSize,
       totalPages: 0,
       currentDepartmentName,
     }
@@ -205,13 +223,13 @@ export async function getMembersServer(
   )
 
   const total = count || 0
-  const totalPages = Math.ceil(total / parsed.pageSize)
+  const totalPages = isAll ? 1 : Math.ceil(total / parsed.pageSize)
 
   return {
     data: members,
     total,
-    page: parsed.page,
-    pageSize: parsed.pageSize,
+    page: isAll ? 1 : parsed.page,
+    pageSize: isAll ? total : parsed.pageSize,
     totalPages,
     currentDepartmentName,
   }

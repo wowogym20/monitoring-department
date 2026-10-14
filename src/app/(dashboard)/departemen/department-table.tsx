@@ -50,6 +50,7 @@ import {
   Building2,
   Plus,
   Search,
+  X,
   MoreHorizontal,
   Edit,
   UserCheck,
@@ -148,15 +149,24 @@ export function DepartmentTable({
     router.push(`/departemen?${params.toString()}`)
   }
 
+  const currentSortBy = searchParams.get("sortBy") || "nama"
   const currentSort = (searchParams.get("sort") === "desc" ? "desc" : "asc") as "asc" | "desc"
 
-  const handleSortToggle = React.useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    const nextSort = currentSort === "asc" ? "desc" : "asc"
-    params.set("sort", nextSort)
-    params.set("page", "1")
-    router.push(`/departemen?${params.toString()}`)
-  }, [currentSort, router, searchParams])
+  const handleSortToggle = React.useCallback(
+    (col: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      if (currentSortBy === col) {
+        const nextSort = currentSort === "asc" ? "desc" : "asc"
+        params.set("sort", nextSort)
+      } else {
+        params.set("sortBy", col)
+        params.set("sort", "asc")
+      }
+      params.set("page", "1")
+      router.push(`/departemen?${params.toString()}`)
+    },
+    [currentSortBy, currentSort, router, searchParams]
+  )
 
   // Action: Create Department
   const handleCreateDepartment = async (e: React.FormEvent) => {
@@ -378,8 +388,8 @@ export function DepartmentTable({
         header: () => (
           <SortableHeader
             label="Departemen"
-            direction={currentSort}
-            onToggle={handleSortToggle}
+            direction={currentSortBy === "nama" ? currentSort : false}
+            onToggle={() => handleSortToggle("nama")}
           />
         ),
         cell: ({ row }) => (
@@ -395,7 +405,13 @@ export function DepartmentTable({
       },
       {
         accessorKey: "kode",
-        header: "Kode",
+        header: () => (
+          <SortableHeader
+            label="Kode"
+            direction={currentSortBy === "kode" ? currentSort : false}
+            onToggle={() => handleSortToggle("kode")}
+          />
+        ),
         cell: ({ row }) => (
           <Badge
             variant="outline"
@@ -448,7 +464,14 @@ export function DepartmentTable({
       },
       {
         accessorKey: "is_active",
-        header: "Status",
+        header: () => (
+          <SortableHeader
+            label="Status"
+            type="general"
+            direction={currentSortBy === "is_active" ? currentSort : false}
+            onToggle={() => handleSortToggle("is_active")}
+          />
+        ),
         cell: ({ row }) => renderStatusBadge(row.original.is_active),
       },
       ...(isSuperAdmin
@@ -462,7 +485,7 @@ export function DepartmentTable({
           ]
         : []),
     ],
-    [isSuperAdmin, page, pageSize, currentSort, handleSortToggle, renderStatusBadge, renderActionMenu]
+    [isSuperAdmin, page, pageSize, currentSortBy, currentSort, handleSortToggle, renderStatusBadge, renderActionMenu]
   )
 
   const table = useReactTable({
@@ -479,15 +502,32 @@ export function DepartmentTable({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               id="search-departemen"
               aria-label="Cari nama atau kode departemen"
               placeholder="Cari nama atau kode departemen..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-8 text-sm"
+              className="pl-8 pr-8 text-sm"
             />
+            {searchValue && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchValue("")
+                  const params = new URLSearchParams(searchParams.toString())
+                  params.delete("search")
+                  params.set("page", "1")
+                  router.push(`/departemen?${params.toString()}`)
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                aria-label="Hapus kata kunci pencarian"
+                title="Hapus pencarian"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
 
           <Select

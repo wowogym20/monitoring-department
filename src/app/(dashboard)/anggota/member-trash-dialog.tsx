@@ -68,15 +68,40 @@ export function MemberTrashDialog({
   onTrashMutated,
 }: MemberTrashDialogProps) {
   const [items, setItems] = React.useState<TrashMemberItem[]>([])
+  const [sortBy, setSortBy] = React.useState<
+    "nama" | "department" | "jabatan" | "deleted_at" | "days_remaining"
+  >("nama")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
   const [isLoading, setIsLoading] = React.useState(false)
 
+  const handleSort = (
+    col: "nama" | "department" | "jabatan" | "deleted_at" | "days_remaining"
+  ) => {
+    if (sortBy === col) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortBy(col)
+      setSortOrder("asc")
+    }
+  }
+
   const sortedItems = React.useMemo(() => {
     return [...items].sort((a, b) => {
-      const cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      let cmp = 0
+      if (sortBy === "nama") {
+        cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      } else if (sortBy === "department") {
+        cmp = a.department_nama.localeCompare(b.department_nama, "id", { sensitivity: "base" })
+      } else if (sortBy === "jabatan") {
+        cmp = a.jabatan.localeCompare(b.jabatan, "id", { sensitivity: "base" })
+      } else if (sortBy === "deleted_at") {
+        cmp = new Date(a.deleted_at).getTime() - new Date(b.deleted_at).getTime()
+      } else if (sortBy === "days_remaining") {
+        cmp = a.days_remaining - b.days_remaining
+      }
       return sortOrder === "asc" ? cmp : -cmp
     })
-  }, [items, sortOrder])
+  }, [items, sortBy, sortOrder])
   const [restoringId, setRestoringId] = React.useState<string | null>(null)
   const [deletingTarget, setDeletingTarget] = React.useState<TrashMemberItem | null>(null)
   const [isDeletingPermanently, setIsDeletingPermanently] = React.useState(false)
@@ -325,16 +350,40 @@ export function MemberTrashDialog({
                         <TableHead className="w-[30%]">
                           <SortableHeader
                             label="Nama Anggota"
-                            direction={sortOrder}
-                            onToggle={() =>
-                              setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-                            }
+                            direction={sortBy === "nama" ? sortOrder : false}
+                            onToggle={() => handleSort("nama")}
                           />
                         </TableHead>
-                        <TableHead>Departemen</TableHead>
-                        <TableHead>Jabatan</TableHead>
-                        <TableHead>Dihapus Pada</TableHead>
-                        <TableHead>Batas Simpan</TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            label="Departemen"
+                            direction={sortBy === "department" ? sortOrder : false}
+                            onToggle={() => handleSort("department")}
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            label="Jabatan"
+                            direction={sortBy === "jabatan" ? sortOrder : false}
+                            onToggle={() => handleSort("jabatan")}
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            label="Dihapus Pada"
+                            type="date"
+                            direction={sortBy === "deleted_at" ? sortOrder : false}
+                            onToggle={() => handleSort("deleted_at")}
+                          />
+                        </TableHead>
+                        <TableHead>
+                          <SortableHeader
+                            label="Batas Simpan"
+                            type="numeric"
+                            direction={sortBy === "days_remaining" ? sortOrder : false}
+                            onToggle={() => handleSort("days_remaining")}
+                          />
+                        </TableHead>
                         {canManage && <TableHead className="text-right">Aksi</TableHead>}
                       </TableRow>
                     </TableHeader>

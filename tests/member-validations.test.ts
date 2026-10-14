@@ -166,21 +166,41 @@ describe("Validasi Zod Modul Anggota (Client & Server)", () => {
       expect(result.search).toBe("")
       expect(result.department_id).toBe("")
       expect(result.sortOrder).toBe("asc")
+      expect(result.sortBy).toBe("nama")
     })
 
-    it("harus mengonversi string query params ke angka dan menerima sortOrder desc", () => {
+    it("harus mengonversi string query params ke angka dan menerima sortOrder desc serta sortBy kustom", () => {
       const result = memberFilterSchema.parse({
         page: "3",
         pageSize: "25",
         status: "active",
         search: "ahmad",
         sortOrder: "desc",
+        sortBy: "nip",
       })
       expect(result.page).toBe(3)
       expect(result.pageSize).toBe(25)
       expect(result.status).toBe("active")
       expect(result.search).toBe("ahmad")
       expect(result.sortOrder).toBe("desc")
+      expect(result.sortBy).toBe("nip")
+    })
+
+    it("harus mendukung seluruh kolom yang valid pada sortBy", () => {
+      const columns = ["nama", "nip", "department", "jabatan", "no_hp", "is_active"] as const
+      columns.forEach((col) => {
+        expect(memberFilterSchema.parse({ sortBy: col }).sortBy).toBe(col)
+      })
+    })
+
+    it("harus mendukung opsi pageSize 5, 10, 25, 50 serta 'all' / -1 untuk semua data", () => {
+      expect(memberFilterSchema.parse({ pageSize: "5" }).pageSize).toBe(5)
+      expect(memberFilterSchema.parse({ pageSize: 10 }).pageSize).toBe(10)
+      expect(memberFilterSchema.parse({ pageSize: "25" }).pageSize).toBe(25)
+      expect(memberFilterSchema.parse({ pageSize: "50" }).pageSize).toBe(50)
+      expect(memberFilterSchema.parse({ pageSize: "all" }).pageSize).toBe(-1)
+      expect(memberFilterSchema.parse({ pageSize: "-1" }).pageSize).toBe(-1)
+      expect(memberFilterSchema.parse({ pageSize: -1 }).pageSize).toBe(-1)
     })
   })
 })

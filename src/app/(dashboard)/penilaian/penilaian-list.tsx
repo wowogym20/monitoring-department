@@ -59,7 +59,17 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
 
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [sortBy, setSortBy] = useState<"nama" | "department" | "status" | "skor">("nama")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+
+  const handleSort = (col: "nama" | "department" | "status" | "skor") => {
+    if (sortBy === col) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortBy(col)
+      setSortOrder("asc")
+    }
+  }
 
   const {
     periodeList,
@@ -91,7 +101,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
     })
   }
 
-  // Filter dan sortir anggota berdasarkan pencarian, status, dan abjad nama
+  // Filter dan sortir anggota berdasarkan pencarian, status, dan kolom yang dipilih
   const filteredMembers = React.useMemo(() => {
     const list = members.filter((member) => {
       const matchesSearch =
@@ -112,10 +122,21 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
     })
 
     return list.sort((a, b) => {
-      const cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      let cmp = 0
+      if (sortBy === "nama") {
+        cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      } else if (sortBy === "department") {
+        cmp = a.department_nama.localeCompare(b.department_nama, "id", { sensitivity: "base" })
+      } else if (sortBy === "status") {
+        cmp = a.status.localeCompare(b.status, "id", { sensitivity: "base" })
+      } else if (sortBy === "skor") {
+        const scoreA = a.skor_rata ?? -1
+        const scoreB = b.skor_rata ?? -1
+        cmp = scoreA - scoreB
+      }
       return sortOrder === "asc" ? cmp : -cmp
     })
-  }, [members, searchQuery, statusFilter, sortOrder])
+  }, [members, searchQuery, statusFilter, sortBy, sortOrder])
 
   return (
     <div className="space-y-6">
@@ -354,7 +375,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
               aria-label="Hapus kata kunci pencarian"
               title="Hapus pencarian"
             >
@@ -429,15 +450,33 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                   <TableHead className="w-[30%]">
                     <SortableHeader
                       label="Anggota"
-                      direction={sortOrder}
-                      onToggle={() =>
-                        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-                      }
+                      direction={sortBy === "nama" ? sortOrder : false}
+                      onToggle={() => handleSort("nama")}
                     />
                   </TableHead>
-                  <TableHead className="w-[20%]">Departemen</TableHead>
-                  <TableHead className="w-[20%]">Status Penilaian</TableHead>
-                  <TableHead className="w-[15%]">Skor Akhir</TableHead>
+                  <TableHead className="w-[20%]">
+                    <SortableHeader
+                      label="Departemen"
+                      direction={sortBy === "department" ? sortOrder : false}
+                      onToggle={() => handleSort("department")}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[20%]">
+                    <SortableHeader
+                      label="Status Penilaian"
+                      type="general"
+                      direction={sortBy === "status" ? sortOrder : false}
+                      onToggle={() => handleSort("status")}
+                    />
+                  </TableHead>
+                  <TableHead className="w-[15%]">
+                    <SortableHeader
+                      label="Skor Akhir"
+                      type="numeric"
+                      direction={sortBy === "skor" ? sortOrder : false}
+                      onToggle={() => handleSort("skor")}
+                    />
+                  </TableHead>
                   <TableHead className="w-[15%] text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>

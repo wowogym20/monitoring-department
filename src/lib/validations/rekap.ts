@@ -9,7 +9,14 @@ export const rekapFilterSchema = z.object({
     .default("all"),
   search: z.string().max(100).optional().default(""),
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(5).max(100).default(10),
+  pageSize: z
+    .preprocess((val) => {
+      if (val === "all" || val === "-1" || val === -1 || val === 0 || val === "0") {
+        return -1
+      }
+      return val
+    }, z.union([z.coerce.number().int().positive(), z.literal(-1)]))
+    .default(10),
 })
 
 export const approveAssessmentSchema = z.object({

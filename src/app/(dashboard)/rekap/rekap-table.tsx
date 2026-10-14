@@ -187,12 +187,21 @@ export function RekapTable({
       },
       {
         accessorKey: "department_nama",
-        header: () => (
-          <span className="flex items-center gap-1.5">
-            <Building className="size-3.5 text-muted-foreground" />
-            <span>Departemen</span>
-          </span>
-        ),
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted()
+          return (
+            <SortableHeader
+              label="Departemen"
+              direction={isSorted}
+              onToggle={() => column.toggleSorting(isSorted === "asc")}
+            >
+              <span className="flex items-center gap-1.5">
+                <Building className="size-3.5 text-muted-foreground" />
+                <span>Departemen</span>
+              </span>
+            </SortableHeader>
+          )
+        },
         cell: ({ row }) => {
           const item = row.original
           return (
@@ -212,7 +221,17 @@ export function RekapTable({
       },
       {
         accessorKey: "skor_rata",
-        header: "Skor Rata-rata",
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted()
+          return (
+            <SortableHeader
+              label="Skor Rata-rata"
+              type="numeric"
+              direction={isSorted}
+              onToggle={() => column.toggleSorting(isSorted === "asc")}
+            />
+          )
+        },
         cell: ({ row }) => {
           const skor = row.original.skor_rata
           return (
@@ -224,7 +243,17 @@ export function RekapTable({
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted()
+          return (
+            <SortableHeader
+              label="Status"
+              type="general"
+              direction={isSorted}
+              onToggle={() => column.toggleSorting(isSorted === "asc")}
+            />
+          )
+        },
         cell: ({ row }) => {
           return (
             <div className="min-w-[120px]">
@@ -235,7 +264,17 @@ export function RekapTable({
       },
       {
         accessorKey: "submitted_at",
-        header: "Tanggal Submit",
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted()
+          return (
+            <SortableHeader
+              label="Tanggal Submit"
+              type="date"
+              direction={isSorted}
+              onToggle={() => column.toggleSorting(isSorted === "asc")}
+            />
+          )
+        },
         cell: ({ row }) => {
           const date = row.original.submitted_at
           return (
@@ -286,8 +325,9 @@ export function RekapTable({
   })
 
   // Hitung rentang data yang ditampilkan
-  const startItem = totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0
-  const endItem = Math.min(currentPage * pageSize, totalCount)
+  const isAll = searchParams.get("pageSize") === "all"
+  const startItem = totalCount > 0 ? (isAll ? 1 : (currentPage - 1) * pageSize + 1) : 0
+  const endItem = isAll ? totalCount : Math.min(currentPage * pageSize, totalCount)
 
   return (
     <div className="space-y-4">
@@ -509,7 +549,7 @@ export function RekapTable({
                     setSearchInput("")
                     updateQuery({ search: null, page: "1" })
                   }}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                   aria-label="Hapus kata kunci pencarian"
                   title="Hapus pencarian"
                 >
@@ -598,16 +638,18 @@ export function RekapTable({
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="hidden sm:inline">Baris:</span>
             <Select
-              value={String(pageSize)}
+              value={isAll ? "all" : String(pageSize)}
               onValueChange={(val) => updateQuery({ pageSize: val, page: "1" })}
             >
-              <SelectTrigger className="h-8 w-18 text-xs bg-card" aria-label="Pilih jumlah baris per halaman">
-                <SelectValue placeholder={String(pageSize)} />
+              <SelectTrigger className="h-8 w-28 text-xs bg-card" aria-label="Pilih jumlah baris per halaman">
+                <SelectValue placeholder={isAll ? "Semua data" : String(pageSize)} />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="5" className="text-xs">5</SelectItem>
                 <SelectItem value="10" className="text-xs">10</SelectItem>
                 <SelectItem value="25" className="text-xs">25</SelectItem>
                 <SelectItem value="50" className="text-xs">50</SelectItem>
+                <SelectItem value="all" className="text-xs">Semua data</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -619,7 +661,7 @@ export function RekapTable({
               size="icon"
               className="size-8"
               onClick={() => updateQuery({ page: "1" })}
-              disabled={currentPage <= 1 || isPending}
+              disabled={isAll || currentPage <= 1 || isPending}
               title="Halaman Pertama"
             >
               <ChevronsLeft className="size-3.5" />
@@ -629,14 +671,14 @@ export function RekapTable({
               size="icon"
               className="size-8"
               onClick={() => updateQuery({ page: String(currentPage - 1) })}
-              disabled={currentPage <= 1 || isPending}
+              disabled={isAll || currentPage <= 1 || isPending}
               title="Halaman Sebelumnya"
             >
               <ChevronLeft className="size-3.5" />
             </Button>
 
             <span className="px-2.5 text-xs font-semibold text-foreground whitespace-nowrap">
-              {currentPage} / {Math.max(pageCount, 1)}
+              {isAll ? "1 / 1" : `${currentPage} / ${Math.max(pageCount, 1)}`}
             </span>
 
             <Button
@@ -644,7 +686,7 @@ export function RekapTable({
               size="icon"
               className="size-8"
               onClick={() => updateQuery({ page: String(currentPage + 1) })}
-              disabled={currentPage >= pageCount || isPending}
+              disabled={isAll || currentPage >= pageCount || isPending}
               title="Halaman Selanjutnya"
             >
               <ChevronRight className="size-3.5" />
@@ -654,7 +696,7 @@ export function RekapTable({
               size="icon"
               className="size-8"
               onClick={() => updateQuery({ page: String(pageCount) })}
-              disabled={currentPage >= pageCount || isPending}
+              disabled={isAll || currentPage >= pageCount || isPending}
               title="Halaman Terakhir"
             >
               <ChevronsRight className="size-3.5" />

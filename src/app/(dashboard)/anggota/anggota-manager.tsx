@@ -7,6 +7,7 @@ import {
   Plus,
   Upload,
   Search,
+  X,
   ChevronLeft,
   ChevronRight,
   MoreVertical,
@@ -108,9 +109,25 @@ export function AnggotaManager({
   const [status, setStatus] = React.useState<"all" | "active" | "inactive">("all")
   const [departmentId, setDepartmentId] = React.useState<string>("all")
   const [page, setPage] = React.useState(1)
-  const [pageSize, setPageSize] = React.useState(10)
+  const [pageSize, setPageSize] = React.useState<number | "all">(10)
+  const [sortBy, setSortBy] = React.useState<
+    "nama" | "nip" | "department" | "jabatan" | "no_hp" | "is_active"
+  >("nama")
   const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
   const [isPending, startTransition] = useTransition()
+
+  const handleSort = React.useCallback(
+    (col: "nama" | "nip" | "department" | "jabatan" | "no_hp" | "is_active") => {
+      if (sortBy === col) {
+        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+      } else {
+        setSortBy(col)
+        setSortOrder("asc")
+      }
+      setPage(1)
+    },
+    [sortBy]
+  )
 
   // Modal State
   const [formOpen, setFormOpen] = React.useState(false)
@@ -163,15 +180,16 @@ export function AnggotaManager({
         status,
         department_id: departmentId === "all" ? "" : departmentId,
         page,
-        pageSize,
+        pageSize: pageSize === "all" ? -1 : pageSize,
         sortOrder,
+        sortBy,
       })
       setData(res)
       setSelectedIds(new Set())
       setIsAllMatchingSelected(false)
       loadTrashCount()
     })
-  }, [debouncedSearch, status, departmentId, page, pageSize, sortOrder, loadTrashCount])
+  }, [debouncedSearch, status, departmentId, page, pageSize, sortOrder, sortBy, loadTrashCount])
 
   React.useEffect(() => {
     loadData()
@@ -431,15 +449,26 @@ export function AnggotaManager({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {/* Input Pencarian */}
             <div className="relative sm:col-span-2 lg:col-span-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="search-anggota"
                 aria-label="Cari nama atau NIG anggota"
                 placeholder="Cari berdasarkan nama atau NIG..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="pl-9 pr-8"
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                  aria-label="Hapus kata kunci pencarian"
+                  title="Hapus pencarian"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
             </div>
 
             {/* Filter Departemen (Khusus Admin & Super Admin) */}
@@ -565,20 +594,54 @@ export function AnggotaManager({
                 />
               </TableHead>
               <TableHead className="w-12 text-center">No</TableHead>
-              <TableHead>NIG</TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="NIG"
+                  direction={sortBy === "nip" ? sortOrder : false}
+                  onToggle={() => handleSort("nip")}
+                />
+              </TableHead>
               <TableHead>
                 <SortableHeader
                   label="Nama Lengkap"
-                  direction={sortOrder}
-                  onToggle={() =>
-                    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
-                  }
+                  direction={sortBy === "nama" ? sortOrder : false}
+                  onToggle={() => handleSort("nama")}
                 />
               </TableHead>
-              {showDeptFilter && <TableHead>Departemen</TableHead>}
-              <TableHead>Jabatan</TableHead>
-              <TableHead>No. HP</TableHead>
-              <TableHead className="text-center">Status</TableHead>
+              {showDeptFilter && (
+                <TableHead>
+                  <SortableHeader
+                    label="Departemen"
+                    direction={sortBy === "department" ? sortOrder : false}
+                    onToggle={() => handleSort("department")}
+                  />
+                </TableHead>
+              )}
+              <TableHead>
+                <SortableHeader
+                  label="Jabatan"
+                  direction={sortBy === "jabatan" ? sortOrder : false}
+                  onToggle={() => handleSort("jabatan")}
+                />
+              </TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="No. HP"
+                  type="general"
+                  direction={sortBy === "no_hp" ? sortOrder : false}
+                  onToggle={() => handleSort("no_hp")}
+                />
+              </TableHead>
+              <TableHead className="text-center">
+                <div className="flex justify-center">
+                  <SortableHeader
+                    label="Status"
+                    type="general"
+                    direction={sortBy === "is_active" ? sortOrder : false}
+                    onToggle={() => handleSort("is_active")}
+                  />
+                </div>
+              </TableHead>
               {canManage && <TableHead className="text-right">Aksi</TableHead>}
             </TableRow>
           </TableHeader>
@@ -872,26 +935,42 @@ export function AnggotaManager({
       {/* Kontrol Paginasi Sisi Server */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 text-xs text-muted-foreground">
         <div>
-          Menampilkan{" "}
-          <strong className="text-foreground">
-            {data.total === 0 ? 0 : (data.page - 1) * data.pageSize + 1}
-          </strong>{" "}
-          sampai{" "}
-          <strong className="text-foreground">
-            {Math.min(data.page * data.pageSize, data.total)}
-          </strong>{" "}
-          dari <strong className="text-foreground">{data.total}</strong> anggota
+          {data.total === 0 ? (
+            "Menampilkan 0 anggota"
+          ) : pageSize === "all" ? (
+            <>
+              Menampilkan <strong className="text-foreground">1</strong> sampai{" "}
+              <strong className="text-foreground">{data.total}</strong> dari{" "}
+              <strong className="text-foreground">{data.total}</strong> anggota
+            </>
+          ) : (
+            <>
+              Menampilkan{" "}
+              <strong className="text-foreground">
+                {(data.page - 1) * data.pageSize + 1}
+              </strong>{" "}
+              sampai{" "}
+              <strong className="text-foreground">
+                {Math.min(data.page * data.pageSize, data.total)}
+              </strong>{" "}
+              dari <strong className="text-foreground">{data.total}</strong> anggota
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
           <Select
             value={String(pageSize)}
             onValueChange={(val) => {
-              setPageSize(Number(val))
+              if (val === "all") {
+                setPageSize("all")
+              } else {
+                setPageSize(Number(val))
+              }
               setPage(1)
             }}
           >
-            <SelectTrigger className="h-8 w-24 text-xs" aria-label="Pilih jumlah baris per halaman">
+            <SelectTrigger className="h-8 w-32 text-xs" aria-label="Pilih jumlah baris per halaman">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -899,6 +978,7 @@ export function AnggotaManager({
               <SelectItem value="10">10 / hal</SelectItem>
               <SelectItem value="25">25 / hal</SelectItem>
               <SelectItem value="50">50 / hal</SelectItem>
+              <SelectItem value="all">Semua data</SelectItem>
             </SelectContent>
           </Select>
 
@@ -906,7 +986,7 @@ export function AnggotaManager({
             <Button
               variant="outline"
               size="icon-sm"
-              disabled={data.page <= 1 || isPending}
+              disabled={pageSize === "all" || data.page <= 1 || isPending}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               className="h-8 w-8"
             >
@@ -915,13 +995,13 @@ export function AnggotaManager({
             </Button>
 
             <span className="px-2 font-medium text-foreground">
-              {data.page} / {Math.max(1, data.totalPages)}
+              {pageSize === "all" ? "1 / 1" : `${data.page} / ${Math.max(1, data.totalPages)}`}
             </span>
 
             <Button
               variant="outline"
               size="icon-sm"
-              disabled={data.page >= data.totalPages || isPending}
+              disabled={pageSize === "all" || data.page >= data.totalPages || isPending}
               onClick={() => setPage((p) => p + 1)}
               className="h-8 w-8"
             >

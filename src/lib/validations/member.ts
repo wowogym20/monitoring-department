@@ -69,8 +69,16 @@ export const memberFilterSchema = z.object({
   status: z.enum(["all", "active", "inactive"]).default("all"),
   department_id: z.string().optional().default(""),
   page: z.coerce.number().int().positive().default(1),
-  pageSize: z.coerce.number().int().positive().max(100).default(10),
+  pageSize: z
+    .preprocess((val) => {
+      if (val === "all" || val === "-1" || val === -1 || val === 0 || val === "0") {
+        return -1
+      }
+      return val
+    }, z.union([z.coerce.number().int().positive(), z.literal(-1)]))
+    .default(10),
   sortOrder: z.enum(["asc", "desc"]).default("asc"),
+  sortBy: z.enum(["nama", "nip", "department", "jabatan", "no_hp", "is_active"]).default("nama"),
 })
 
 export type MemberFilterParams = z.infer<typeof memberFilterSchema>

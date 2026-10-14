@@ -80,20 +80,34 @@ export function AspekManager({
   const [urutan, setUrutan] = React.useState<number>(initialAspects.length + 1)
   const [isActive, setIsActive] = React.useState(true)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [nameSortOrder, setNameSortOrder] = React.useState<"none" | "asc" | "desc">("none")
+  const [sortBy, setSortBy] = React.useState<"urutan" | "nama" | "deskripsi" | "is_active">("urutan")
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
 
-  // Sort aspects by urutan atau abjad nama aspek
+  const handleSort = (col: "urutan" | "nama" | "deskripsi" | "is_active") => {
+    if (sortBy === col) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortBy(col)
+      setSortOrder("asc")
+    }
+  }
+
+  // Sort aspects by kolom yang dipilih
   const sortedAspects = React.useMemo(() => {
     return [...initialAspects].sort((a, b) => {
-      if (nameSortOrder === "asc") {
-        return a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      let cmp = 0
+      if (sortBy === "urutan") {
+        cmp = a.urutan - b.urutan
+      } else if (sortBy === "nama") {
+        cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      } else if (sortBy === "deskripsi") {
+        cmp = (a.deskripsi || "").localeCompare(b.deskripsi || "", "id", { sensitivity: "base" })
+      } else if (sortBy === "is_active") {
+        cmp = (a.is_active ? 1 : 0) - (b.is_active ? 1 : 0)
       }
-      if (nameSortOrder === "desc") {
-        return b.nama.localeCompare(a.nama, "id", { sensitivity: "base" })
-      }
-      return a.urutan - b.urutan
+      return sortOrder === "asc" ? cmp : -cmp
     })
-  }, [initialAspects, nameSortOrder])
+  }, [initialAspects, sortBy, sortOrder])
 
   // Action: Tambah Aspek
   const handleCreateAspect = async (e: React.FormEvent) => {
@@ -276,20 +290,36 @@ export function AspekManager({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-16">Urutan</TableHead>
+                  <TableHead className="w-20">
+                    <SortableHeader
+                      label="Urutan"
+                      type="numeric"
+                      direction={sortBy === "urutan" ? sortOrder : false}
+                      onToggle={() => handleSort("urutan")}
+                    />
+                  </TableHead>
                   <TableHead>
                     <SortableHeader
                       label="Nama Aspek"
-                      direction={nameSortOrder}
-                      onToggle={() =>
-                        setNameSortOrder((prev) =>
-                          prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
-                        )
-                      }
+                      direction={sortBy === "nama" ? sortOrder : false}
+                      onToggle={() => handleSort("nama")}
                     />
                   </TableHead>
-                  <TableHead>Deskripsi / Rubrik Penilaian</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label="Deskripsi / Rubrik Penilaian"
+                      direction={sortBy === "deskripsi" ? sortOrder : false}
+                      onToggle={() => handleSort("deskripsi")}
+                    />
+                  </TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label="Status"
+                      type="general"
+                      direction={sortBy === "is_active" ? sortOrder : false}
+                      onToggle={() => handleSort("is_active")}
+                    />
+                  </TableHead>
                   {isSuperAdmin && (
                     <>
                       <TableHead className="w-28 text-center">Atur Urutan</TableHead>
