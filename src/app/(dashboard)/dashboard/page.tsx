@@ -65,7 +65,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 ? data.department
                   ? `Mengelola evaluasi kinerja dan standarisasi nilai untuk ${data.department.nama}`
                   : "Akun ketua belum ditetapkan ke salah satu departemen"
-                : "Portal monitoring, rekapitulasi, dan standarisasi kinerja 14 departemen Tazakka"}
+                : "Portal monitoring, rekapitulasi, dan standarisasi kinerja 15 departemen Tazakka"}
             </p>
           </div>
 
