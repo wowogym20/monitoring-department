@@ -15,8 +15,6 @@ import {
   ChevronDown,
   ChevronUp,
   BarChart2,
-  Clock,
-  Sparkles,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -187,7 +185,7 @@ export function RekapSummaryCards({ summaries }: RekapSummaryCardsProps) {
         <div className="flex items-center gap-2">
           <Building2 className="size-4 text-primary" />
           <h2 className="text-sm font-semibold text-foreground">
-            Status Capaian Tiap Departemen
+            Ringkasan Progres per Departemen
           </h2>
           <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
             {summaries.length}

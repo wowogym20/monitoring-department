@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -41,6 +42,11 @@ import {
   ArrowRight,
   RefreshCw,
   FileQuestion,
+  RotateCcw,
+  Building,
+  Calendar,
+  Layers,
+  User,
 } from "lucide-react"
 
 interface RekapTableProps {
@@ -106,39 +112,80 @@ export function RekapTable({
     return () => clearTimeout(timer)
   }, [searchInput, currentSearch, updateQuery])
 
+  // Cek apakah ada filter aktif selain default
+  const hasActiveFilters =
+    Boolean(currentSearch) ||
+    (currentStatus && currentStatus !== "all") ||
+    (selectedDepartmentId && selectedDepartmentId !== "all")
+
+  const handleResetFilters = () => {
+    setSearchInput("")
+    updateQuery({
+      search: null,
+      status: null,
+      departmentId: null,
+      page: "1",
+    })
+  }
+
   // Definisi Kolom TanStack Table
   const columns: ColumnDef<RekapTableItem>[] = React.useMemo(
     () => [
       {
         accessorKey: "member_nama",
-        header: "Anggota",
+        header: () => (
+          <span className="flex items-center gap-1.5">
+            <User className="size-3.5 text-muted-foreground" />
+            <span>Anggota</span>
+          </span>
+        ),
         cell: ({ row }) => {
           const item = row.original
+          const initials = item.member_nama
+            .split(" ")
+            .map((n) => n[0])
+            .slice(0, 2)
+            .join("")
+            .toUpperCase()
+
           return (
-            <div className="flex flex-col min-w-[160px]">
-              <span className="font-semibold text-foreground text-sm">
-                {item.member_nama}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {item.member_nip ? `NIP: ${item.member_nip}` : "NIP: -"} • {item.member_jabatan}
-              </span>
+            <div className="flex items-center gap-3 min-w-[190px]">
+              <div className="size-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
+                {initials}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-foreground text-xs sm:text-sm truncate leading-tight">
+                  {item.member_nama}
+                </span>
+                <span className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
+                  {item.member_nip ? `NIP: ${item.member_nip}` : "NIP: -"} • {item.member_jabatan}
+                </span>
+              </div>
             </div>
           )
         },
       },
       {
         accessorKey: "department_nama",
-        header: "Departemen",
+        header: () => (
+          <span className="flex items-center gap-1.5">
+            <Building className="size-3.5 text-muted-foreground" />
+            <span>Departemen</span>
+          </span>
+        ),
         cell: ({ row }) => {
           const item = row.original
           return (
-            <div className="flex flex-col min-w-[130px]">
-              <span className="text-xs font-medium text-foreground">
+            <div className="flex flex-col min-w-[140px] space-y-0.5">
+              <span className="text-xs font-medium text-foreground truncate">
                 {item.department_nama}
               </span>
-              <span className="text-[11px] font-mono text-muted-foreground">
+              <Badge
+                variant="outline"
+                className="w-fit text-[10px] font-mono px-1.5 py-0 border-border/80 text-muted-foreground"
+              >
                 {item.department_kode}
-              </span>
+              </Badge>
             </div>
           )
         },
@@ -148,14 +195,22 @@ export function RekapTable({
         header: "Skor Rata-rata",
         cell: ({ row }) => {
           const skor = row.original.skor_rata
-          return <SkorBadge skor={skor} showScore={true} />
+          return (
+            <div className="min-w-[110px]">
+              <SkorBadge skor={skor} showScore={true} />
+            </div>
+          )
         },
       },
       {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
-          return <StatusBadge status={row.original.status} />
+          return (
+            <div className="min-w-[120px]">
+              <StatusBadge status={row.original.status} />
+            </div>
+          )
         },
       },
       {
@@ -164,7 +219,7 @@ export function RekapTable({
         cell: ({ row }) => {
           const date = row.original.submitted_at
           return (
-            <span className="text-xs text-muted-foreground whitespace-nowrap">
+            <span className="text-xs text-muted-foreground whitespace-nowrap min-w-[100px] inline-block font-mono">
               {date ? formatDateId(date) : "-"}
             </span>
           )
@@ -175,16 +230,16 @@ export function RekapTable({
         header: () => <span className="sr-only">Aksi</span>,
         cell: ({ row }) => {
           return (
-            <div className="flex justify-end">
+            <div className="flex justify-end pr-2">
               <Button
                 asChild
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1 text-xs hover:border-primary hover:text-primary"
+                className="h-8 px-3 gap-1.5 text-xs font-semibold rounded-md hover:border-primary hover:text-primary transition-colors shadow-2xs"
               >
                 <Link href={`/rekap/${row.original.id}`} id={`btn-detail-${row.original.id}`}>
                   <span>Detail</span>
-                  <ArrowRight className="size-3.5" />
+                  <ArrowRight className="size-3" />
                 </Link>
               </Button>
             </div>
@@ -210,29 +265,52 @@ export function RekapTable({
   return (
     <div className="space-y-4">
       {/* Bar Filter & Pencarian Sisi Server */}
-      <div className="flex flex-col gap-3 p-4 bg-card rounded-lg border border-border shadow-2xs">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+      <div className="p-4 sm:p-5 bg-card/80 backdrop-blur-xs rounded-xl border border-border shadow-2xs space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/60 pb-3">
+          <div className="flex items-center gap-2">
             <Filter className="size-4 text-primary" />
-            <span>Filter Rekapitulasi</span>
+            <span className="text-sm font-semibold text-foreground">Filter & Pencarian Rekap</span>
+            {hasActiveFilters && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                Filter Aktif
+              </Badge>
+            )}
           </div>
-          {isPending && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground animate-pulse">
-              <RefreshCw className="size-3 animate-spin" />
-              Memuat data...
-            </span>
-          )}
+
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground gap-1"
+              >
+                <RotateCcw className="size-3" />
+                <span>Reset</span>
+              </Button>
+            )}
+
+            {isPending && (
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground animate-pulse">
+                <RefreshCw className="size-3 animate-spin text-primary" />
+                Memuat data...
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* 1. Filter Periode */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Periode</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+              <Calendar className="size-3" />
+              <span>Periode Penilaian</span>
+            </label>
             <Select
               value={selectedPeriodId || ""}
               onValueChange={(val) => updateQuery({ periodeId: val, page: "1" })}
             >
-              <SelectTrigger id="select-filter-periode" className="h-9 text-xs">
+              <SelectTrigger id="select-filter-periode" className="h-9 text-xs bg-background">
                 <SelectValue placeholder="Pilih Periode" />
               </SelectTrigger>
               <SelectContent>
@@ -247,13 +325,16 @@ export function RekapTable({
 
           {/* 2. Filter Departemen (Hanya untuk super_admin & admin) */}
           {userRole !== "user" && (
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-muted-foreground">Departemen</label>
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+                <Building className="size-3" />
+                <span>Departemen</span>
+              </label>
               <Select
                 value={selectedDepartmentId || "all"}
                 onValueChange={(val) => updateQuery({ departmentId: val, page: "1" })}
               >
-                <SelectTrigger id="select-filter-dept" className="h-9 text-xs">
+                <SelectTrigger id="select-filter-dept" className="h-9 text-xs bg-background">
                   <SelectValue placeholder="Semua Departemen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -271,13 +352,16 @@ export function RekapTable({
           )}
 
           {/* 3. Filter Status */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Status</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+              <Layers className="size-3" />
+              <span>Status Penilaian</span>
+            </label>
             <Select
               value={currentStatus || "all"}
               onValueChange={(val) => updateQuery({ status: val, page: "1" })}
             >
-              <SelectTrigger id="select-filter-status" className="h-9 text-xs">
+              <SelectTrigger id="select-filter-status" className="h-9 text-xs bg-background">
                 <SelectValue placeholder="Semua Status" />
               </SelectTrigger>
               <SelectContent>
@@ -286,34 +370,37 @@ export function RekapTable({
                 </SelectItem>
                 {userRole !== "admin" && (
                   <SelectItem value="draft" className="text-xs">
-                    Draf
+                    Draft
                   </SelectItem>
                 )}
                 <SelectItem value="submitted" className="text-xs">
                   Submitted
                 </SelectItem>
                 <SelectItem value="revision_requested" className="text-xs">
-                  Perlu Revisi
+                  Revision Requested
                 </SelectItem>
                 <SelectItem value="approved" className="text-xs">
-                  Disetujui
+                  Approved
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* 4. Pencarian Nama / NIP */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-muted-foreground">Pencarian</label>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+              <Search className="size-3" />
+              <span>Cari Anggota</span>
+            </label>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="input-search-nama"
                 type="text"
-                placeholder="Cari nama / NIP anggota..."
+                placeholder="Ketik nama atau NIP..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="h-9 pl-9 text-xs"
+                className="h-9 pl-9 text-xs bg-background"
               />
             </div>
           </div>
@@ -321,73 +408,86 @@ export function RekapTable({
       </div>
 
       {/* Tabel Data TanStack Table */}
-      <div className="rounded-md border border-border bg-card shadow-2xs overflow-hidden">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-muted/40 hover:bg-muted/40">
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="text-xs font-semibold py-3">
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/30 transition-colors"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3 text-xs">
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+      <div className="rounded-xl border border-border bg-card shadow-2xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="text-xs font-semibold py-3.5 px-4 text-muted-foreground">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-36 text-center text-muted-foreground"
-                >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <FileQuestion className="size-8 text-muted-foreground/60" />
-                    <p className="text-sm font-medium">Tidak ada data penilaian yang ditemukan.</p>
-                    <p className="text-xs text-muted-foreground">
-                      Coba sesuaikan filter departemen, status, atau kata kunci pencarian.
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-muted/30 transition-colors border-b border-border/60 last:border-b-0"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-3 px-4 text-xs">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-44 text-center text-muted-foreground"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto p-4">
+                      <FileQuestion className="size-10 text-muted-foreground/40" />
+                      <p className="text-sm font-semibold text-foreground">Tidak ada penilaian yang sesuai</p>
+                      <p className="text-xs text-muted-foreground">
+                        Tidak ditemukan data untuk kombinasi filter dan kata kunci pencarian yang dipilih.
+                      </p>
+                      {hasActiveFilters && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleResetFilters}
+                          className="mt-2 h-8 text-xs gap-1.5"
+                        >
+                          <RotateCcw className="size-3" />
+                          <span>Hapus Filter</span>
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Kontrol Paginasi Sisi Server */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-1">
         <div className="text-xs text-muted-foreground">
           Menampilkan <span className="font-semibold text-foreground">{startItem}</span> -{" "}
           <span className="font-semibold text-foreground">{endItem}</span> dari{" "}
           <span className="font-semibold text-foreground">{totalCount}</span> penilaian
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Pilihan Page Size */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-2">
-            <span>Baris per halaman:</span>
+        <div className="flex items-center gap-3">
+          {/* Pilihan Baris per Halaman */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="hidden sm:inline">Baris:</span>
             <Select
               value={String(pageSize)}
               onValueChange={(val) => updateQuery({ pageSize: val, page: "1" })}
             >
-              <SelectTrigger className="h-8 w-16 text-xs">
+              <SelectTrigger className="h-8 w-18 text-xs bg-card">
                 <SelectValue placeholder={String(pageSize)} />
               </SelectTrigger>
               <SelectContent>
@@ -398,7 +498,7 @@ export function RekapTable({
             </Select>
           </div>
 
-          {/* Tombol Halaman */}
+          {/* Tombol Navigasi Halaman */}
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
@@ -408,7 +508,7 @@ export function RekapTable({
               disabled={currentPage <= 1 || isPending}
               title="Halaman Pertama"
             >
-              <ChevronsLeft className="size-4" />
+              <ChevronsLeft className="size-3.5" />
             </Button>
             <Button
               variant="outline"
@@ -418,11 +518,11 @@ export function RekapTable({
               disabled={currentPage <= 1 || isPending}
               title="Halaman Sebelumnya"
             >
-              <ChevronLeft className="size-4" />
+              <ChevronLeft className="size-3.5" />
             </Button>
 
-            <span className="px-2 text-xs font-medium text-foreground">
-              Hal {currentPage} dari {Math.max(pageCount, 1)}
+            <span className="px-2.5 text-xs font-semibold text-foreground whitespace-nowrap">
+              {currentPage} / {Math.max(pageCount, 1)}
             </span>
 
             <Button
@@ -433,7 +533,7 @@ export function RekapTable({
               disabled={currentPage >= pageCount || isPending}
               title="Halaman Selanjutnya"
             >
-              <ChevronRight className="size-4" />
+              <ChevronRight className="size-3.5" />
             </Button>
             <Button
               variant="outline"
@@ -443,7 +543,7 @@ export function RekapTable({
               disabled={currentPage >= pageCount || isPending}
               title="Halaman Terakhir"
             >
-              <ChevronsRight className="size-4" />
+              <ChevronsRight className="size-3.5" />
             </Button>
           </div>
         </div>
