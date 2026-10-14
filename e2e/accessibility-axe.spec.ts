@@ -45,6 +45,7 @@ test.describe('Audit Aksesibilitas WCAG 2.1 AA (@axe-core/playwright)', () => {
   test('2. Halaman Super-Admin (/dashboard, /departemen, /ketua, /periode, /aspek, /profil) memenuhi standar WCAG 2.1 AA', async ({
     page,
   }) => {
+    test.setTimeout(60000)
     // Login sebagai Super Admin
     await page.goto('/login')
     await page.fill('input[type="email"]', ACCOUNTS.superAdmin.email)

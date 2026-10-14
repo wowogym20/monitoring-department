@@ -38,3 +38,6 @@ dan button "Login" yang mengarah ke halaman login jika belum login dan mengarah 
 dan button install app jika sudah install maka tidak muncul
 
 PWA agar bisa di install di android dan ios dan desktop
+
+
+Terapkan progras loading bar di atas halaman saat halaman sedang load data dan memuat halaman baru maupun apa itu loading nya

@@ -93,37 +93,38 @@ export async function updateSession(request: NextRequest) {
     pathname === "/lupa-password" ||
     pathname === "/reset-password"
 
+  const isPublicRoute =
+    pathname === "/" ||
+    isAuthRoute ||
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.startsWith("/opengraph-image") ||
+    pathname.startsWith("/twitter-image") ||
+    pathname === "/sw.js" ||
+    pathname.startsWith("/icons/")
+
   // 1. KASUS: Pengguna BELUM login
   if (!user) {
-    // Jika mengakses halaman root "/", arahkan ke /login (hanya sekali)
-    if (pathname === "/") {
-      const url = request.nextUrl.clone()
-      url.pathname = "/login"
-      return {
-        supabaseResponse: createSafeRedirect(url, request, supabaseResponse),
-        user: null,
-        role: null,
-      }
+    // Jika rute publik, izinkan akses langsung
+    if (isPublicRoute) {
+      return { supabaseResponse, user: null, role: null }
     }
 
     // Jika mengakses rute terproteksi (seperti /dashboard), arahkan ke /login dengan parameter redirect
-    if (!isAuthRoute) {
-      const url = request.nextUrl.clone()
-      url.pathname = "/login"
-      url.searchParams.set("redirect", pathname)
-      return {
-        supabaseResponse: createSafeRedirect(url, request, supabaseResponse),
-        user: null,
-        role: null,
-      }
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
+    url.searchParams.set("redirect", pathname)
+    return {
+      supabaseResponse: createSafeRedirect(url, request, supabaseResponse),
+      user: null,
+      role: null,
     }
-
-    // Jika sudah di halaman auth (/login, /lupa-password), biarkan lewat
-    return { supabaseResponse, user: null, role: null }
   }
 
-  // 2. KASUS: Pengguna SUDAH login dan mengakses halaman auth atau root
-  if (user && (isAuthRoute || pathname === "/") && pathname !== "/reset-password") {
+  // 2. KASUS: Pengguna SUDAH login dan mengakses halaman auth (/login, /lupa-password)
+  // Alihkan ke /dashboard (namun izinkan akses ke landing page "/" dan "/reset-password")
+  if (user && isAuthRoute && pathname !== "/reset-password") {
     const url = request.nextUrl.clone()
     url.pathname = "/dashboard"
     url.searchParams.delete("redirect")
