@@ -353,7 +353,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserCog className="size-5 text-primary" />
-              Buat Akun Ketua Baru
+              Buat Akun Kepala Departemen Baru
             </DialogTitle>
             <DialogDescription>
               Akun akan dibuat di sistem autentikasi dengan peran Kepala Departemen (user).
