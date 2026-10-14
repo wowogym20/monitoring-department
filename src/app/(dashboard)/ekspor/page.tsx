@@ -29,14 +29,14 @@ export default async function EksporPage() {
   const departments = deptData || []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header Halaman */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
-          <FileSpreadsheet className="size-7 text-primary shrink-0" />
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+          <FileSpreadsheet className="size-6 text-primary shrink-0" />
           Ekspor Laporan Penilaian
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
           Unduh laporan rekapitulasi kinerja departemen dalam format lembar kerja Excel (.xlsx) dan dokumen cetak PDF (.pdf).
         </p>
       </div>

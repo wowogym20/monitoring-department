@@ -168,36 +168,36 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
   }
 
   return (
-    <div className="grid gap-6 grid-cols-1 lg:grid-cols-12">
+    <div className="grid gap-4 lg:grid-cols-12 items-start">
       {/* Kolom Kiri: Form Parameter & Tombol Aksi */}
       <Card className="border border-border shadow-xs lg:col-span-7">
-        <CardHeader className="p-4 sm:p-6 pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-              <Download className="size-4" />
+        <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2.5">
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+              <Download className="size-3.5" />
             </div>
             <div>
-              <CardTitle className="text-base sm:text-lg font-semibold text-foreground">
+              <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
                 Parameter Ekspor Laporan
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm mt-0.5">
+              <CardDescription className="text-xs mt-0.5">
                 Pilih periode evaluasi dan departemen yang ingin dimasukkan ke dalam berkas laporan.
               </CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-4 sm:p-6 pt-0 space-y-4 sm:space-y-5">
+        <CardContent className="p-3.5 sm:p-4 pt-0 space-y-3">
           {/* 1. Filter Periode */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="period-select" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-foreground/85">
-              <Calendar className="size-3.5 sm:size-4 text-primary shrink-0" />
+          <div className="space-y-1">
+            <Label htmlFor="period-select" className="text-xs font-medium flex items-center gap-1.5 text-foreground/85">
+              <Calendar className="size-3.5 text-primary shrink-0" />
               <span>Periode Penilaian</span>
             </Label>
             {periods.length === 0 ? (
-              <p className="text-xs sm:text-sm text-muted-foreground">Belum ada periode yang terdaftar.</p>
+              <p className="text-xs text-muted-foreground">Belum ada periode yang terdaftar.</p>
             ) : (
               <Select value={selectedPeriodId} onValueChange={setSelectedPeriodId}>
-                <SelectTrigger id="period-select" aria-label="Pilih periode penilaian" className="w-full h-9.5 sm:h-10 text-xs sm:text-sm bg-background">
+                <SelectTrigger id="period-select" aria-label="Pilih periode penilaian" className="w-full h-9 text-xs sm:text-sm bg-background">
                   <SelectValue placeholder="Pilih Periode">
                     {selectedPeriod ? (
                       <div className="flex items-center justify-between w-full gap-2">
@@ -223,7 +223,7 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
                   {periods.map((p) => {
                     const cleanName = formatPeriodDisplay(p.nama)
                     return (
-                      <SelectItem key={p.id} value={p.id} className="text-xs sm:text-sm py-2">
+                      <SelectItem key={p.id} value={p.id} className="text-xs sm:text-sm py-1.5">
                         <div className="flex items-center justify-between w-full gap-2">
                           <span className="font-medium truncate">{cleanName}</span>
                           <Badge
@@ -247,34 +247,34 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
           </div>
 
           {/* 2. Filter Departemen */}
-          <div className="space-y-1.5 sm:space-y-2">
-            <Label htmlFor="dept-select" className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-foreground/85">
-              <Building2 className="size-3.5 sm:size-4 text-primary shrink-0" />
+          <div className="space-y-1">
+            <Label htmlFor="dept-select" className="text-xs font-medium flex items-center gap-1.5 text-foreground/85">
+              <Building2 className="size-3.5 text-primary shrink-0" />
               <span>Departemen</span>
             </Label>
             <Select value={selectedDeptId} onValueChange={setSelectedDeptId}>
-              <SelectTrigger id="dept-select" aria-label="Pilih cakupan departemen" className="w-full h-9.5 sm:h-10 text-xs sm:text-sm bg-background">
+              <SelectTrigger id="dept-select" aria-label="Pilih cakupan departemen" className="w-full h-9 text-xs sm:text-sm bg-background">
                 <SelectValue placeholder="Semua Departemen" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" className="text-xs sm:text-sm py-2">
+                <SelectItem value="all" className="text-xs sm:text-sm py-1.5">
                   <span className="font-medium">Semua Departemen (Rekap Lengkap)</span>
                 </SelectItem>
                 {departments.map((d) => (
-                  <SelectItem key={d.id} value={d.id} className="text-xs sm:text-sm py-2">
+                  <SelectItem key={d.id} value={d.id} className="text-xs sm:text-sm py-1.5">
                     <span className="font-medium">{d.nama}</span>{" "}
                     <span className="text-muted-foreground text-[10px] font-mono">({d.kode})</span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-[11px] sm:text-xs text-muted-foreground">
+            <p className="text-[11px] text-muted-foreground">
               Pilih &quot;Semua Departemen&quot; untuk mengunduh seluruh 14 departemen sekaligus, atau pilih salah satu departemen spesifik.
             </p>
           </div>
 
           {/* Strip Ringkasan Parameter */}
-          <div className="p-3 rounded-lg bg-muted/40 border border-border/70 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="p-2 sm:p-2.5 rounded-md bg-muted/40 border border-border/70 flex flex-wrap items-center justify-between gap-2 text-xs">
             <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
               <Calendar className="size-3.5 text-primary shrink-0" />
               <span className="shrink-0 font-medium">Periode:</span>
@@ -293,24 +293,24 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
             </div>
           </div>
 
-          <Separator className="my-1 sm:my-2" />
+          <Separator className="my-0.5" />
 
           {/* 3. Tombol Aksi Unduh */}
-          <div className="space-y-2.5 sm:space-y-3 pt-1">
-            <Label className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="space-y-2 pt-0.5">
+            <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Pilihan Format Berkas
             </Label>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row gap-2.5">
               {/* Tombol Unduh Excel */}
               <Button
                 type="button"
-                className="flex-1 h-10 sm:h-11 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-lg shadow-xs transition-colors gap-2"
+                className="flex-1 h-9 sm:h-9.5 bg-emerald-700 hover:bg-emerald-800 text-white font-medium text-xs sm:text-sm rounded-md shadow-xs transition-colors gap-2"
                 onClick={handleDownloadExcel}
                 disabled={isDownloadingExcel || isDownloadingPdf || !selectedPeriodId}
               >
                 {isDownloadingExcel ? (
                   <>
-                    <Loader2 className="size-4 animate-spin" />
+                    <Loader2 className="size-3.5 animate-spin" />
                     <span>Menyiapkan Excel...</span>
                   </>
                 ) : (
@@ -325,13 +325,13 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 h-10 sm:h-11 border-emerald-700 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold rounded-lg shadow-xs transition-colors gap-2"
+                className="flex-1 h-9 sm:h-9.5 border-emerald-700 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-medium text-xs sm:text-sm rounded-md shadow-xs transition-colors gap-2"
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingExcel || isDownloadingPdf || !selectedPeriodId}
               >
                 {isDownloadingPdf ? (
                   <>
-                    <Loader2 className="size-4 animate-spin text-emerald-600" />
+                    <Loader2 className="size-3.5 animate-spin text-emerald-600" />
                     <span>Membuat PDF...</span>
                   </>
                 ) : (
@@ -347,15 +347,15 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
       </Card>
 
       {/* Kolom Kanan: Ringkasan Spesifikasi Berkas & Konsistensi Data */}
-      <div className="space-y-4 lg:col-span-5">
+      <div className="space-y-3 lg:col-span-5">
         <Card className="border border-border shadow-xs">
-          <CardHeader className="p-4 sm:p-6 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                <Info className="size-4" />
+          <CardHeader className="p-3.5 sm:p-4 pb-2 sm:pb-2.5">
+            <div className="flex items-center gap-2">
+              <div className="size-7 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                <Info className="size-3.5" />
               </div>
               <div>
-                <CardTitle className="text-base font-semibold text-foreground">
+                <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
                   Spesifikasi Berkas Laporan
                 </CardTitle>
                 <CardDescription className="text-xs mt-0.5">
@@ -364,14 +364,14 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0 space-y-3.5 sm:space-y-4 text-sm">
+          <CardContent className="p-3.5 sm:p-4 pt-0 space-y-2.5 text-xs sm:text-sm">
             {/* Format Excel */}
-            <div className="rounded-lg border border-border/80 p-3 sm:p-3.5 bg-muted/30 space-y-1.5">
+            <div className="rounded-md border border-border/80 p-2.5 sm:p-3 bg-muted/30 space-y-1">
               <div className="flex items-center gap-2 font-medium text-foreground">
                 <FileSpreadsheet className="size-4 text-emerald-600 shrink-0" />
                 <span className="font-semibold text-xs sm:text-sm">Format Excel (.xlsx)</span>
               </div>
-              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside pl-0.5">
+              <ul className="text-[11px] sm:text-xs text-muted-foreground space-y-0.5 list-disc list-inside pl-0.5">
                 <li>
                   <strong className="text-foreground">Sheet 1:</strong> Ringkasan per departemen (Total anggota, sudah dinilai, rata-rata skor, kelengkapan).
                 </li>
@@ -383,12 +383,12 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
             </div>
 
             {/* Format PDF */}
-            <div className="rounded-lg border border-border/80 p-3 sm:p-3.5 bg-muted/30 space-y-1.5">
+            <div className="rounded-md border border-border/80 p-2.5 sm:p-3 bg-muted/30 space-y-1">
               <div className="flex items-center gap-2 font-medium text-foreground">
                 <FileText className="size-4 text-emerald-600 shrink-0" />
                 <span className="font-semibold text-xs sm:text-sm">Format Dokumen PDF (.pdf)</span>
               </div>
-              <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside pl-0.5">
+              <ul className="text-[11px] sm:text-xs text-muted-foreground space-y-0.5 list-disc list-inside pl-0.5">
                 <li>Tata letak siap cetak format A4 Landscape.</li>
                 <li>Tema visual hijau emerald pada header dan kartu departemen.</li>
                 <li>Memuat judul periode, tabel skor anggota, rata-rata departemen, dan tanggal cetak resmi.</li>
@@ -396,8 +396,8 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
             </div>
 
             {/* Jaminan Konsistensi */}
-            <div className="flex items-start gap-2 pt-1 text-xs text-muted-foreground">
-              <CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 pt-0.5 text-[11px] sm:text-xs text-muted-foreground">
+              <CheckCircle2 className="size-3.5 sm:size-4 text-emerald-600 shrink-0 mt-0.5" />
               <span>
                 Angka dan perhitungan pada berkas ekspor 100% konsisten dengan data pada halaman <strong>Rekap Penilaian</strong>.
               </span>
