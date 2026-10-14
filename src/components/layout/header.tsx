@@ -60,7 +60,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
 
   const roleLabel = {
     super_admin: "Super-Admin",
-    admin: "Kokordinator",
+    admin: "Koordinator",
     user: "Kepala Departemen",
   }[user.role]
 
