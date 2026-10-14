@@ -70,6 +70,7 @@ export const memberFilterSchema = z.object({
   department_id: z.string().optional().default(""),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().positive().max(100).default(10),
+  sortOrder: z.enum(["asc", "desc"]).default("asc"),
 })
 
 export type MemberFilterParams = z.infer<typeof memberFilterSchema>
@@ -183,4 +184,33 @@ export const bulkUpdateMemberSchema = z
   )
 
 export type BulkUpdateMemberInput = z.infer<typeof bulkUpdateMemberSchema>
+
+/**
+ * Skema pemulihan anggota dari tempat sampah
+ */
+export const restoreMemberSchema = z.object({
+  id: z.string().uuid("ID Anggota tidak valid"),
+})
+
+export type RestoreMemberInput = z.infer<typeof restoreMemberSchema>
+
+/**
+ * Skema pemulihan massal anggota dari tempat sampah
+ */
+export const bulkRestoreMemberSchema = z.object({
+  memberIds: z
+    .array(z.string().uuid("ID Anggota tidak valid"))
+    .min(1, "Minimal pilih 1 anggota untuk dipulihkan"),
+})
+
+export type BulkRestoreMemberInput = z.infer<typeof bulkRestoreMemberSchema>
+
+/**
+ * Skema penghapusan permanen (hard delete) anggota
+ */
+export const hardDeleteMemberSchema = z.object({
+  id: z.string().uuid("ID Anggota tidak valid"),
+})
+
+export type HardDeleteMemberInput = z.infer<typeof hardDeleteMemberSchema>
 

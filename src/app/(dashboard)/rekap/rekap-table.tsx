@@ -8,8 +8,11 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
+  type SortingState,
   useReactTable,
 } from "@tanstack/react-table"
+import { SortableHeader } from "@/components/ui/sortable-header"
 import {
   Table,
   TableBody,
@@ -141,12 +144,21 @@ export function RekapTable({
     () => [
       {
         accessorKey: "member_nama",
-        header: () => (
-          <span className="flex items-center gap-1.5">
-            <User className="size-3.5 text-muted-foreground" />
-            <span>Anggota</span>
-          </span>
-        ),
+        header: ({ column }) => {
+          const isSorted = column.getIsSorted()
+          return (
+            <SortableHeader
+              label="Anggota"
+              direction={isSorted}
+              onToggle={() => column.toggleSorting(isSorted === "asc")}
+            >
+              <span className="flex items-center gap-1.5">
+                <User className="size-3.5 text-muted-foreground" />
+                <span>Anggota</span>
+              </span>
+            </SortableHeader>
+          )
+        },
         cell: ({ row }) => {
           const item = row.original
           const initials = item.member_nama
@@ -258,10 +270,17 @@ export function RekapTable({
     []
   )
 
+  const [sorting, setSorting] = React.useState<SortingState>([])
+
   const table = useReactTable({
     data,
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
     pageCount: pageCount || 1,
   })

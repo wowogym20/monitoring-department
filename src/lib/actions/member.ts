@@ -11,6 +11,9 @@ import {
   importMemberRowSchema,
   bulkDeleteMemberSchema,
   bulkUpdateMemberSchema,
+  restoreMemberSchema,
+  bulkRestoreMemberSchema,
+  hardDeleteMemberSchema,
   type MemberFilterParams,
   type CreateMemberInput,
   type UpdateMemberInput,
@@ -34,6 +37,19 @@ export interface MemberListItem {
   assessment_count: number
   created_at: string
   updated_at: string
+}
+
+export interface TrashMemberItem {
+  id: string
+  department_id: string
+  department_nama: string
+  department_kode: string
+  nama: string
+  nip: string | null
+  jabatan: string
+  deleted_at: string
+  days_remaining: number
+  assessment_count: number
 }
 
 export interface GetMembersResponse {
@@ -128,8 +144,8 @@ export async function getMembersServer(
   // Paginasi sisi server
   const from = (parsed.page - 1) * parsed.pageSize
   const to = from + parsed.pageSize - 1
-
-  query = query.order("nama", { ascending: true }).range(from, to)
+  const isAscending = parsed.sortOrder !== "desc"
+  query = query.order("nama", { ascending: isAscending }).range(from, to)
 
   const { data, count, error } = await query
 
@@ -1146,3 +1162,417 @@ export async function bulkUpdateMembersAction(
     return { success: false, error: errorMsg }
   }
 }
+
+/**
+ * Server Action: Pembersihan Otomatis Data Tempat Sampah Kedaluwarsa (> 7 Hari)
+ * Menghapus fisik dari tabel members dan assessments
+ */
+export async function purgeExpiredTrashMembersAction(): Promise<{
+  success: boolean
+  purgedCount: number
+  error?: string
+}> {
+  try {
+    const adminClient = createAdminClient()
+    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+    const { data: expired, error: fetchErr } = await adminClient
+      .from("members")
+      .select("id")
+      .not("deleted_at", "is", null)
+      .lt("deleted_at", cutoff)
+
+    if (fetchErr) {
+      return { success: false, purgedCount: 0, error: fetchErr.message }
+    }
+
+    if (!expired || expired.length === 0) {
+      return { success: true, purgedCount: 0 }
+    }
+
+    const expiredIds = expired.map((m) => m.id)
+
+    // 1. Hapus lembar penilaian terkait kaskade
+    await adminClient.from("assessments").delete().in("member_id", expiredIds)
+
+    // 2. Hapus baris anggota secara fisik dari Supabase
+    const { error: deleteErr } = await adminClient.from("members").delete().in("id", expiredIds)
+
+    if (deleteErr) {
+      return { success: false, purgedCount: 0, error: deleteErr.message }
+    }
+
+    revalidatePath("/anggota")
+    return { success: true, purgedCount: expiredIds.length }
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Gagal membersihkan data tempat sampah"
+    return { success: false, purgedCount: 0, error: errorMsg }
+  }
+}
+
+/**
+ * Server Action: Mengambil Jumlah Anggota di Tempat Sampah (untuk Badge Header)
+ */
+export async function getTrashCountAction(): Promise<{
+  success: boolean
+  count: number
+  error?: string
+}> {
+  try {
+    const currentUser = await requireRole("super_admin", "admin", "user")
+    const supabase = await createClient()
+
+    let query = supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .not("deleted_at", "is", null)
+
+    if (currentUser.role === "user") {
+      if (!currentUser.department) return { success: true, count: 0 }
+      query = query.eq("department_id", currentUser.department.id)
+    }
+
+    const { count, error } = await query
+
+    if (error) {
+      return { success: false, count: 0, error: error.message }
+    }
+
+    return { success: true, count: count || 0 }
+  } catch (err: unknown) {
+    return { success: false, count: 0, error: err instanceof Error ? err.message : "Terjadi kesalahan" }
+  }
+}
+
+/**
+ * Server Action: Mengambil Daftar Anggota di Tempat Sampah
+ */
+export async function getTrashMembersAction(): Promise<{
+  success: boolean
+  data: TrashMemberItem[]
+  error?: string
+}> {
+  try {
+    const currentUser = await requireRole("super_admin", "admin", "user")
+    const supabase = await createClient()
+
+    // Jalankan auto-purge latar belakang untuk membersihkan data > 7 hari
+    await purgeExpiredTrashMembersAction()
+
+    let query = supabase
+      .from("members")
+      .select(`
+        id,
+        department_id,
+        nama,
+        nip,
+        jabatan,
+        deleted_at,
+        departments:department_id (
+          id,
+          nama,
+          kode
+        ),
+        assessments (
+          id
+        )
+      `)
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
+
+    if (currentUser.role === "user") {
+      if (!currentUser.department) return { success: true, data: [] }
+      query = query.eq("department_id", currentUser.department.id)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      return { success: false, data: [], error: error.message }
+    }
+
+    interface TrashDbRow {
+      id: string
+      department_id: string
+      nama: string
+      nip: string | null
+      jabatan: string
+      deleted_at: string
+      departments: { id: string; nama: string; kode: string } | null
+      assessments: Array<{ id: string }> | null
+    }
+
+    const now = Date.now()
+    const rawRows = (data as unknown as TrashDbRow[]) || []
+    const items: TrashMemberItem[] = rawRows.map((row) => {
+      const deletedTime = new Date(row.deleted_at).getTime()
+      const diffDays = Math.floor((now - deletedTime) / (1000 * 60 * 60 * 24))
+      const days_remaining = Math.max(0, 7 - diffDays)
+
+      return {
+        id: row.id,
+        department_id: row.department_id,
+        department_nama: row.departments?.nama || "-",
+        department_kode: row.departments?.kode || "-",
+        nama: row.nama,
+        nip: row.nip,
+        jabatan: row.jabatan,
+        deleted_at: row.deleted_at,
+        days_remaining,
+        assessment_count: row.assessments?.length || 0,
+      }
+    })
+
+    return { success: true, data: items }
+  } catch (err: unknown) {
+    return { success: false, data: [], error: err instanceof Error ? err.message : "Terjadi kesalahan" }
+  }
+}
+
+/**
+ * Server Action: Pulihkan Anggota dari Tempat Sampah
+ */
+export async function restoreMemberAction(id: string): Promise<{
+  success: boolean
+  message?: string
+  error?: string
+}> {
+  try {
+    const currentUser = await requireRole("super_admin", "user")
+    const validated = restoreMemberSchema.parse({ id })
+    const supabase = await createClient()
+
+    const { data: member, error: fetchErr } = await supabase
+      .from("members")
+      .select("id, department_id, nama, deleted_at")
+      .eq("id", validated.id)
+      .maybeSingle()
+
+    if (fetchErr || !member || !member.deleted_at) {
+      return { success: false, error: "Data anggota tidak ditemukan di tempat sampah." }
+    }
+
+    if (currentUser.role === "user" && member.department_id !== currentUser.department?.id) {
+      return { success: false, error: "Anda tidak memiliki hak akses untuk memulihkan anggota departemen lain." }
+    }
+
+    const now = new Date().toISOString()
+
+    // 1. Pulihkan data anggota
+    const { error: updateErr } = await supabase
+      .from("members")
+      .update({
+        deleted_at: null,
+        is_active: true,
+        updated_at: now,
+      })
+      .eq("id", validated.id)
+
+    if (updateErr) {
+      return { success: false, error: `Gagal memulihkan anggota: ${updateErr.message}` }
+    }
+
+    // 2. Pulihkan lembar penilaian terkait
+    await supabase
+      .from("assessments")
+      .update({
+        deleted_at: null,
+        updated_at: now,
+      })
+      .eq("member_id", validated.id)
+
+    revalidatePath("/anggota")
+    revalidatePath("/penilaian")
+    revalidatePath("/rekap")
+    revalidatePath("/dashboard")
+
+    return {
+      success: true,
+      message: `Anggota '${member.nama}' berhasil dipulihkan dari tempat sampah.`,
+    }
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      return { success: false, error: err.errors[0]?.message || "Validasi ID gagal" }
+    }
+    return { success: false, error: err instanceof Error ? err.message : "Terjadi kesalahan pada server" }
+  }
+}
+
+/**
+ * Server Action: Pulihkan Massal Anggota dari Tempat Sampah
+ */
+export async function bulkRestoreMembersAction(memberIds: string[]): Promise<{
+  success: boolean
+  message?: string
+  error?: string
+}> {
+  try {
+    const currentUser = await requireRole("super_admin", "user")
+    const validated = bulkRestoreMemberSchema.parse({ memberIds })
+    const supabase = await createClient()
+
+    const { data: members, error: fetchErr } = await supabase
+      .from("members")
+      .select("id, department_id, nama, deleted_at")
+      .in("id", validated.memberIds)
+      .not("deleted_at", "is", null)
+
+    if (fetchErr || !members || members.length === 0) {
+      return { success: false, error: "Tidak ada data anggota di tempat sampah yang cocok." }
+    }
+
+    if (currentUser.role === "user") {
+      const unauthorized = members.filter((m) => m.department_id !== currentUser.department?.id)
+      if (unauthorized.length > 0) {
+        return { success: false, error: "Anda tidak memiliki hak akses untuk memulihkan anggota departemen lain." }
+      }
+    }
+
+    const validIds = members.map((m) => m.id)
+    const now = new Date().toISOString()
+
+    await supabase
+      .from("members")
+      .update({
+        deleted_at: null,
+        is_active: true,
+        updated_at: now,
+      })
+      .in("id", validIds)
+
+    await supabase
+      .from("assessments")
+      .update({
+        deleted_at: null,
+        updated_at: now,
+      })
+      .in("member_id", validIds)
+
+    revalidatePath("/anggota")
+    revalidatePath("/penilaian")
+    revalidatePath("/rekap")
+    revalidatePath("/dashboard")
+
+    return {
+      success: true,
+      message: `Berhasil memulihkan ${validIds.length} data anggota dari tempat sampah.`,
+    }
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      return { success: false, error: err.errors[0]?.message || "Validasi data gagal" }
+    }
+    return { success: false, error: err instanceof Error ? err.message : "Terjadi kesalahan pada server" }
+  }
+}
+
+/**
+ * Server Action: Hapus Permanen (Hard Delete) Anggota dari Supabase
+ */
+export async function hardDeleteMemberAction(id: string): Promise<{
+  success: boolean
+  message?: string
+  error?: string
+}> {
+  try {
+    const currentUser = await requireRole("super_admin", "user")
+    const validated = hardDeleteMemberSchema.parse({ id })
+    const supabase = await createClient()
+    const adminClient = createAdminClient()
+
+    const { data: member, error: fetchErr } = await supabase
+      .from("members")
+      .select("id, department_id, nama, deleted_at")
+      .eq("id", validated.id)
+      .maybeSingle()
+
+    if (fetchErr || !member) {
+      return { success: false, error: "Data anggota tidak ditemukan." }
+    }
+
+    if (currentUser.role === "user" && member.department_id !== currentUser.department?.id) {
+      return { success: false, error: "Anda tidak memiliki hak akses untuk menghapus anggota departemen lain." }
+    }
+
+    // 1. Hapus assessments terkait kaskade (scores & comments cascade)
+    await adminClient.from("assessments").delete().eq("member_id", validated.id)
+
+    // 2. Hapus fisik dari tabel members
+    const { error: deleteErr } = await adminClient.from("members").delete().eq("id", validated.id)
+
+    if (deleteErr) {
+      return { success: false, error: `Gagal menghapus permanen data anggota: ${deleteErr.message}` }
+    }
+
+    revalidatePath("/anggota")
+    revalidatePath("/penilaian")
+    revalidatePath("/rekap")
+    revalidatePath("/dashboard")
+
+    return {
+      success: true,
+      message: `Anggota '${member.nama}' berhasil dihapus permanen dari sistem.`,
+    }
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      return { success: false, error: err.errors[0]?.message || "Validasi ID gagal" }
+    }
+    return { success: false, error: err instanceof Error ? err.message : "Terjadi kesalahan pada server" }
+  }
+}
+
+/**
+ * Server Action: Kosongkan Tempat Sampah (Hard Delete Seluruh Data Anggota di Tempat Sampah)
+ */
+export async function emptyTrashAction(): Promise<{
+  success: boolean
+  message?: string
+  error?: string
+}> {
+  try {
+    const currentUser = await requireRole("super_admin", "user")
+    const supabase = await createClient()
+    const adminClient = createAdminClient()
+
+    let query = supabase.from("members").select("id, department_id").not("deleted_at", "is", null)
+
+    if (currentUser.role === "user") {
+      if (!currentUser.department) {
+        return { success: true, message: "Tempat sampah sudah kosong." }
+      }
+      query = query.eq("department_id", currentUser.department.id)
+    }
+
+    const { data: members, error: fetchErr } = await query
+
+    if (fetchErr) {
+      return { success: false, error: `Gagal membaca tempat sampah: ${fetchErr.message}` }
+    }
+
+    if (!members || members.length === 0) {
+      return { success: true, message: "Tempat sampah sudah kosong." }
+    }
+
+    const targetIds = members.map((m) => m.id)
+
+    // Hapus assessments kaskade dan baris anggota fisik
+    await adminClient.from("assessments").delete().in("member_id", targetIds)
+    const { error: deleteErr } = await adminClient.from("members").delete().in("id", targetIds)
+
+    if (deleteErr) {
+      return { success: false, error: `Gagal mengosongkan tempat sampah: ${deleteErr.message}` }
+    }
+
+    revalidatePath("/anggota")
+    revalidatePath("/penilaian")
+    revalidatePath("/rekap")
+    revalidatePath("/dashboard")
+
+    return {
+      success: true,
+      message: `Berhasil mengosongkan tempat sampah (${targetIds.length} data anggota dihapus permanen).`,
+    }
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : "Terjadi kesalahan pada server" }
+  }
+}
+

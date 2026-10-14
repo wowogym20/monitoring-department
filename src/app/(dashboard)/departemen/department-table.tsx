@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { SortableHeader } from "@/components/ui/sortable-header"
 import {
   Building2,
   Plus,
@@ -146,6 +147,16 @@ export function DepartmentTable({
     params.set("page", String(newPage))
     router.push(`/departemen?${params.toString()}`)
   }
+
+  const currentSort = (searchParams.get("sort") === "desc" ? "desc" : "asc") as "asc" | "desc"
+
+  const handleSortToggle = React.useCallback(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    const nextSort = currentSort === "asc" ? "desc" : "asc"
+    params.set("sort", nextSort)
+    params.set("page", "1")
+    router.push(`/departemen?${params.toString()}`)
+  }, [currentSort, router, searchParams])
 
   // Action: Create Department
   const handleCreateDepartment = async (e: React.FormEvent) => {
@@ -364,7 +375,13 @@ export function DepartmentTable({
       },
       {
         accessorKey: "nama",
-        header: "Departemen",
+        header: () => (
+          <SortableHeader
+            label="Departemen"
+            direction={currentSort}
+            onToggle={handleSortToggle}
+          />
+        ),
         cell: ({ row }) => (
           <div className="font-medium text-foreground">
             <div className="flex items-center gap-2">
@@ -445,7 +462,7 @@ export function DepartmentTable({
           ]
         : []),
     ],
-    [isSuperAdmin, page, pageSize, renderStatusBadge, renderActionMenu]
+    [isSuperAdmin, page, pageSize, currentSort, handleSortToggle, renderStatusBadge, renderActionMenu]
   )
 
   const table = useReactTable({

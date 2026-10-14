@@ -31,9 +31,11 @@ export default async function DepartemenPage({
       ? Math.max(1, parseInt(resolvedParams.page, 10) || 1)
       : 1
   const pageSize = 10
+  const sortOrder =
+    resolvedParams.sort === "desc" ? "desc" : "asc"
 
   const [departmentsResult, eligibleKetua] = await Promise.all([
-    getDepartmentsServer({ search, status, page, pageSize }),
+    getDepartmentsServer({ search, status, page, pageSize, sortOrder }),
     getEligibleKetuaList(),
   ])
 

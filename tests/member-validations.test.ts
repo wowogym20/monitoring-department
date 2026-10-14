@@ -165,19 +165,22 @@ describe("Validasi Zod Modul Anggota (Client & Server)", () => {
       expect(result.status).toBe("all")
       expect(result.search).toBe("")
       expect(result.department_id).toBe("")
+      expect(result.sortOrder).toBe("asc")
     })
 
-    it("harus mengonversi string query params ke angka", () => {
+    it("harus mengonversi string query params ke angka dan menerima sortOrder desc", () => {
       const result = memberFilterSchema.parse({
         page: "3",
         pageSize: "25",
         status: "active",
         search: "ahmad",
+        sortOrder: "desc",
       })
       expect(result.page).toBe(3)
       expect(result.pageSize).toBe(25)
       expect(result.status).toBe("active")
       expect(result.search).toBe("ahmad")
+      expect(result.sortOrder).toBe("desc")
     })
   })
 })

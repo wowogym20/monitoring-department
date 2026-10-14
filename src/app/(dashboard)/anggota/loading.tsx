@@ -3,14 +3,17 @@ import { Skeleton } from "@/components/ui/skeleton"
 export default function AnggotaLoading() {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="space-y-1">
-          <Skeleton className="h-7 w-48 rounded" />
+          <Skeleton className="h-8 w-56 rounded" />
           <Skeleton className="h-4 w-72 rounded" />
         </div>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-32 rounded-md" />
-          <Skeleton className="h-9 w-36 rounded-md" />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+            <Skeleton className="h-9 w-full sm:w-32 rounded-md" />
+            <Skeleton className="h-9 w-full sm:w-28 rounded-md" />
+          </div>
+          <Skeleton className="h-9 w-full sm:w-36 rounded-md" />
         </div>
       </div>
 

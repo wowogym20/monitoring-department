@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SortableHeader } from "@/components/ui/sortable-header"
 import { cn } from "@/lib/utils"
 import {
   Calendar,
@@ -58,6 +59,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
 
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
   const {
     periodeList,
@@ -89,24 +91,31 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
     })
   }
 
-  // Filter anggota berdasarkan pencarian dan status
-  const filteredMembers = members.filter((member) => {
-    const matchesSearch =
-      member.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (member.nip && member.nip.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      member.jabatan.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filter dan sortir anggota berdasarkan pencarian, status, dan abjad nama
+  const filteredMembers = React.useMemo(() => {
+    const list = members.filter((member) => {
+      const matchesSearch =
+        member.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (member.nip && member.nip.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        member.jabatan.toLowerCase().includes(searchQuery.toLowerCase())
 
-    if (!matchesSearch) return false
+      if (!matchesSearch) return false
 
-    if (statusFilter === "all") return true
-    if (statusFilter === "unassessed") return member.status === "unassessed"
-    if (statusFilter === "draft") return member.status === "draft"
-    if (statusFilter === "submitted") return member.status === "submitted"
-    if (statusFilter === "approved") return member.status === "approved"
-    if (statusFilter === "revision_requested") return member.status === "revision_requested"
+      if (statusFilter === "all") return true
+      if (statusFilter === "unassessed") return member.status === "unassessed"
+      if (statusFilter === "draft") return member.status === "draft"
+      if (statusFilter === "submitted") return member.status === "submitted"
+      if (statusFilter === "approved") return member.status === "approved"
+      if (statusFilter === "revision_requested") return member.status === "revision_requested"
 
-    return true
-  })
+      return true
+    })
+
+    return list.sort((a, b) => {
+      const cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      return sortOrder === "asc" ? cmp : -cmp
+    })
+  }, [members, searchQuery, statusFilter, sortOrder])
 
   return (
     <div className="space-y-6">
@@ -417,7 +426,15 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
-                  <TableHead className="w-[30%]">Anggota</TableHead>
+                  <TableHead className="w-[30%]">
+                    <SortableHeader
+                      label="Anggota"
+                      direction={sortOrder}
+                      onToggle={() =>
+                        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+                      }
+                    />
+                  </TableHead>
                   <TableHead className="w-[20%]">Departemen</TableHead>
                   <TableHead className="w-[20%]">Status Penilaian</TableHead>
                   <TableHead className="w-[15%]">Skor Akhir</TableHead>

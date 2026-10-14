@@ -17,6 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { SortableHeader } from "@/components/ui/sortable-header"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import {
   Dialog,
@@ -79,11 +80,20 @@ export function AspekManager({
   const [urutan, setUrutan] = React.useState<number>(initialAspects.length + 1)
   const [isActive, setIsActive] = React.useState(true)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [nameSortOrder, setNameSortOrder] = React.useState<"none" | "asc" | "desc">("none")
 
-  // Sort aspects by urutan
+  // Sort aspects by urutan atau abjad nama aspek
   const sortedAspects = React.useMemo(() => {
-    return [...initialAspects].sort((a, b) => a.urutan - b.urutan)
-  }, [initialAspects])
+    return [...initialAspects].sort((a, b) => {
+      if (nameSortOrder === "asc") {
+        return a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      }
+      if (nameSortOrder === "desc") {
+        return b.nama.localeCompare(a.nama, "id", { sensitivity: "base" })
+      }
+      return a.urutan - b.urutan
+    })
+  }, [initialAspects, nameSortOrder])
 
   // Action: Tambah Aspek
   const handleCreateAspect = async (e: React.FormEvent) => {
@@ -267,7 +277,17 @@ export function AspekManager({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">Urutan</TableHead>
-                  <TableHead>Nama Aspek</TableHead>
+                  <TableHead>
+                    <SortableHeader
+                      label="Nama Aspek"
+                      direction={nameSortOrder}
+                      onToggle={() =>
+                        setNameSortOrder((prev) =>
+                          prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
+                        )
+                      }
+                    />
+                  </TableHead>
                   <TableHead>Deskripsi / Rubrik Penilaian</TableHead>
                   <TableHead>Status</TableHead>
                   {isSuperAdmin && (

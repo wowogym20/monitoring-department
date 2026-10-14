@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
+import { SortableHeader } from "@/components/ui/sortable-header"
 import { Card } from "@/components/ui/card"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
@@ -78,6 +79,16 @@ export function PeriodeManager({
   const [tanggalMulai, setTanggalMulai] = React.useState("")
   const [tanggalAkhir, setTanggalAkhir] = React.useState("")
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [sortOrder, setSortOrder] = React.useState<"none" | "asc" | "desc">("none")
+
+  // Urutkan periode sesuai abjad nama atau default urutan tanggal sistem
+  const sortedPeriods = React.useMemo(() => {
+    if (sortOrder === "none") return initialPeriods
+    return [...initialPeriods].sort((a, b) => {
+      const cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      return sortOrder === "asc" ? cmp : -cmp
+    })
+  }, [initialPeriods, sortOrder])
 
   // Action: Buat Periode Baru
   const handleCreatePeriod = async (e: React.FormEvent) => {
@@ -331,7 +342,17 @@ export function PeriodeManager({
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">#</TableHead>
-              <TableHead>Nama Periode</TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="Nama Periode"
+                  direction={sortOrder}
+                  onToggle={() =>
+                    setSortOrder((prev) =>
+                      prev === "none" ? "asc" : prev === "asc" ? "desc" : "none"
+                    )
+                  }
+                />
+              </TableHead>
               <TableHead>Tanggal Mulai</TableHead>
               <TableHead>Tanggal Akhir</TableHead>
               <TableHead>Status Periode</TableHead>
@@ -340,8 +361,8 @@ export function PeriodeManager({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {initialPeriods.length > 0 ? (
-              initialPeriods.map((period, idx) => (
+            {sortedPeriods.length > 0 ? (
+              sortedPeriods.map((period, idx) => (
                 <TableRow key={period.id}>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {idx + 1}
@@ -380,8 +401,8 @@ export function PeriodeManager({
 
       {/* Tampilan Mobile (< md): Kartu Menyusun ke Bawah (Tanpa Horizontal Scroll) */}
       <div className="space-y-3 md:hidden">
-        {initialPeriods.length > 0 ? (
-          initialPeriods.map((period, idx) => (
+        {sortedPeriods.length > 0 ? (
+          sortedPeriods.map((period, idx) => (
             <Card
               key={period.id}
               className="p-4 rounded-xl border border-border bg-card shadow-2xs space-y-3 gap-0"

@@ -22,6 +22,7 @@ import {
   XCircle,
 } from "lucide-react"
 import { toast } from "sonner"
+import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -62,6 +63,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { SortableHeader } from "@/components/ui/sortable-header"
 
 import { UserRole } from "@/types/database"
 import {
@@ -70,6 +72,7 @@ import {
   deleteMemberAction,
   getAllMemberIdsAction,
   bulkDeleteMembersAction,
+  getTrashCountAction,
   type MemberListItem,
   type GetMembersResponse,
 } from "@/lib/actions/member"
@@ -77,6 +80,7 @@ import { exportSelectedMembersToExcel } from "@/lib/export/member-export"
 import { MemberFormDialog } from "./member-form-dialog"
 import { MemberImportDialog } from "./member-import-dialog"
 import { MemberBulkEditDialog } from "./member-bulk-edit-dialog"
+import { MemberTrashDialog } from "./member-trash-dialog"
 
 interface DepartmentOption {
   id: string
@@ -105,17 +109,19 @@ export function AnggotaManager({
   const [departmentId, setDepartmentId] = React.useState<string>("all")
   const [page, setPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
   const [isPending, startTransition] = useTransition()
 
   // Modal State
   const [formOpen, setFormOpen] = React.useState(false)
   const [memberToEdit, setMemberToEdit] = React.useState<MemberListItem | null>(null)
   const [importOpen, setImportOpen] = React.useState(false)
+  const [trashOpen, setTrashOpen] = React.useState(false)
+  const [trashCount, setTrashCount] = React.useState(0)
 
   // Alert Dialog Hapus
   const [deleteTarget, setDeleteTarget] = React.useState<MemberListItem | null>(null)
   const [isDeleting, setIsDeleting] = React.useState(false)
-
 
   // State Seleksi Baris & Aksi Massal
   const [selectedIds, setSelectedIds] = React.useState<Set<string>>(new Set())
@@ -127,6 +133,18 @@ export function AnggotaManager({
   const [bulkDeleteOpen, setBulkDeleteOpen] = React.useState(false)
   const [isBulkDeleting, setIsBulkDeleting] = React.useState(false)
   const [isBulkExporting, setIsBulkExporting] = React.useState(false)
+
+  // Muat jumlah data di tempat sampah
+  const loadTrashCount = React.useCallback(async () => {
+    try {
+      const res = await getTrashCountAction()
+      if (res.success) {
+        setTrashCount(res.count)
+      }
+    } catch {
+      // diamkan kegagalan hitung non-kritis
+    }
+  }, [])
 
   // Debounce input pencarian 350ms
   React.useEffect(() => {
@@ -146,12 +164,14 @@ export function AnggotaManager({
         department_id: departmentId === "all" ? "" : departmentId,
         page,
         pageSize,
+        sortOrder,
       })
       setData(res)
       setSelectedIds(new Set())
       setIsAllMatchingSelected(false)
+      loadTrashCount()
     })
-  }, [debouncedSearch, status, departmentId, page, pageSize])
+  }, [debouncedSearch, status, departmentId, page, pageSize, sortOrder, loadTrashCount])
 
   React.useEffect(() => {
     loadData()
@@ -328,13 +348,13 @@ export function AnggotaManager({
   return (
     <div className="space-y-6">
       {/* Header & Aksi Utama */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2">
-            <Users className="h-7 w-7 text-primary" />
-            Manajemen Anggota
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2.5">
+            <Users className="h-7 w-7 text-primary shrink-0" />
+            <span>Manajemen Anggota</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground">
             {userRole === "user" ? (
               <span>
                 Daftar anggota departemen Anda:{" "}
@@ -348,19 +368,47 @@ export function AnggotaManager({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {canImport && (
+        {/* Tombol Aksi Utama: Responsif rapi di Mobile, Tablet, dan Desktop */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
+          {/* Tombol Sekunder: Tempat Sampah & Impor Massal */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+            {/* Tombol Tempat Sampah */}
             <Button
               variant="outline"
-              onClick={() => setImportOpen(true)}
-              id="btn-open-import"
-              className="gap-2 border-primary/30 text-primary hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+              onClick={() => setTrashOpen(true)}
+              id="btn-open-trash"
+              className={cn(
+                "h-9 px-3 gap-2 border-red-500/30 text-red-700 hover:bg-red-50 hover:text-red-800 dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-950/40 cursor-pointer justify-center text-xs sm:text-sm font-medium transition-colors shadow-2xs",
+                !canImport && "col-span-2 sm:col-span-1"
+              )}
             >
-              <Upload className="h-4 w-4" />
-              Impor Massal
+              <Trash2 className="h-4 w-4 text-red-500 shrink-0" />
+              <span className="truncate">Tempat Sampah</span>
+              {trashCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="ml-0.5 px-1.5 py-0 text-[10px] h-4 min-w-4 flex items-center justify-center rounded-full font-semibold shrink-0"
+                >
+                  {trashCount}
+                </Badge>
+              )}
             </Button>
-          )}
 
+            {/* Tombol Impor Massal */}
+            {canImport && (
+              <Button
+                variant="outline"
+                onClick={() => setImportOpen(true)}
+                id="btn-open-import"
+                className="h-9 px-3 gap-2 border-primary/30 text-primary hover:bg-emerald-50 hover:text-emerald-800 dark:hover:bg-emerald-950/40 dark:text-emerald-400 cursor-pointer justify-center text-xs sm:text-sm font-medium transition-colors shadow-2xs"
+              >
+                <Upload className="h-4 w-4 shrink-0" />
+                <span className="truncate">Impor Massal</span>
+              </Button>
+            )}
+          </div>
+
+          {/* Tombol Tambah Anggota (Primary Action) */}
           {canManage && (
             <Button
               onClick={() => {
@@ -368,10 +416,10 @@ export function AnggotaManager({
                 setFormOpen(true)
               }}
               id="btn-tambah-anggota"
-              className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              className="h-9 px-3.5 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 font-medium shadow-2xs cursor-pointer justify-center w-full sm:w-auto text-xs sm:text-sm transition-colors"
             >
-              <Plus className="h-4 w-4" />
-              Tambah Anggota
+              <Plus className="h-4 w-4 shrink-0" />
+              <span>Tambah Anggota</span>
             </Button>
           )}
         </div>
@@ -518,7 +566,15 @@ export function AnggotaManager({
               </TableHead>
               <TableHead className="w-12 text-center">No</TableHead>
               <TableHead>NIG</TableHead>
-              <TableHead>Nama Lengkap</TableHead>
+              <TableHead>
+                <SortableHeader
+                  label="Nama Lengkap"
+                  direction={sortOrder}
+                  onToggle={() =>
+                    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+                  }
+                />
+              </TableHead>
               {showDeptFilter && <TableHead>Departemen</TableHead>}
               <TableHead>Jabatan</TableHead>
               <TableHead>No. HP</TableHead>
@@ -909,15 +965,14 @@ export function AnggotaManager({
               <span>
                 Apakah Anda yakin ingin menghapus data anggota{" "}
                 <strong className="text-foreground">{deleteTarget?.nama}</strong>? Data akan
-                dihapus dari daftar aktif (soft delete) dan tidak akan dapat dinilai pada periode
-                berikutnya.
+                dipindahkan ke <strong>Tempat Sampah</strong> dan dapat dipulihkan kembali dalam waktu{" "}
+                <strong>7 hari</strong> sebelum dihapus permanen dari Supabase.
               </span>
               {deleteTarget?.has_assessment && (
                 <span className="block rounded-md bg-amber-500/10 border border-amber-500/30 p-2.5 text-xs text-amber-800 dark:text-amber-300 mt-2">
                   <strong>Perhatian:</strong> Anggota ini memiliki{" "}
-                  <strong>{deleteTarget.assessment_count} riwayat penilaian</strong>. Seluruh lembar
-                  penilaian, nilai aspek, dan komentar yang terintegrasi akan ikut dihapus secara
-                  otomatis.
+                  <strong>{deleteTarget.assessment_count} riwayat penilaian</strong>. Lembar
+                  penilaian dan data terkait ikut dipindahkan sementara ke tempat sampah.
                 </span>
               )}
             </AlertDialogDescription>
@@ -930,7 +985,7 @@ export function AnggotaManager({
               disabled={isDeleting}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              {isDeleting ? "Menghapus..." : "Ya, Hapus Anggota"}
+              {isDeleting ? "Menghapus..." : "Ya, Pindahkan ke Tempat Sampah"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -959,18 +1014,18 @@ export function AnggotaManager({
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive flex items-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Hapus {selectedIds.size} Anggota Terpilih?
+              Pindahkan {selectedIds.size} Anggota ke Tempat Sampah?
             </AlertDialogTitle>
             <AlertDialogDescription className="space-y-2">
               <span>
                 Apakah Anda yakin ingin menghapus{" "}
                 <strong className="text-foreground">{selectedIds.size} anggota</strong> yang
-                dipilih? Data akan dihapus dari daftar aktif (soft delete) dan tidak akan dapat
-                dinilai pada periode berikutnya.
+                dipilih? Data akan dipindahkan ke <strong>Tempat Sampah</strong> dan dapat dipulihkan dalam waktu{" "}
+                <strong>7 hari</strong> sebelum dihapus permanen oleh sistem.
               </span>
               <span className="block text-xs text-muted-foreground mt-1">
                 Catatan: Jika ada anggota terpilih yang memiliki riwayat penilaian, seluruh lembar
-                penilaian dan data terkait yang terintegrasi juga akan ikut dihapus secara otomatis.
+                penilaian dan data terkait yang terintegrasi juga akan ikut dipindahkan ke tempat sampah.
               </span>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -989,6 +1044,17 @@ export function AnggotaManager({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal Dialog Tempat Sampah Anggota */}
+      <MemberTrashDialog
+        open={trashOpen}
+        onOpenChange={setTrashOpen}
+        userRole={userRole}
+        onTrashMutated={() => {
+          loadData()
+          loadTrashCount()
+        }}
+      />
     </div>
   )
 }

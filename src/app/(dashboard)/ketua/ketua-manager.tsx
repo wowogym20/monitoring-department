@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { SortableHeader } from "@/components/ui/sortable-header"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -83,6 +84,7 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
   const router = useRouter()
 
   const [search, setSearch] = React.useState("")
+  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("asc")
   const [createOpen, setCreateOpen] = React.useState(false)
   const [editAccount, setEditAccount] = React.useState<KetuaAccountItem | null>(null)
   const [deleteAccount, setDeleteAccount] = React.useState<KetuaAccountItem | null>(null)
@@ -107,16 +109,22 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const filteredAccounts = React.useMemo(() => {
-    if (!search.trim()) return initialAccounts
-    const q = search.toLowerCase()
-    return initialAccounts.filter(
-      (a) =>
-        a.nama.toLowerCase().includes(q) ||
-        a.email.toLowerCase().includes(q) ||
-        (a.department?.nama.toLowerCase() || "").includes(q) ||
-        (a.department?.kode.toLowerCase() || "").includes(q)
-    )
-  }, [initialAccounts, search])
+    let result = initialAccounts
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      result = initialAccounts.filter(
+        (a) =>
+          a.nama.toLowerCase().includes(q) ||
+          a.email.toLowerCase().includes(q) ||
+          (a.department?.nama.toLowerCase() || "").includes(q) ||
+          (a.department?.kode.toLowerCase() || "").includes(q)
+      )
+    }
+    return [...result].sort((a, b) => {
+      const cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+      return sortOrder === "asc" ? cmp : -cmp
+    })
+  }, [initialAccounts, search, sortOrder])
 
   // Opsi departemen yang belum memiliki ketua (untuk create)
   const availableDeptsForCreate = React.useMemo(() => {
@@ -302,8 +310,16 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead>Nama Kepala</TableHead>
+                <TableHead className="w-12">No</TableHead>
+                <TableHead>
+                  <SortableHeader
+                    label="Nama Kepala"
+                    direction={sortOrder}
+                    onToggle={() =>
+                      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+                    }
+                  />
+                </TableHead>
                 <TableHead>Email Login</TableHead>
                 <TableHead>No. HP</TableHead>
                 <TableHead>Departemen Terkait</TableHead>

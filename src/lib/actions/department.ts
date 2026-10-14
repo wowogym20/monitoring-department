@@ -32,6 +32,7 @@ export interface DepartmentFilterParams {
   status?: "all" | "active" | "inactive"
   page?: number
   pageSize?: number
+  sortOrder?: "asc" | "desc"
 }
 
 import { z } from "zod"
@@ -43,7 +44,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
   await requireRole("super_admin", "admin")
   const supabase = await createClient()
 
-  const { search = "", status = "all", page = 1, pageSize = 10 } = params
+  const { search = "", status = "all", page = 1, pageSize = 10, sortOrder = "asc" } = params
 
   let query = supabase
     .from("departments")
@@ -74,7 +75,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
-  query = query.order("nama", { ascending: true }).range(from, to)
+  query = query.order("nama", { ascending: sortOrder === "asc" }).range(from, to)
 
   const { data, count, error } = await query
 
