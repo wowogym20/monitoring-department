@@ -185,7 +185,7 @@ export function KetuaManager({ initialAccounts }: KetuaManagerProps) {
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs"
         >
           <Plus className="size-4 mr-1.5" />
-          Buat Akun Ketua Baru
+          Buat Akun Kadep Baru
         </Button>
       </div>
 
