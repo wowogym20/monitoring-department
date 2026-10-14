@@ -162,8 +162,11 @@ export async function updateSession(request: NextRequest) {
 
     // Role-based route guard sesuai matriks PRD bagian 10:
 
-    // A. Khusus Super Admin: /ketua
-    if (pathname.startsWith("/ketua") && role !== "super_admin") {
+    // A. Khusus Super Admin: /ketua dan /panduan (Buku & Dokumentasi Sistem)
+    if (
+      (pathname.startsWith("/ketua") || pathname.startsWith("/panduan")) &&
+      role !== "super_admin"
+    ) {
       const url = request.nextUrl.clone()
       url.pathname = "/dashboard"
       return {
