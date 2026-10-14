@@ -14,7 +14,7 @@ export default async function KetuaPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-          Akun Ketua Departemen
+          Akun Kepala Departemen
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
           Kelola akun login ketua departemen, aktivasi akun, dan reset kata sandi (Khusus Super-Admin).
