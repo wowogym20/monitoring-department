@@ -215,7 +215,7 @@ const KopHeader = () => (
   <View style={styles.kopWrapper} fixed>
     <Text style={styles.kopInstitution}>PONDOK MODERN TAZAKKA</Text>
     <Text style={styles.kopSub}>
-      Sistem Informasi Monitoring & Evaluasi Kinerja 14 Departemen — Dokumen Resmi Panduan Operasional
+      Sistem Informasi Monitoring & Evaluasi Kinerja 15 Departemen — Dokumen Resmi Panduan Operasional
     </Text>
   </View>
 )
@@ -240,7 +240,7 @@ const SectionOverview = () => (
       <Text style={styles.sectionTitle}>1. GAMBARAN UMUM SISTEM & URGENSI</Text>
     </View>
     <Text style={styles.paragraph}>
-      Aplikasi Monitoring Departemen adalah platform web internal Pondok Modern Tazakka yang menyatukan proses evaluasi berkala kinerja anggota tim di seluruh 14 departemen. Sistem ini menggantikan format formulir manual yang sebelumnya tersebar dan tidak seragam menjadi satu standar evaluasi Likert 1–5 terpusat.
+      Aplikasi Monitoring Departemen adalah platform web internal Pondok Modern Tazakka yang menyatukan proses evaluasi berkala kinerja anggota tim di seluruh 15 departemen. Sistem ini menggantikan format formulir manual yang sebelumnya tersebar dan tidak seragam menjadi satu standar evaluasi Likert 1–5 terpusat.
     </Text>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>•</Text>
@@ -251,7 +251,7 @@ const SectionOverview = () => (
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>•</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Isolasi Data Ketat:</Text> Setiap Ketua Departemen hanya dapat melihat dan menilai anggota departemennya sendiri.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Isolasi Data Ketat:</Text> Setiap Kepala Departemen hanya dapat melihat dan menilai anggota departemennya sendiri.
       </Text>
     </View>
     <View style={styles.bulletItem}>
@@ -263,7 +263,7 @@ const SectionOverview = () => (
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>•</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Efisiensi SDM:</Text> Waktu rekapitulasi 14 departemen dipersingkat dari hitungan hari menjadi hitungan menit.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Efisiensi Tim Koordinator:</Text> Waktu rekapitulasi 15 departemen dipersingkat dari hitungan hari menjadi hitungan menit.
       </Text>
     </View>
 
@@ -300,27 +300,27 @@ const SectionOverview = () => (
 const SectionUserGuide = () => (
   <View>
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>PANDUAN OPERASIONAL: KETUA DEPARTEMEN (USER)</Text>
+      <Text style={styles.sectionTitle}>PANDUAN OPERASIONAL: KEPALA DEPARTEMEN (USER)</Text>
     </View>
     <Text style={styles.paragraph}>
-      Sebagai Ketua Departemen, amanah utama Anda adalah memelihara daftar anggota departemen dan memberikan penilaian berkala secara adil, objektif, dan tepat waktu pada setiap periode aktif.
+      Sebagai Kepala Departemen, amanah utama Anda adalah mengecek daftar anggota departemen dan memberikan penilaian berkala secara adil, objektif, dan tepat waktu pada setiap periode aktif.
     </Text>
 
-    <Text style={styles.subSectionTitle}>A. Manajemen Anggota Departemen (/anggota)</Text>
+    <Text style={styles.subSectionTitle}>A. Manajemen Anggota Departemen (anggota)</Text>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>1.</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Menambah Anggota Baru:</Text> Buka menu Data Anggota, klik tombol Tambah Anggota, masukkan Nama Lengkap, NIP/ID Internal, Jabatan/Amanah, dan Nomor WhatsApp.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Menambah Anggota Baru:</Text> Buka menu Data Anggota, klik tombol Tambah Anggota, masukkan Nama Lengkap, NIG/ID Internal, Jabatan/Amanah, dan Nomor WhatsApp (Opsional).
       </Text>
     </View>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>2.</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Memperbarui & Menonaktifkan:</Text> Klik ikon pensil untuk mengubah data. Jika anggota mutasi atau purna tugas, ubah status menjadi Nonaktif (riwayat nilai masa lalu tetap aman tersimpan).
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Memperbarui & Menonaktifkan:</Text> Klik ikon titik tiga untuk mengubah data. Jika anggota mutasi atau purna tugas, ubah status menjadi Nonaktif (riwayat nilai masa lalu tetap aman tersimpan).
       </Text>
     </View>
 
-    <Text style={styles.subSectionTitle}>B. Mengisi Lembar Penilaian Anggota (/penilaian)</Text>
+    <Text style={styles.subSectionTitle}>B. Mengisi Lembar Penilaian Anggota (penilaian)</Text>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>1.</Text>
       <Text style={styles.bulletContent}>
@@ -336,20 +336,20 @@ const SectionUserGuide = () => (
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>3.</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Simpan Draf vs Submit:</Text> Gunakan Simpan sebagai Draf bila ingin melanjutkannya nanti. Klik Submit Penilaian apabila seluruh aspek telah dinilai lengkap dan siap diverifikasi oleh SDM.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Simpan Draf vs Submit:</Text> Gunakan Simpan sebagai Draf bila ingin melanjutkannya nanti. Klik Submit Penilaian apabila seluruh aspek telah dinilai lengkap dan siap diverifikasi oleh Tim Koordinator.
       </Text>
     </View>
 
     <View style={styles.calloutImportant}>
       <Text style={styles.calloutTitle}>ATURAN PENTING: AUTO-RESUBMIT JIKA EDIT PENILAIAN</Text>
       <Text style={styles.calloutText}>
-        Apabila Anda menyunting skor penilaian yang statusnya telah Disetujui (Approved) oleh SDM, sistem secara otomatis akan mengembalikan statusnya menjadi Submitted agar SDM memverifikasi ulang perubahannya.
+        Apabila Anda menyunting skor penilaian yang statusnya telah Disetujui (Approved) oleh Tim Koordinator, sistem secara otomatis akan mengembalikan statusnya menjadi Submitted agar Koordinator memverifikasi ulang perubahannya.
       </Text>
     </View>
 
-    <Text style={styles.subSectionTitle}>C. Membaca Masukan & Komentar SDM</Text>
+    <Text style={styles.subSectionTitle}>C. Membaca Masukan & Komentar Koordinator</Text>
     <Text style={styles.paragraph}>
-      Jika Admin SDM meminta revisi (Revision Requested), buka detail penilaian dan tinjau kolom komentar di bagian bawah lembar penilaian. Anda dapat mengetik balasan dan memperbarui skor yang diminta.
+      Jika Admin Koordinator meminta revisi (Revision Requested), buka detail penilaian dan tinjau kolom komentar di bagian bawah lembar penilaian. Anda dapat mengetik balasan dan memperbarui skor yang diminta.
     </Text>
   </View>
 )
@@ -358,13 +358,13 @@ const SectionUserGuide = () => (
 const SectionAdminGuide = () => (
   <View>
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>PANDUAN OPERASIONAL: ADMIN SDM (ADMIN)</Text>
+      <Text style={styles.sectionTitle}>PANDUAN OPERASIONAL: KOORDINATOR (ADMIN)</Text>
     </View>
     <Text style={styles.paragraph}>
-      Admin SDM bertindak sebagai verifikator terpusat kelengkapan evaluasi 14 departemen, mengelola impor data massal, memvalidasi objektivitas nilai, memberikan komentar umpan balik, dan mengekspor laporan resmi.
+      Admin/Koordinator bertindak sebagai verifikator terpusat kelengkapan evaluasi 15 departemen, mengelola impor data massal, memvalidasi objektivitas nilai, memberikan komentar umpan balik, dan mengekspor laporan resmi.
     </Text>
 
-    <Text style={styles.subSectionTitle}>A. Monitoring Rekapitulasi 14 Departemen (/rekap)</Text>
+    <Text style={styles.subSectionTitle}>A. Monitoring Rekapitulasi 15 Departemen (/rekap)</Text>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>•</Text>
       <Text style={styles.bulletContent}>
@@ -374,7 +374,7 @@ const SectionAdminGuide = () => (
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>•</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Filter Pencarian Cepat:</Text> Filter berdasarkan Departemen, Periode, Status (Draft, Submitted, Revision Requested, Approved), dan kolom pencarian nama/NIP.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Filter Pencarian Cepat:</Text> Filter berdasarkan Departemen, Periode, Status (Draft, Submitted, Revision Requested, Approved), dan kolom pencarian nama/NIG.
       </Text>
     </View>
 
@@ -382,7 +382,7 @@ const SectionAdminGuide = () => (
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>1.</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Pemeriksaan Detail:</Text> Buka lembar penilaian anggota untuk memeriksa kesesuaian skor dan catatan evaluasi ketua.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Pemeriksaan Detail:</Text> Buka lembar penilaian anggota untuk memeriksa kesesuaian skor dan catatan evaluasi Kadep.
       </Text>
     </View>
     <View style={styles.bulletItem}>
@@ -429,11 +429,11 @@ const SectionSuperAdminGuide = () => (
       Memantau grafik radar agregat 7 aspek seluruh lembaga, distribusi predikat kinerja (Sangat Baik, Baik, Cukup, Kurang, Sangat Kurang), serta status kelulusan evaluasi per departemen secara real-time.
     </Text>
 
-    <Text style={styles.subSectionTitle}>B. Tata Kelola 14 Departemen & Penetapan Ketua (/departemen & /ketua)</Text>
+    <Text style={styles.subSectionTitle}>B. Tata Kelola 15 Departemen & Penetapan Kadep (Departemen & Kadep)</Text>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>•</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Penetapan & Rotasi Ketua:</Text> Tetapkan atau ganti ketua departemen dari daftar akun pengguna. Data penilaian historis tetap utuh melekat pada departemen.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Penetapan & Rotasi Kadep:</Text> Tetapkan atau ganti kepala departemen dari daftar akun pengguna. Data penilaian historis tetap utuh melekat pada departemen.
       </Text>
     </View>
     <View style={styles.bulletItem}>
@@ -443,7 +443,7 @@ const SectionSuperAdminGuide = () => (
       </Text>
     </View>
 
-    <Text style={styles.subSectionTitle}>C. Periode Penilaian & Jejak Audit (/periode & /audit)</Text>
+    <Text style={styles.subSectionTitle}>C. Periode Penilaian & Jejak Audit (periode & audit)</Text>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>•</Text>
       <Text style={styles.bulletContent}>
@@ -468,22 +468,22 @@ const SectionFaq = () => (
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>Q:</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Apakah anggota departemen dapat login ke aplikasi ini?</Text>
-        {"\n"}Tidak. Anggota departemen tidak memiliki akun. Sistem ini murni alat kerja ketua, SDM, dan pimpinan untuk menjaga kerahasiaan dan objektivitas evaluasi.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}> Apakah anggota departemen dapat login ke aplikasi ini?</Text>
+        {"\n"}Tidak. Anggota departemen tidak memiliki akun. Sistem ini murni alat kerja kadep, Koordinator, dan pimpinan untuk menjaga kerahasiaan dan objektivitas evaluasi.
       </Text>
     </View>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>Q:</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Apakah aplikasi ini dapat digunakan langsung dari smartphone (HP)?</Text>
+        <Text style={{ fontFamily: "Helvetica-Bold" }}> Apakah aplikasi ini dapat digunakan langsung dari smartphone (HP)?</Text>
         {"\n"}Ya. Antarmuka aplikasi telah dioptimalkan secara mobile-first dan nyaman digunakan dari layar HP mulai lebar 360 px.
       </Text>
     </View>
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>Q:</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Bagaimana jika lupa kata sandi atau akun terkendala?</Text>
-        {"\n"}Silakan hubungi Tim TI atau Admin SDM melalui email ti@tazakka.or.id atau admin.sdm@tazakka.or.id untuk reset kata sandi resmi.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}> Bagaimana jika lupa kata sandi atau akun terkendala?</Text>
+        {"\n"}Silakan hubungi Tim TI atau Admin Koordinator melalui WhatsApp 085748639927.
       </Text>
     </View>
   </View>
