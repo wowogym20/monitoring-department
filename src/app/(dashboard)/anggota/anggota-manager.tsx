@@ -359,7 +359,7 @@ export function AnggotaManager({
     }
   }
 
-  const canManage = userRole === "super_admin" || userRole === "user"
+  const canManage = userRole === "super_admin" || userRole === "admin" || userRole === "user"
   const canImport = userRole === "super_admin" || userRole === "admin"
   const showDeptFilter = userRole === "super_admin" || userRole === "admin"
 

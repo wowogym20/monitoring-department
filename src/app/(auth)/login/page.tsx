@@ -129,10 +129,10 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none transition-colors cursor-pointer z-10 p-0.5"
                 aria-label={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
                 title={showPassword ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"}
-                tabIndex={0}
+                tabIndex={-1}
               >
                 {showPassword ? (
                   <EyeOff className="size-4" />

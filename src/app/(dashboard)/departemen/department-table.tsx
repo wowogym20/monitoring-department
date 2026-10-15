@@ -102,7 +102,7 @@ export function DepartmentTable({
   summary,
   activePeriodName,
   currentFillingStatus = "all",
-  currentPageSize = "10",
+  currentPageSize = "all",
 }: DepartmentTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -156,7 +156,7 @@ export function DepartmentTable({
   }
 
   const currentFillingStatusParam = searchParams.get("fillingStatus") || currentFillingStatus || "all"
-  const pageSizeValue = searchParams.get("pageSize") || currentPageSize || "10"
+  const pageSizeValue = searchParams.get("pageSize") || currentPageSize || "all"
   const isAll = pageSizeValue === "all" || pageSizeValue === "semua"
 
   const handleFillingStatusFilterChange = (val: string) => {
@@ -512,7 +512,13 @@ export function DepartmentTable({
       },
       {
         accessorKey: "ketua",
-        header: "Kepala Departemen",
+        header: () => (
+          <SortableHeader
+            label="Kepala Departemen"
+            direction={currentSortBy === "ketua" ? currentSort : false}
+            onToggle={() => handleSortToggle("ketua")}
+          />
+        ),
         cell: ({ row }) => {
           const ketua = row.original.ketua
           return (
@@ -553,7 +559,13 @@ export function DepartmentTable({
       },
       {
         accessorKey: "filling_status",
-        header: "Status Pengisian",
+        header: () => (
+          <SortableHeader
+            label="Status Pengisian"
+            direction={currentSortBy === "filling_status" ? currentSort : false}
+            onToggle={() => handleSortToggle("filling_status")}
+          />
+        ),
         cell: ({ row }) => renderFillingStatusBadge(row.original),
       },
       {

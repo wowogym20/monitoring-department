@@ -44,6 +44,9 @@ export interface PenilaianDashboardData {
   summary: {
     totalMembers: number
     submittedCount: number
+    submittedOnlyCount: number
+    approvedCount: number
+    revisionRequestedCount: number
     draftCount: number
     unassessedCount: number
     percentage: number
@@ -221,18 +224,24 @@ export async function getAssessmentDashboardDataServer(params: {
   // Dinilai = berstatus submitted, approved, atau revision_requested
   const totalMembers = members.length
   let submittedCount = 0
+  let submittedOnlyCount = 0
+  let approvedCount = 0
+  let revisionRequestedCount = 0
   let draftCount = 0
   let unassessedCount = 0
 
   for (const m of members) {
     if (m.status === "draft") {
       draftCount++
-    } else if (
-      m.status === "submitted" ||
-      m.status === "approved" ||
-      m.status === "revision_requested"
-    ) {
+    } else if (m.status === "submitted") {
       submittedCount++
+      submittedOnlyCount++
+    } else if (m.status === "approved") {
+      submittedCount++
+      approvedCount++
+    } else if (m.status === "revision_requested") {
+      submittedCount++
+      revisionRequestedCount++
     } else {
       unassessedCount++
     }
@@ -249,6 +258,9 @@ export async function getAssessmentDashboardDataServer(params: {
     summary: {
       totalMembers,
       submittedCount,
+      submittedOnlyCount,
+      approvedCount,
+      revisionRequestedCount,
       draftCount,
       unassessedCount,
       percentage,

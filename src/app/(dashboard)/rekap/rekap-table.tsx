@@ -43,7 +43,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
-import { bulkApproveAssessmentsAction, RekapTableItem } from "@/lib/actions/rekap"
+import {
+  bulkApproveAssessmentsAction,
+  bulkApproveAllSubmittedAction,
+  RekapTableItem,
+} from "@/lib/actions/rekap"
 import { AssessmentPeriod, UserRole } from "@/types/database"
 import { formatDateId } from "@/lib/date"
 import {
@@ -64,7 +68,6 @@ import {
   X,
   CheckCheck,
   CheckCircle2,
-  AlertTriangle,
   Loader2,
 } from "lucide-react"
 
@@ -158,6 +161,10 @@ export function RekapTable({
   const [bulkDialogOpen, setBulkDialogOpen] = React.useState(false)
   const [isApproving, setIsApproving] = React.useState(false)
 
+  // State untuk terima semua laporan selesai (submitted) pada periode/departemen aktif
+  const [bulkAllDialogOpen, setBulkAllDialogOpen] = React.useState(false)
+  const [isApprovingAll, setIsApprovingAll] = React.useState(false)
+
   // Bersihkan pilihan jika data/halaman/filter berganti
   React.useEffect(() => {
     setSelectedIds([])
@@ -180,6 +187,27 @@ export function RekapTable({
       toast.error("Terjadi kesalahan sistem saat menyetujui penilaian.")
     } finally {
       setIsApproving(false)
+    }
+  }
+
+  const handleBulkApproveAll = async () => {
+    setIsApprovingAll(true)
+    try {
+      const res = await bulkApproveAllSubmittedAction({
+        periodId: selectedPeriodId,
+        departmentId: selectedDepartmentId,
+      })
+      if (res.success) {
+        toast.success(res.message)
+        setBulkAllDialogOpen(false)
+        router.refresh()
+      } else {
+        toast.error(res.error)
+      }
+    } catch {
+      toast.error("Terjadi kesalahan sistem saat menyetujui seluruh laporan.")
+    } finally {
+      setIsApprovingAll(false)
     }
   }
 
@@ -460,13 +488,26 @@ export function RekapTable({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+            {canApprove && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setBulkAllDialogOpen(true)}
+                className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5 shadow-2xs cursor-pointer"
+                title="Terima seluruh laporan penilaian yang sudah selesai dinilai (status submitted)"
+              >
+                <CheckCheck className="size-3.5" />
+                <span>Terima Semua Selesai</span>
+              </Button>
+            )}
+
             {hasActiveFilters && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleResetFilters}
-                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:border-destructive/40 hover:bg-destructive/10 gap-1.5 transition-colors"
+                className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:border-destructive/40 hover:bg-destructive/10 gap-1.5 transition-colors cursor-pointer"
                 title="Reset semua filter ke default"
               >
                 <RotateCcw className="size-3" />
@@ -897,6 +938,63 @@ export function RekapTable({
                 <>
                   <CheckCheck className="size-3.5 mr-1.5" />
                   <span>Ya, Setujui {selectedIds.length} Penilaian</span>
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Konfirmasi Terima Semua Laporan Selesai */}
+      <Dialog open={bulkAllDialogOpen} onOpenChange={setBulkAllDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-foreground font-bold">
+              <CheckCheck className="size-5 text-emerald-600" />
+              <span>Terima Semua Laporan Selesai</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm text-muted-foreground pt-1">
+              Aksi ini akan menyetujui (status <strong>Disetujui / Approved</strong>) seluruh laporan penilaian kinerja yang saat ini berstatus <strong>Submitted</strong> pada lingkup periode terpilih
+              {selectedDepartmentId ? " dan departemen terkait" : " lintas seluruh departemen"}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-lg text-xs space-y-1.5 border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200">
+            <p className="font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="size-3.5 text-emerald-600" />
+              Persetujuan Massal Langsung
+            </p>
+            <p className="text-muted-foreground dark:text-emerald-300/80">
+              Seluruh laporan yang berstatus &quot;submitted&quot; akan langsung disetujui tanpa harus memilih baris satu per satu di setiap halaman.
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkAllDialogOpen(false)}
+              disabled={isApprovingAll}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5 shadow-2xs"
+              onClick={handleBulkApproveAll}
+              disabled={isApprovingAll}
+            >
+              {isApprovingAll ? (
+                <>
+                  <Loader2 className="size-3.5 animate-spin" />
+                  <span>Menyetujui Semua...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCheck className="size-3.5" />
+                  <span>Ya, Terima Semua Selesai</span>
                 </>
               )}
             </Button>

@@ -880,6 +880,82 @@ export async function bulkApproveAssessmentsAction(assessmentIds: string[]) {
 }
 
 /**
+ * 3.B. Server Action: Persetujuan Massal Seluruh Laporan Selesai (submitted)
+ * Menerima semua laporan yang sudah selesai di seluruh halaman (scope periode & departemen yang dipilih).
+ * Hak akses: super_admin & admin
+ */
+export async function bulkApproveAllSubmittedAction(params: {
+  periodId?: string | null
+  departmentId?: string | null
+}) {
+  try {
+    await requireRole("super_admin", "admin")
+    const adminClient = createAdminClient()
+
+    let query = adminClient
+      .from("assessments")
+      .select("id")
+      .eq("status", "submitted")
+      .is("deleted_at", null)
+
+    if (params.periodId) {
+      query = query.eq("period_id", params.periodId)
+    }
+
+    if (params.departmentId && params.departmentId !== "all") {
+      query = query.eq("department_id", params.departmentId)
+    }
+
+    const { data: submittedList, error: fetchErr } = await query
+
+    if (fetchErr) {
+      return {
+        success: false,
+        error: `Gagal memuat data penilaian submitted: ${fetchErr.message}`,
+      }
+    }
+
+    if (!submittedList || submittedList.length === 0) {
+      return {
+        success: false,
+        error: "Tidak ada laporan berstatus 'submitted' yang perlu disetujui pada filter saat ini.",
+      }
+    }
+
+    const targetIds = submittedList.map((a) => a.id)
+
+    // Batch update status to approved
+    const { error: updateErr } = await adminClient
+      .from("assessments")
+      .update({
+        status: "approved",
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", targetIds)
+
+    if (updateErr) {
+      return {
+        success: false,
+        error: `Gagal menyetujui seluruh laporan: ${updateErr.message}`,
+      }
+    }
+
+    revalidatePath("/rekap")
+    revalidatePath("/penilaian")
+    revalidatePath("/dashboard")
+
+    return {
+      success: true,
+      count: targetIds.length,
+      message: `Berhasil menyetujui semua (${targetIds.length}) laporan penilaian yang telah selesai.`,
+    }
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server"
+    return { success: false, error: errorMsg }
+  }
+}
+
+/**
  * 4. Server Action: Meminta Revisi Penilaian (Status: revision_requested)
  * Validasi transisi status: Hanya boleh dari 'submitted' atau 'approved' (PRD Bagian 9)
  * Wajib disertai komentar/catatan revisi

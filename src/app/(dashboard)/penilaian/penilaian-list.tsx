@@ -114,6 +114,13 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
       if (statusFilter === "all") return true
       if (statusFilter === "unassessed") return member.status === "unassessed"
       if (statusFilter === "draft") return member.status === "draft"
+      if (statusFilter === "assessed_all") {
+        return (
+          member.status === "submitted" ||
+          member.status === "approved" ||
+          member.status === "revision_requested"
+        )
+      }
       if (statusFilter === "submitted") return member.status === "submitted"
       if (statusFilter === "approved") return member.status === "approved"
       if (statusFilter === "revision_requested") return member.status === "revision_requested"
@@ -343,15 +350,25 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
 
             {/* Breakdown Mini Badges */}
             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium border border-primary/20">
-                <CheckCircle2 className="size-3.5" /> {summary.submittedCount} Selesai / Terkirim
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 font-medium border border-emerald-500/20">
+                <CheckCircle2 className="size-3.5 text-emerald-600" /> {summary.submittedCount} Sudah Dinilai
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-muted-foreground font-medium border border-border">
                 <FileEdit className="size-3.5 text-muted-foreground" /> {summary.draftCount} Masih Draf
               </span>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 font-medium border border-amber-500/20">
-                <AlertCircle className="size-3.5" /> {summary.unassessedCount} Belum Dinilai
+                <AlertCircle className="size-3.5 text-amber-600" /> {summary.unassessedCount} Belum Dinilai
               </span>
+              {summary.approvedCount > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-600/15 text-emerald-900 dark:text-emerald-200 font-medium border border-emerald-600/30">
+                  <CheckCircle2 className="size-3.5 text-emerald-600" /> {summary.approvedCount} Disetujui
+                </span>
+              )}
+              {summary.revisionRequestedCount > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-500/10 text-orange-700 dark:text-orange-400 font-medium border border-orange-500/20">
+                  <AlertCircle className="size-3.5 text-orange-600" /> {summary.revisionRequestedCount} Perlu Revisi
+                </span>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -421,15 +438,50 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
           </Button>
           <Button
             size="sm"
-            variant={statusFilter === "submitted" ? "default" : "outline"}
-            onClick={() => setStatusFilter("submitted")}
+            variant={statusFilter === "assessed_all" ? "default" : "outline"}
+            onClick={() => setStatusFilter("assessed_all")}
             className={cn(
               "h-8 text-xs shrink-0 rounded-lg",
-              statusFilter === "submitted" && "bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+              statusFilter === "assessed_all" && "bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
             )}
           >
             Sudah Dinilai ({summary.submittedCount})
           </Button>
+          <Button
+            size="sm"
+            variant={statusFilter === "submitted" ? "default" : "outline"}
+            onClick={() => setStatusFilter("submitted")}
+            className={cn(
+              "h-8 text-xs shrink-0 rounded-lg",
+              statusFilter === "submitted" && "bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+            )}
+          >
+            Menunggu Verifikasi ({summary.submittedOnlyCount})
+          </Button>
+          <Button
+            size="sm"
+            variant={statusFilter === "approved" ? "default" : "outline"}
+            onClick={() => setStatusFilter("approved")}
+            className={cn(
+              "h-8 text-xs shrink-0 rounded-lg",
+              statusFilter === "approved" && "bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+            )}
+          >
+            Disetujui ({summary.approvedCount})
+          </Button>
+          {summary.revisionRequestedCount > 0 && (
+            <Button
+              size="sm"
+              variant={statusFilter === "revision_requested" ? "default" : "outline"}
+              onClick={() => setStatusFilter("revision_requested")}
+              className={cn(
+                "h-8 text-xs shrink-0 rounded-lg",
+                statusFilter === "revision_requested" && "bg-orange-600 hover:bg-orange-700 text-white font-semibold"
+              )}
+            >
+              Perlu Revisi ({summary.revisionRequestedCount})
+            </Button>
+          )}
         </div>
       </div>
 

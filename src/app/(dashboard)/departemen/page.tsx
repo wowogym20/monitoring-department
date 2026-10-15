@@ -30,11 +30,10 @@ export default async function DepartemenPage({
     typeof resolvedParams.page === "string"
       ? Math.max(1, parseInt(resolvedParams.page, 10) || 1)
       : 1
-  const pageSizeParam = resolvedParams.pageSize
-  let pageSize: number | "all" = 10
-  if (pageSizeParam === "all" || pageSizeParam === "semua") {
-    pageSize = "all"
-  } else if (typeof pageSizeParam === "string") {
+  const pageSizeParam =
+    typeof resolvedParams.pageSize === "string" ? resolvedParams.pageSize : undefined
+  let pageSize: number | "all" = "all"
+  if (pageSizeParam && pageSizeParam !== "all" && pageSizeParam !== "semua") {
     const parsed = parseInt(pageSizeParam, 10)
     if ([5, 10, 25, 50].includes(parsed)) {
       pageSize = parsed
@@ -53,7 +52,11 @@ export default async function DepartemenPage({
     resolvedParams.sort === "desc" ? "desc" : "asc"
   const sortByParam = resolvedParams.sortBy
   const sortBy =
-    sortByParam === "kode" || sortByParam === "is_active" || sortByParam === "created_at"
+    sortByParam === "kode" ||
+    sortByParam === "ketua" ||
+    sortByParam === "filling_status" ||
+    sortByParam === "is_active" ||
+    sortByParam === "created_at"
       ? sortByParam
       : "nama"
 

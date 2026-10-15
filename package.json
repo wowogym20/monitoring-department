@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "seed:users": "npx tsx scripts/seed-dev-users.ts"
+    "seed:users": "npx tsx scripts/seed-dev-users.ts",
+    "cleanup:e2e": "npx tsx scripts/cleanup-e2e-data.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

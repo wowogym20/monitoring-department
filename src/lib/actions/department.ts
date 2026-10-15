@@ -48,7 +48,7 @@ export interface DepartmentFilterParams {
   page?: number
   pageSize?: number | "all"
   sortOrder?: "asc" | "desc"
-  sortBy?: "nama" | "kode" | "is_active" | "created_at"
+  sortBy?: "nama" | "kode" | "ketua" | "filling_status" | "is_active" | "created_at"
 }
 
 import { z } from "zod"
@@ -65,12 +65,13 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
     status = "all",
     fillingStatus = "all",
     page = 1,
-    pageSize = 10,
+    pageSize = "all",
     sortOrder = "asc",
     sortBy = "nama",
   } = params
 
   // 1. Ambil periode penilaian aktif (open) atau periode terbaru
+  let activePeriod: { id: string; nama: string; status: string } | null = null
   const { data: openPeriod } = await supabase
     .from("assessment_periods")
     .select("id, nama, status")
@@ -78,6 +79,19 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
     .order("tanggal_mulai", { ascending: false })
     .limit(1)
     .maybeSingle()
+
+  if (openPeriod) {
+    activePeriod = openPeriod
+  } else {
+    // Fallback ke periode paling baru jika tidak ada yang open
+    const { data: latestPeriod } = await supabase
+      .from("assessment_periods")
+      .select("id, nama, status")
+      .order("tanggal_mulai", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    activePeriod = latestPeriod || null
+  }
 
   // 2. Ambil seluruh anggota aktif per departemen
   const { data: membersList } = await supabase
@@ -93,11 +107,11 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
 
   // 3. Ambil penilaian pada periode aktif
   let assessmentsList: Array<{ department_id: string; status: string }> = []
-  if (openPeriod) {
+  if (activePeriod) {
     const { data: rawAssess } = await supabase
       .from("assessments")
       .select("department_id, status")
-      .eq("period_id", openPeriod.id)
+      .eq("period_id", activePeriod.id)
       .is("deleted_at", null)
     assessmentsList = rawAssess || []
   }
@@ -213,6 +227,43 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
     }
   )
 
+  // 5.B. Sorting dinamis untuk seluruh kolom (nama, kode, ketua, filling_status, is_active, created_at)
+  allDepartments.sort((a, b) => {
+    let cmp = 0
+    if (sortBy === "kode") {
+      cmp = a.kode.localeCompare(b.kode, "id", { sensitivity: "base" })
+    } else if (sortBy === "is_active") {
+      cmp = a.is_active === b.is_active ? 0 : a.is_active ? -1 : 1
+    } else if (sortBy === "created_at") {
+      cmp = new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    } else if (sortBy === "ketua") {
+      const ketuaA = a.ketua?.nama || ""
+      const ketuaB = b.ketua?.nama || ""
+      if (!ketuaA && !ketuaB) cmp = 0
+      else if (!ketuaA) cmp = 1
+      else if (!ketuaB) cmp = -1
+      else cmp = ketuaA.localeCompare(ketuaB, "id", { sensitivity: "base" })
+    } else if (sortBy === "filling_status") {
+      const getRank = (d: DepartmentListItem) => {
+        if (d.filling_status === "completed") return 3
+        if (d.filling_status === "partial") return 2
+        return 1
+      }
+      const rankA = getRank(a)
+      const rankB = getRank(b)
+      if (rankA !== rankB) {
+        cmp = rankA - rankB
+      } else {
+        const ratioA = a.total_members > 0 ? a.assessed_count / a.total_members : 0
+        const ratioB = b.total_members > 0 ? b.assessed_count / b.total_members : 0
+        cmp = ratioA - ratioB
+      }
+    } else {
+      cmp = a.nama.localeCompare(b.nama, "id", { sensitivity: "base" })
+    }
+    return isAscending ? cmp : -cmp
+  })
+
   // 6. Ringkasan kepatuhan pengisian departemen aktif
   let completedCount = 0
   let partialCount = 0
@@ -229,7 +280,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
     completed: completedCount,
     partial: partialCount,
     unfilled: unfilledCount,
-    periodName: openPeriod?.nama || null,
+    periodName: activePeriod?.nama || null,
   }
 
   // 7. Filter status pengisian jika dipilih
@@ -260,7 +311,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
     pageSize: resolvedPageSize,
     totalPages,
     summary: completionSummary,
-    activePeriod: openPeriod,
+    activePeriod: activePeriod,
   }
 }
 

@@ -9,7 +9,7 @@ import { toast } from "sonner"
 import { Loader2, Lock, ArrowLeft, CheckCircle2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import {
   Card,
@@ -113,10 +113,9 @@ export default function ResetPasswordPage() {
                     Kata Sandi Baru
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
-                    <Input
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none z-10" />
+                    <PasswordInput
                       id="passwordBaru"
-                      type="password"
                       placeholder="Minimal 8 karakter"
                       className="pl-9"
                       disabled={isPending}
@@ -138,10 +137,9 @@ export default function ResetPasswordPage() {
                     Konfirmasi Kata Sandi Baru
                   </Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-2.5 size-4 text-muted-foreground pointer-events-none" />
-                    <Input
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none z-10" />
+                    <PasswordInput
                       id="konfirmasiPassword"
-                      type="password"
                       placeholder="Ulangi kata sandi baru"
                       className="pl-9"
                       disabled={isPending}

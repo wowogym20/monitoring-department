@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Badge } from "@/components/ui/badge"
 import { SortableHeader } from "@/components/ui/sortable-header"
 import { Label } from "@/components/ui/label"
@@ -925,9 +926,8 @@ export function UserManager({
 
             <div className="space-y-1.5">
               <Label htmlFor="create-password">Password Awal *</Label>
-              <Input
+              <PasswordInput
                 id="create-password"
-                type="password"
                 placeholder="Minimal 8 karakter"
                 value={createPassword}
                 onChange={(e) => setCreatePassword(e.target.value)}
@@ -1169,9 +1169,8 @@ export function UserManager({
             <form onSubmit={handleResetSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="reset-pwd">Kata Sandi Baru *</Label>
-                <Input
+                <PasswordInput
                   id="reset-pwd"
-                  type="password"
                   placeholder="Minimal 8 karakter"
                   value={resetPasswordBaru}
                   onChange={(e) => setResetPasswordBaru(e.target.value)}

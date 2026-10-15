@@ -13,10 +13,12 @@ import {
   CheckCircle2,
   Building2,
   UserCircle,
+  Trash2,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -35,7 +37,7 @@ import {
   UpdatePasswordInput,
 } from "@/lib/validations/auth"
 import { updateProfileAction, updatePasswordAction } from "@/lib/actions/auth"
-import { uploadAvatarAction } from "@/lib/actions/avatar"
+import { uploadAvatarAction, deleteAvatarAction } from "@/lib/actions/avatar"
 import { UserRole } from "@/types/database"
 import { cn } from "@/lib/utils"
 
@@ -118,6 +120,27 @@ export function AccountProfileCard({
     })
   }
 
+  const handleDeleteAvatar = () => {
+    startTransition(async () => {
+      try {
+        const result = await deleteAvatarAction()
+        if (result.success) {
+          setPreviewUrl(null)
+          if (fileInputRef.current) fileInputRef.current.value = ""
+          toast.success(result.message || "Foto profil berhasil dihapus")
+        } else {
+          toast.error(result.error || "Gagal menghapus foto profil")
+        }
+      } catch (err: unknown) {
+        toast.error(
+          err instanceof Error
+            ? err.message
+            : "Terjadi kesalahan saat menghapus foto profil"
+        )
+      }
+    })
+  }
+
   return (
     <Card className="border border-border/80 shadow-xs overflow-hidden bg-card gap-0 py-0">
       <CardHeader className="p-3.5 sm:p-4 pb-2.5 sm:pb-3 border-b border-border/60">
@@ -172,21 +195,38 @@ export function AccountProfileCard({
               disabled={isPending}
             />
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isPending}
-              className="h-7.5 px-2.5 text-xs gap-1.5 font-medium rounded-lg"
-            >
-              {isPending ? (
-                <Loader2 className="size-3 animate-spin text-primary" />
-              ) : (
-                <Upload className="size-3" />
+            <div className="flex flex-col items-center gap-1.5 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isPending}
+                className="h-7.5 px-2.5 text-xs gap-1.5 font-medium rounded-lg"
+              >
+                {isPending ? (
+                  <Loader2 className="size-3 animate-spin text-primary" />
+                ) : (
+                  <Upload className="size-3" />
+                )}
+                <span>Pilih Foto Baru</span>
+              </Button>
+
+              {previewUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDeleteAvatar}
+                  disabled={isPending}
+                  className="h-7 px-2 text-[11px] text-destructive hover:text-destructive hover:bg-destructive/10 gap-1 rounded-md cursor-pointer transition-colors"
+                  title="Hapus foto profil dan gunakan avatar default"
+                >
+                  <Trash2 className="size-3" />
+                  <span>Hapus Foto</span>
+                </Button>
               )}
-              <span>Pilih Foto Baru</span>
-            </Button>
+            </div>
             <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1">
               JPG, PNG, atau WebP (maks. 2MB)
             </p>
@@ -429,9 +469,8 @@ export function UpdatePasswordForm() {
         <CardContent className="p-3.5 sm:p-4 space-y-3 flex-1">
           <div className="space-y-1.5">
             <Label htmlFor="passwordBaru" className="text-xs font-medium">Kata Sandi Baru</Label>
-            <Input
+            <PasswordInput
               id="passwordBaru"
-              type="password"
               placeholder="Minimal 8 karakter"
               disabled={isPending}
               className="h-9 text-xs sm:text-sm"
@@ -446,9 +485,8 @@ export function UpdatePasswordForm() {
 
           <div className="space-y-1.5">
             <Label htmlFor="konfirmasiPassword" className="text-xs font-medium">Konfirmasi Kata Sandi Baru</Label>
-            <Input
+            <PasswordInput
               id="konfirmasiPassword"
-              type="password"
               placeholder="Ulangi kata sandi baru"
               disabled={isPending}
               className="h-9 text-xs sm:text-sm"

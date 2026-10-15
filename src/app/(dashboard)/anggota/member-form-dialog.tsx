@@ -177,7 +177,7 @@ export function MemberFormDialog({
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Departemen */}
-            {userRole === "super_admin" ? (
+            {userRole === "super_admin" || userRole === "admin" ? (
               <FormField
                 control={form.control}
                 name="department_id"
@@ -203,7 +203,7 @@ export function MemberFormDialog({
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Sebagai Super-Admin, wajib memilih departemen penugasan anggota.
+                      Pilih departemen penugasan anggota.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

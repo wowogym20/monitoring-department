@@ -243,9 +243,13 @@ export async function getMembersServer(
  */
 export async function createMemberAction(input: CreateMemberInput) {
   try {
-    const currentUser = await requireRole("super_admin", "user")
+    const currentUser = await requireRole("super_admin", "admin", "user")
     const validated = createMemberSchema.parse(input)
     const supabase = await createClient()
+    const dbClient =
+      currentUser.role === "admin" || currentUser.role === "super_admin"
+        ? createAdminClient()
+        : supabase
 
     let departmentIdToUse: string
 
@@ -259,7 +263,7 @@ export async function createMemberAction(input: CreateMemberInput) {
       }
       departmentIdToUse = currentUser.department.id
     } else {
-      // Role super_admin: Wajib memilih departemen
+      // Role super_admin & admin: Wajib memilih departemen
       if (!validated.department_id || validated.department_id.trim() === "") {
         return {
           success: false,
@@ -301,7 +305,7 @@ export async function createMemberAction(input: CreateMemberInput) {
       }
     }
 
-    const { error: insertError } = await supabase.from("members").insert({
+    const { error: insertError } = await dbClient.from("members").insert({
       department_id: departmentIdToUse,
       nama: validated.nama,
       nip: validated.nip,
@@ -333,9 +337,13 @@ export async function createMemberAction(input: CreateMemberInput) {
  */
 export async function updateMemberAction(input: UpdateMemberInput) {
   try {
-    const currentUser = await requireRole("super_admin", "user")
+    const currentUser = await requireRole("super_admin", "admin", "user")
     const validated = updateMemberSchema.parse(input)
     const supabase = await createClient()
+    const dbClient =
+      currentUser.role === "admin" || currentUser.role === "super_admin"
+        ? createAdminClient()
+        : supabase
 
     // Ambil data anggota saat ini
     const { data: currentMember, error: fetchError } = await supabase
@@ -361,8 +369,8 @@ export async function updateMemberAction(input: UpdateMemberInput) {
           error: "Anda tidak memiliki hak akses untuk mengubah anggota departemen lain.",
         }
       }
-    } else if (currentUser.role === "super_admin") {
-      // Super admin boleh memindahkan departemen
+    } else if (currentUser.role === "super_admin" || currentUser.role === "admin") {
+      // Super admin & admin boleh memindahkan departemen
       if (validated.department_id && validated.department_id.trim() !== "") {
         departmentIdToUse = validated.department_id.trim()
       }
@@ -387,7 +395,7 @@ export async function updateMemberAction(input: UpdateMemberInput) {
       }
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await dbClient
       .from("members")
       .update({
         nama: validated.nama,
@@ -423,10 +431,14 @@ export async function updateMemberAction(input: UpdateMemberInput) {
  */
 export async function toggleMemberStatusAction(id: string, is_active: boolean) {
   try {
-    const currentUser = await requireRole("super_admin", "user")
+    const currentUser = await requireRole("super_admin", "admin", "user")
     const validatedId = z.string().uuid("ID Anggota tidak valid").parse(id)
     const validatedActive = z.boolean().parse(is_active)
     const supabase = await createClient()
+    const dbClient =
+      currentUser.role === "admin" || currentUser.role === "super_admin"
+        ? createAdminClient()
+        : supabase
 
     const { data: member, error: fetchError } = await supabase
       .from("members")
@@ -448,7 +460,7 @@ export async function toggleMemberStatusAction(id: string, is_active: boolean) {
       }
     }
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await dbClient
       .from("members")
       .update({
         is_active: validatedActive,
@@ -483,9 +495,13 @@ export async function toggleMemberStatusAction(id: string, is_active: boolean) {
  */
 export async function deleteMemberAction(id: string) {
   try {
-    const currentUser = await requireRole("super_admin", "user")
+    const currentUser = await requireRole("super_admin", "admin", "user")
     const validatedId = z.string().uuid("ID Anggota tidak valid").parse(id)
     const supabase = await createClient()
+    const dbClient =
+      currentUser.role === "admin" || currentUser.role === "super_admin"
+        ? createAdminClient()
+        : supabase
 
     const { data: member, error: fetchError } = await supabase
       .from("members")
@@ -525,7 +541,7 @@ export async function deleteMemberAction(id: string) {
 
     // 2. Kaskade soft-delete seluruh lembar penilaian terkait jika ada
     if (assessmentCount && assessmentCount > 0) {
-      const { error: cascadeErr } = await supabase
+      const { error: cascadeErr } = await dbClient
         .from("assessments")
         .update({
           deleted_at: now,
@@ -543,7 +559,7 @@ export async function deleteMemberAction(id: string) {
     }
 
     // 3. Lakukan soft delete data anggota
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await dbClient
       .from("members")
       .update({
         deleted_at: now,
