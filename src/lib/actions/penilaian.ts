@@ -17,6 +17,7 @@ import {
   AssessmentStatus,
   Database,
 } from "@/types/database"
+import { isKetuaMember } from "@/lib/penilaian"
 
 export interface PenilaianMemberItem {
   id: string
@@ -33,6 +34,8 @@ export interface PenilaianMemberItem {
   submitted_at: string | null
   updated_at: string | null
   can_edit: boolean
+  is_ketua?: boolean
+  is_self?: boolean
 }
 
 export interface PenilaianDashboardData {
@@ -70,7 +73,10 @@ export interface PenilaianDetailData {
   assessment: Assessment | null
   scores: Record<string, number> // aspect_id -> nilai
   isReadOnly: boolean
+  readOnlyReason?: "closed_period" | "self_assessment_blocked"
   isApprovedBefore: boolean
+  isKetua?: boolean
+  isSelf?: boolean
 }
 
 interface MemberWithDeptRow {
@@ -79,12 +85,24 @@ interface MemberWithDeptRow {
   nip: string | null
   jabatan: string
   department_id: string
+  no_hp?: string | null
   departments: {
     id: string
     nama: string
     kode: string
+    ketua_id: string | null
+    ketua?: {
+      id: string
+      nama: string
+      no_hp?: string | null
+    } | Array<{
+      id: string
+      nama: string
+      no_hp?: string | null
+    }> | null
   } | null
 }
+
 
 /**
  * Mengambil seluruh data yang dibutuhkan untuk halaman /penilaian:
@@ -117,7 +135,7 @@ export async function getAssessmentDashboardDataServer(params: {
     selectedPeriode = periodeList.find((p) => p.status === "open") || periodeList[0] || null
   }
 
-  // 2. Ambil daftar departemen untuk dropdown filter (admin & super_admin)
+  // 2. Ambil daftar departemen untuk dropdown filter (admin & super_admin, serta info departemen milik user)
   let departments: Array<{ id: string; nama: string; kode: string }> = []
   if (currentUser.role === "super_admin" || currentUser.role === "admin") {
     const { data: deptData } = await supabase
@@ -126,6 +144,14 @@ export async function getAssessmentDashboardDataServer(params: {
       .eq("is_active", true)
       .order("nama", { ascending: true })
     departments = deptData || []
+  } else if (currentUser.role === "user" && currentUser.department) {
+    departments = [
+      {
+        id: currentUser.department.id,
+        nama: currentUser.department.nama,
+        kode: currentUser.department.kode,
+      },
+    ]
   }
 
   // Tentukan departemen yang disaring:
@@ -139,7 +165,8 @@ export async function getAssessmentDashboardDataServer(params: {
   }
 
   // 3. Ambil anggota aktif
-  let membersQuery = supabase
+  const adminClient = createAdminClient()
+  let membersQuery = adminClient
     .from("members")
     .select(`
       id,
@@ -147,10 +174,17 @@ export async function getAssessmentDashboardDataServer(params: {
       nip,
       jabatan,
       department_id,
+      no_hp,
       departments!inner (
         id,
         nama,
-        kode
+        kode,
+        ketua_id,
+        ketua:profiles!departments_ketua_id_fkey (
+          id,
+          nama,
+          no_hp
+        )
       )
     `)
     .eq("is_active", true)
@@ -194,10 +228,25 @@ export async function getAssessmentDashboardDataServer(params: {
   // 5. Rakit item anggota dengan status penilaian
   const members: PenilaianMemberItem[] = rawMembers.map((m) => {
     const assessment = assessmentsMap.get(m.id)
-    const canEdit =
+    const dept = m.departments
+    const deptKetua = dept?.ketua
+      ? (Array.isArray(dept.ketua) ? dept.ketua[0] : dept.ketua)
+      : null
+
+    const isKetua = isKetuaMember(m, deptKetua || (currentUser.role === "user" ? currentUser : null))
+    const isSelf = currentUser.role === "user" && isKetua
+
+    let canEdit =
       currentUser.role === "super_admin" ||
       currentUser.role === "admin" ||
       (currentUser.role === "user" && currentUser.department?.id === m.department_id)
+
+    // Jika anggota adalah Ketua Departemen dan pengguna login adalah role user (ketua itu sendiri),
+    // maka ketua dilarang menilai dirinya sendiri (disable / lihat saja).
+    // Sedangkan admin dan super_admin tetap berhak menilai ketua departemen.
+    if (isSelf) {
+      canEdit = false
+    }
 
     return {
       id: m.id,
@@ -217,6 +266,8 @@ export async function getAssessmentDashboardDataServer(params: {
       submitted_at: assessment?.submitted_at || null,
       updated_at: assessment?.updated_at || null,
       can_edit: canEdit,
+      is_ketua: isKetua,
+      is_self: isSelf,
     }
   })
 
@@ -295,10 +346,17 @@ export async function getAssessmentDetailServer(
       nip,
       jabatan,
       department_id,
+      no_hp,
       departments!inner (
         id,
         nama,
-        kode
+        kode,
+        ketua_id,
+        ketua:profiles!departments_ketua_id_fkey (
+          id,
+          nama,
+          no_hp
+        )
       )
     `)
     .eq("id", memberId)
@@ -313,6 +371,8 @@ export async function getAssessmentDetailServer(
     id: string
     nama: string
     kode: string
+    ketua_id: string | null
+    ketua?: { id: string; nama: string; no_hp?: string | null } | Array<{ id: string; nama: string; no_hp?: string | null }> | null
   } | null
 
   // Validasi kepemilikan departemen untuk Ketua
@@ -321,6 +381,13 @@ export async function getAssessmentDetailServer(
       throw new Error("Akses ditolak: Anda hanya dapat menilai anggota departemen Anda sendiri.")
     }
   }
+
+  const deptKetua = memberDept?.ketua
+    ? (Array.isArray(memberDept.ketua) ? memberDept.ketua[0] : memberDept.ketua)
+    : null
+
+  const isKetua = isKetuaMember(memberData, deptKetua || (currentUser.role === "user" ? currentUser : null))
+  const isSelf = currentUser.role === "user" && isKetua
 
   // 2. Ambil periode yang diminta atau periode open default
   let periode: AssessmentPeriod | null = null
@@ -395,8 +462,17 @@ export async function getAssessmentDetailServer(
     }
   }
 
-  // Form read-only jika periode closed untuk ketua (super_admin tetap bisa ubah jika perlu)
-  const isReadOnly = periode.status === "closed" && currentUser.role !== "super_admin"
+  // Form read-only jika periode closed untuk ketua, ATAU jika ketua menilai diri sendiri
+  let isReadOnly = periode.status === "closed" && currentUser.role !== "super_admin"
+  let readOnlyReason: "closed_period" | "self_assessment_blocked" | undefined = undefined
+
+  if (isSelf) {
+    isReadOnly = true
+    readOnlyReason = "self_assessment_blocked"
+  } else if (periode.status === "closed" && currentUser.role !== "super_admin") {
+    readOnlyReason = "closed_period"
+  }
+
   const isApprovedBefore = assessmentData?.status === "approved"
 
   return {
@@ -414,7 +490,10 @@ export async function getAssessmentDetailServer(
     assessment: assessmentData as Assessment | null,
     scores,
     isReadOnly,
+    readOnlyReason,
     isApprovedBefore,
+    isKetua,
+    isSelf,
   }
 }
 
@@ -437,7 +516,27 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
     // 1. Ambil data anggota untuk validasi departemen
     const { data: member, error: memberErr } = await adminClient
       .from("members")
-      .select("id, department_id, is_active, deleted_at")
+      .select(`
+        id,
+        nama,
+        nip,
+        jabatan,
+        department_id,
+        no_hp,
+        is_active,
+        deleted_at,
+        departments!inner (
+          id,
+          nama,
+          kode,
+          ketua_id,
+          ketua:profiles!departments_ketua_id_fkey (
+            id,
+            nama,
+            no_hp
+          )
+        )
+      `)
       .eq("id", validated.member_id)
       .single()
 
@@ -452,6 +551,28 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
       return {
         success: false,
         error: "Anda tidak berhak menilai anggota di luar departemen Anda.",
+      }
+    }
+
+    // Validasi proteksi: Ketua Departemen dilarang menilai dirinya sendiri
+    const memberDept = member.departments as unknown as {
+      id: string
+      nama: string
+      kode: string
+      ketua_id: string | null
+      ketua?: { id: string; nama: string; no_hp?: string | null } | Array<{ id: string; nama: string; no_hp?: string | null }> | null
+    } | null
+
+    const deptKetua = memberDept?.ketua
+      ? (Array.isArray(memberDept.ketua) ? memberDept.ketua[0] : memberDept.ketua)
+      : null
+
+    const isKetua = isKetuaMember(member, deptKetua || (currentUser.role === "user" ? currentUser : null))
+
+    if (currentUser.role === "user" && isKetua) {
+      return {
+        success: false,
+        error: "Sebagai Ketua Departemen, Anda tidak berhak menilai diri Anda sendiri. Penilaian Ketua Departemen hanya dapat dilakukan oleh Admin (SDM) atau Super Admin.",
       }
     }
 

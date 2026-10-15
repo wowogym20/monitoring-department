@@ -5,7 +5,7 @@ import * as React from "react"
 export const SIDEBAR_COOKIE_NAME = "sidebar_state"
 export const SIDEBAR_PREF_COOKIE = "sidebar_custom_pref"
 export const TABLET_PORTRAIT_QUERY =
-  "(min-width: 768px) and (max-width: 1023px) and (orientation: portrait)"
+  "(min-width: 768px) and (max-width: 1024px) and (orientation: portrait)"
 
 export interface SidebarContextValue {
   isCollapsed: boolean
@@ -14,6 +14,11 @@ export interface SidebarContextValue {
   mobileOpen: boolean
   setMobileOpen: (open: boolean | ((prev: boolean) => boolean)) => void
   toggleMobile: () => void
+  // State & Kontrol Khusus Tablet Portrait Overlay
+  isTabletPortrait: boolean
+  tabletOpen: boolean
+  setTabletOpen: (open: boolean | ((prev: boolean) => boolean)) => void
+  toggleTablet: () => void
 }
 
 const SidebarContext = React.createContext<SidebarContextValue | null>(null)
@@ -36,6 +41,8 @@ export function SidebarProvider({
 }: SidebarProviderProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(initialCollapsed)
   const [mobileOpen, setMobileOpen] = React.useState(false)
+  const [isTabletPortrait, setIsTabletPortrait] = React.useState(false)
+  const [tabletOpen, setTabletOpen] = React.useState(false)
   const hasUserPrefRef = React.useRef(initialHasUserPreference)
 
   // Sinkronisasi dengan localStorage jika cookie tidak terbaca di SSR (fallback)
@@ -57,22 +64,22 @@ export function SidebarProvider({
     }
   }, []) // Hanya dieksekusi sekali saat client mount
 
-  // Perilaku responsif Tablet Portrait (hanya jika pengguna belum pernah memilih secara manual)
+  // Deteksi & Tangani Viewport Tablet Portrait (768px - 1024px, orientation: portrait)
   React.useEffect(() => {
-    // Jika pengguna sudah memiliki preferensi tersimpan, jangan override
-    if (hasUserPrefRef.current) return
     if (typeof window === "undefined" || !window.matchMedia) return
 
     const mediaQuery = window.matchMedia(TABLET_PORTRAIT_QUERY)
-
-    // Evaluasi awal saat browser mount
+    setIsTabletPortrait(mediaQuery.matches)
     if (mediaQuery.matches) {
-      setTimeout(() => setIsCollapsed(true), 0)
+      // Pada orientasi tablet portrait, sidebar selalu tertutup secara default
+      setTabletOpen(false)
     }
 
     const handleChange = (e: MediaQueryListEvent) => {
-      if (!hasUserPrefRef.current) {
-        setIsCollapsed(e.matches)
+      setIsTabletPortrait(e.matches)
+      if (e.matches) {
+        // Saat perangkat berotasi ke tablet portrait, otomatis tertutup secara default
+        setTabletOpen(false)
       }
     }
 
@@ -108,8 +115,16 @@ export function SidebarProvider({
   )
 
   const toggleSidebar = React.useCallback(() => {
-    setCollapsedState((prev) => !prev)
-  }, [setCollapsedState])
+    if (isTabletPortrait) {
+      setTabletOpen((prev) => !prev)
+    } else {
+      setCollapsedState((prev) => !prev)
+    }
+  }, [isTabletPortrait, setCollapsedState])
+
+  const toggleTablet = React.useCallback(() => {
+    setTabletOpen((prev) => !prev)
+  }, [])
 
   const toggleMobile = React.useCallback(() => {
     setMobileOpen((prev) => !prev)
@@ -123,8 +138,22 @@ export function SidebarProvider({
       mobileOpen,
       setMobileOpen,
       toggleMobile,
+      isTabletPortrait,
+      tabletOpen,
+      setTabletOpen,
+      toggleTablet,
     }),
-    [isCollapsed, setCollapsedState, toggleSidebar, mobileOpen, toggleMobile]
+    [
+      isCollapsed,
+      setCollapsedState,
+      toggleSidebar,
+      mobileOpen,
+      setMobileOpen,
+      toggleMobile,
+      isTabletPortrait,
+      tabletOpen,
+      toggleTablet,
+    ]
   )
 
   return (

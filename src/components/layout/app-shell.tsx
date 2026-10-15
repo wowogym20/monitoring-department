@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/sheet"
 
 import { useUnreadComments } from "@/hooks/use-unread-comments"
-import { Home } from "lucide-react"
+import { Home, X } from "lucide-react"
 import { AppFooter } from "@/components/layout/app-footer"
 
 interface AppShellProps {
@@ -42,7 +42,14 @@ export function AppShell({
   logoUrl = "/Logo.jpeg",
 }: AppShellProps) {
   const pathname = usePathname()
-  const { isCollapsed, mobileOpen, setMobileOpen } = useSidebar()
+  const {
+    isCollapsed,
+    mobileOpen,
+    setMobileOpen,
+    isTabletPortrait,
+    tabletOpen,
+    setTabletOpen,
+  } = useSidebar()
   const { data: unreadCommentsCount = 0 } = useUnreadComments(user.role)
 
   const filteredNavItems = navigationItems
@@ -66,8 +73,40 @@ export function AppShell({
     }))
     .filter((group) => group.items.length > 0)
 
+  // Kunci scroll body & tambahkan listener Escape ketika sidebar overlay tablet terbuka
+  React.useEffect(() => {
+    if (!isTabletPortrait || !tabletOpen) return
+
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setTabletOpen(false)
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.body.style.overflow = originalOverflow
+      window.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [isTabletPortrait, tabletOpen, setTabletOpen])
+
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground">
+    <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground relative">
+      {/* Backdrop Overlay khusus Tablet Portrait saat sidebar terbuka */}
+      {isTabletPortrait && tabletOpen && (
+        <div
+          id="tablet-sidebar-backdrop"
+          className="fixed inset-0 bg-black/50 backdrop-blur-xs z-40 transition-opacity duration-300 cursor-pointer animate-in fade-in"
+          onClick={() => setTabletOpen(false)}
+          aria-label="Tutup sidebar"
+          role="button"
+          tabIndex={0}
+        />
+      )}
+
       {/* Mobile Navigation Sheet (Dapat dibuka via tombol hamburger di Header) */}
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-72 p-0 flex flex-col">
@@ -179,43 +218,59 @@ export function AppShell({
         </SheetContent>
       </Sheet>
 
-      {/* Desktop Sidebar (Khusus Brand & Menu Navigasi - Collapsible) */}
+      {/* Desktop / Tablet Sidebar
+          - Tablet portrait (768px-1024px portrait): Overlay posisi absolute di atas konten (tidak mendorong konten), z-index 50, tertutup default.
+          - Desktop biasa: Normal flex flow, collapsible w-16 / w-64, sticky top-0.
+      */}
       <aside
+        id="app-sidebar"
         className={cn(
-          "hidden md:flex flex-col border-r border-border bg-card shrink-0 h-screen sticky top-0 transition-[width] duration-300 ease-in-out z-20",
-          isCollapsed ? "w-16" : "w-64"
+          "border-r border-border bg-card flex flex-col transition-all duration-300 ease-in-out",
+          isTabletPortrait
+            ? cn(
+                "absolute top-0 left-0 bottom-0 min-h-full w-64 z-50 shadow-2xl",
+                tabletOpen ? "flex translate-x-0" : "hidden -translate-x-full"
+              )
+            : cn(
+                "hidden md:flex shrink-0 h-screen sticky top-0 z-20 transition-[width]",
+                isCollapsed ? "w-16" : "w-64"
+              )
         )}
+        style={isTabletPortrait ? { position: "absolute" } : undefined}
       >
         {/* Brand Header */}
         <div
           className={cn(
             "h-16 border-b border-border flex items-center shrink-0 transition-all duration-300",
-            isCollapsed ? "justify-center px-2" : "px-4"
+            !isTabletPortrait && isCollapsed ? "justify-center px-2" : "px-4"
           )}
         >
           <Link
             href="/dashboard"
+            onClick={() => {
+              if (isTabletPortrait) setTabletOpen(false)
+            }}
             className={cn(
               "flex items-center gap-3 min-w-0 rounded-md transition-colors",
-              isCollapsed ? "justify-center p-1 hover:bg-muted" : "w-full"
+              !isTabletPortrait && isCollapsed ? "justify-center p-1 hover:bg-muted" : "flex-1"
             )}
             title={appName}
           >
             <div
               className={cn(
                 "rounded-full overflow-hidden shrink-0 border border-border/80 shadow-2xs bg-muted/20 flex items-center justify-center",
-                isCollapsed ? "size-8" : "size-9"
+                !isTabletPortrait && isCollapsed ? "size-8" : "size-9"
               )}
             >
               <img
                 src={logoUrl || "/Logo.jpeg"}
                 alt={appName}
-                width={isCollapsed ? 32 : 36}
-                height={isCollapsed ? 32 : 36}
+                width={!isTabletPortrait && isCollapsed ? 32 : 36}
+                height={!isTabletPortrait && isCollapsed ? 32 : 36}
                 className="size-full object-cover aspect-square"
               />
             </div>
-            {!isCollapsed && (
+            {(!isCollapsed || isTabletPortrait) && (
               <div className="flex flex-col min-w-0 overflow-hidden">
                 <h1 className="font-bold text-sm tracking-tight leading-tight truncate text-foreground">
                   {appName}
@@ -226,14 +281,26 @@ export function AppShell({
               </div>
             )}
           </Link>
+
+          {/* Tombol Close Sidebar Khusus Tablet Portrait */}
+          {isTabletPortrait && (
+            <button
+              type="button"
+              onClick={() => setTabletOpen(false)}
+              className="size-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted ml-auto shrink-0 cursor-pointer"
+              aria-label="Tutup sidebar"
+            >
+              <X className="size-4" />
+            </button>
+          )}
         </div>
 
-        {/* Daftar Tautan Menu Desktop */}
+        {/* Daftar Tautan Menu Desktop / Tablet */}
         <nav className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-3 overflow-x-hidden">
           {groupedNavItems.map((group, groupIdx) => (
             <div key={group.section} className="space-y-1">
               {groupedNavItems.length > 1 && (
-                isCollapsed ? (
+                !isTabletPortrait && isCollapsed ? (
                   groupIdx > 0 ? (
                     <div className="py-1">
                       <div className="h-px w-8 mx-auto bg-border/80" />
@@ -259,10 +326,13 @@ export function AppShell({
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={() => {
+                      if (isTabletPortrait) setTabletOpen(false)
+                    }}
                     title={item.title}
                     className={cn(
                       "flex items-center rounded-lg text-sm transition-colors relative cursor-pointer",
-                      isCollapsed
+                      !isTabletPortrait && isCollapsed
                         ? "justify-center size-10 mx-auto"
                         : "gap-3 px-3 py-2.5 w-full",
                       isActive
@@ -279,13 +349,13 @@ export function AppShell({
                     <span
                       className={cn(
                         "transition-opacity duration-200",
-                        isCollapsed ? "sr-only" : "flex-1 truncate text-left"
+                        !isTabletPortrait && isCollapsed ? "sr-only" : "flex-1 truncate text-left"
                       )}
                     >
                       {item.title}
                     </span>
                     {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
-                      isCollapsed ? (
+                      !isTabletPortrait && isCollapsed ? (
                         <span
                           className="absolute top-1.5 right-1.5 size-2 bg-orange-500 rounded-full ring-2 ring-card"
                           aria-label={`${item.unreadCount} notifikasi belum dibaca`}
@@ -306,7 +376,7 @@ export function AppShell({
                   </Link>
                 )
               })}
-              {groupedNavItems.length > 1 && !isCollapsed && groupIdx < groupedNavItems.length - 1 && (
+              {groupedNavItems.length > 1 && (!isCollapsed || isTabletPortrait) && groupIdx < groupedNavItems.length - 1 && (
                 <div className="pt-2">
                   <hr className="border-border/60" />
                 </div>
@@ -319,10 +389,13 @@ export function AppShell({
         <div className="border-t border-border p-2 sm:p-3 shrink-0">
           <Link
             href="/"
+            onClick={() => {
+              if (isTabletPortrait) setTabletOpen(false)
+            }}
             title="Halaman Beranda"
             className={cn(
               "flex items-center rounded-lg text-sm transition-colors relative cursor-pointer",
-              isCollapsed
+              !isTabletPortrait && isCollapsed
                 ? "justify-center size-10 mx-auto"
                 : "gap-3 px-3 py-2.5 w-full",
               pathname === "/"
@@ -339,7 +412,7 @@ export function AppShell({
             <span
               className={cn(
                 "transition-opacity duration-200",
-                isCollapsed ? "sr-only" : "flex-1 truncate text-left"
+                !isTabletPortrait && isCollapsed ? "sr-only" : "flex-1 truncate text-left"
               )}
             >
               Halaman Beranda

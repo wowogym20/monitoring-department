@@ -63,6 +63,7 @@ import {
   XCircle,
   AlertCircle,
   Clock,
+  RotateCcw,
 } from "lucide-react"
 import { formatDateJakarta } from "@/lib/date"
 import { cn } from "@/lib/utils"
@@ -166,6 +167,22 @@ export function DepartmentTable({
     } else {
       params.delete("fillingStatus")
     }
+    params.set("page", "1")
+    router.push(`/departemen?${params.toString()}`)
+  }
+
+  const hasActiveFilters = Boolean(
+    searchValue.trim() ||
+    currentStatus !== "all" ||
+    currentFillingStatusParam !== "all"
+  )
+
+  const handleResetFilters = () => {
+    setSearchValue("")
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("search")
+    params.delete("status")
+    params.delete("fillingStatus")
     params.set("page", "1")
     router.push(`/departemen?${params.toString()}`)
   }
@@ -812,17 +829,18 @@ export function DepartmentTable({
       })()}
 
       {/* Search, Filter & Action Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center gap-2">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+      <div className="flex flex-col gap-2.5 sm:gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 min-w-0">
+          {/* Input Pencarian: Full width di mobile, teratur di desktop */}
+          <div className="relative w-full sm:w-64 md:w-72 lg:w-80 shrink-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               id="search-departemen"
               aria-label="Cari nama atau kode departemen"
               placeholder="Cari nama atau kode departemen..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-8 pr-8 text-sm"
+              className="h-9.5 sm:h-9 pl-9 pr-9 text-xs sm:text-sm bg-background w-full"
             />
             {searchValue && (
               <button
@@ -834,7 +852,7 @@ export function DepartmentTable({
                   params.set("page", "1")
                   router.push(`/departemen?${params.toString()}`)
                 }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 aria-label="Hapus kata kunci pencarian"
                 title="Hapus pencarian"
               >
@@ -843,36 +861,61 @@ export function DepartmentTable({
             )}
           </div>
 
-          <Select
-            value={currentFillingStatusParam}
-            onValueChange={handleFillingStatusFilterChange}
-          >
-            <SelectTrigger className="w-36 sm:w-44 text-sm shrink-0" aria-label="Filter status pengisian">
-              <SelectValue placeholder="Status Pengisian" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Pengisian</SelectItem>
-              <SelectItem value="completed">Sudah Mengisi</SelectItem>
-              <SelectItem value="partial">Sebagian</SelectItem>
-              <SelectItem value="unfilled">Belum Mengisi</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Filter Status: Grid 2 kolom seimbang di mobile, sejajar di sm+ */}
+          <div className="grid grid-cols-2 gap-2 w-full sm:w-auto sm:flex sm:items-center">
+            <Select
+              value={currentFillingStatusParam}
+              onValueChange={handleFillingStatusFilterChange}
+            >
+              <SelectTrigger
+                className="w-full sm:w-40 md:w-44 h-9.5 sm:h-9 text-xs sm:text-sm bg-background"
+                aria-label="Filter status pengisian"
+              >
+                <SelectValue placeholder="Status Pengisian" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Pengisian</SelectItem>
+                <SelectItem value="completed">Sudah Mengisi</SelectItem>
+                <SelectItem value="partial">Sebagian</SelectItem>
+                <SelectItem value="unfilled">Belum Mengisi</SelectItem>
+              </SelectContent>
+            </Select>
 
-          <Select
-            value={currentStatus}
-            onValueChange={handleStatusFilterChange}
-          >
-            <SelectTrigger className="w-32 sm:w-36 text-sm shrink-0" aria-label="Filter status departemen">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="active">Aktif Saja</SelectItem>
-              <SelectItem value="inactive">Nonaktif Saja</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select
+              value={currentStatus}
+              onValueChange={handleStatusFilterChange}
+            >
+              <SelectTrigger
+                className="w-full sm:w-32 md:w-36 h-9.5 sm:h-9 text-xs sm:text-sm bg-background"
+                aria-label="Filter status departemen"
+              >
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="active">Aktif Saja</SelectItem>
+                <SelectItem value="inactive">Nonaktif Saja</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Reset Filter Button jika ada filter aktif */}
+          {hasActiveFilters && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleResetFilters}
+              className="h-8.5 sm:h-9 px-2.5 text-xs text-muted-foreground hover:text-foreground border-dashed w-full sm:w-auto justify-center shrink-0 cursor-pointer"
+              title="Reset semua filter dan pencarian"
+            >
+              <RotateCcw className="size-3.5 mr-1.5" />
+              <span>Reset Filter</span>
+            </Button>
+          )}
         </div>
 
+        {/* Tombol Tambah Departemen: Full width di mobile, auto di sm+ */}
         {isSuperAdmin && (
           <Button
             onClick={() => {
@@ -881,7 +924,7 @@ export function DepartmentTable({
               setIsActive(true)
               setAddOpen(true)
             }}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs"
+            className="w-full sm:w-auto h-9.5 sm:h-9 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs justify-center text-xs sm:text-sm transition-colors cursor-pointer"
           >
             <Plus className="size-4 mr-1.5" />
             Tambah Departemen
@@ -1016,7 +1059,7 @@ export function DepartmentTable({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-2 text-xs text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/40 shrink-0"
+                      className="h-8 px-2.5 text-xs font-medium border border-emerald-600/20 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20 hover:text-emerald-800 dark:text-emerald-300 dark:border-emerald-700/40 dark:bg-emerald-950/40 dark:hover:bg-emerald-950/70 shrink-0 rounded-md transition-colors cursor-pointer"
                       onClick={() => {
                         setAssignDept(dept)
                         setSelectedKetuaId(dept.ketua_id || "unassigned")
@@ -1050,18 +1093,18 @@ export function DepartmentTable({
       </div>
 
       {/* Server Pagination Footer with Page Size Selector */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground px-1 pt-1">
-        <div className="flex flex-wrap items-center gap-3">
-          <p>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 text-xs text-muted-foreground px-0.5 pt-1">
+        <div className="flex flex-wrap items-center justify-between sm:justify-start gap-2.5 sm:gap-3">
+          <p className="text-xs">
             {isAll
               ? `Menampilkan seluruh ${total} departemen`
-              : `Menampilkan baris ${(page - 1) * pageSize + 1} - ${Math.min(page * pageSize, total)} dari total ${total} departemen`}
+              : `Menampilkan ${(page - 1) * pageSize + 1} - ${Math.min(page * pageSize, total)} dari ${total} departemen`}
           </p>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-[11px]">Tampilkan:</span>
             <Select value={pageSizeValue} onValueChange={handlePageSizeChange}>
-              <SelectTrigger className="h-7 w-24 text-xs bg-background" aria-label="Pilih jumlah baris per halaman">
+              <SelectTrigger className="h-8 w-24 text-xs bg-background" aria-label="Pilih jumlah baris per halaman">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1077,18 +1120,18 @@ export function DepartmentTable({
         </div>
 
         {!isAll && (
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
             <Button
               variant="outline"
               size="sm"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1}
-              className="h-8 px-2.5 text-xs"
+              className="flex-1 sm:flex-initial h-8.5 px-3 text-xs justify-center cursor-pointer"
             >
               <ChevronLeft className="size-3.5 mr-1" />
               Sebelumnya
             </Button>
-            <span className="px-2 font-medium">
+            <span className="px-2 font-medium text-xs text-center shrink-0">
               Halaman {page} dari {Math.max(totalPages, 1)}
             </span>
             <Button
@@ -1096,7 +1139,7 @@ export function DepartmentTable({
               size="sm"
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= totalPages}
-              className="h-8 px-2.5 text-xs"
+              className="flex-1 sm:flex-initial h-8.5 px-3 text-xs justify-center cursor-pointer"
             >
               Berikutnya
               <ChevronRight className="size-3.5 ml-1" />

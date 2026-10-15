@@ -48,7 +48,16 @@ export interface HeaderProps {
 
 export function Header({ user, onMobileMenuToggle }: HeaderProps) {
   const pathname = usePathname()
-  const { isCollapsed, toggleSidebar, toggleMobile } = useSidebar()
+  const {
+    isCollapsed,
+    toggleSidebar,
+    toggleMobile,
+    isTabletPortrait,
+    tabletOpen,
+  } = useSidebar()
+
+  // Status terbuka sidebar berdasarkan mode layar (tablet portrait overlay vs desktop biasa)
+  const isSidebarOpen = isTabletPortrait ? tabletOpen : !isCollapsed
 
   // Dapatkan judul halaman aktif untuk breadcrumb desktop & konteks mobile
   const currentNavItem = navigationItems.find(
@@ -109,20 +118,20 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           <Menu className="size-5" />
         </Button>
 
-        {/* Tombol Toggle Sidebar Desktop (>= md) */}
+        {/* Tombol Toggle Sidebar Desktop & Tablet (>= md) */}
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
           className="hidden md:flex size-9 shrink-0 text-muted-foreground hover:text-foreground rounded-md"
-          aria-label={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
-          aria-expanded={!isCollapsed}
-          title={isCollapsed ? "Buka sidebar" : "Tutup sidebar"}
+          aria-label={isSidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+          aria-expanded={isSidebarOpen}
+          title={isSidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
         >
-          {isCollapsed ? (
-            <PanelLeftOpen className="size-5" />
-          ) : (
+          {isSidebarOpen ? (
             <PanelLeftClose className="size-5" />
+          ) : (
+            <PanelLeftOpen className="size-5" />
           )}
         </Button>
 
@@ -175,8 +184,8 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
       {/* Sisi Kanan Header: Mode Tampilan, Role Badge, Profile Avatar & Logout */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
         {/* 1. Mode Tampilan (Theme Toggle) */}
-        <div className="shrink-0">
-          <ThemeToggle />
+        <div className="shrink-0 rounded-full">
+          <ThemeToggle className="rounded-full" />
         </div>
 
         {/* 2. Role Badge (Tampil di Tablet/Desktop >= sm) */}
@@ -196,7 +205,7 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="group flex items-center gap-2 sm:gap-2.5 h-10 px-1.5 sm:px-2.5 rounded-full border border-border/50 hover:border-border/80 bg-background/50 hover:bg-muted/70 transition-all duration-150 cursor-pointer shrink-0 data-[state=open]:bg-muted data-[state=open]:border-border"
+              className="group flex items-center justify-center sm:justify-start gap-2 sm:gap-2.5 size-10 sm:size-auto sm:h-10 p-0 sm:pl-1 sm:pr-2.5 rounded-full border border-border/50 hover:border-border/80 bg-background/50 hover:bg-muted/70 transition-all duration-150 cursor-pointer shrink-0 data-[state=open]:bg-muted data-[state=open]:border-border"
               aria-label="Menu akun pengguna"
             >
               <Avatar className="size-8 ring-1 ring-border/80 shrink-0">

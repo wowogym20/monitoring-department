@@ -35,6 +35,7 @@ import {
   CheckCircle2,
   Lock,
   Loader2,
+  ShieldAlert,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -46,7 +47,16 @@ interface AssessmentFormProps {
 export function AssessmentForm({ initialData }: AssessmentFormProps) {
   const router = useRouter()
 
-  const { member, periode, aspects, assessment, isReadOnly, isApprovedBefore } = initialData
+  const {
+    member,
+    periode,
+    aspects,
+    assessment,
+    isReadOnly,
+    readOnlyReason,
+    isApprovedBefore,
+    isKetua,
+  } = initialData
 
   // State nilai per aspek { [aspect_id]: nilai (1-5) }
   const [scores, setScores] = useState<Record<string, number>>(initialData.scores || {})
@@ -166,6 +176,14 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
               <span>{member.nip ? `NIP: ${member.nip}` : "Tanpa NIP"}</span>
               <span>•</span>
               <span className="font-medium text-foreground">{member.jabatan}</span>
+              {isKetua && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] px-1.5 py-0 font-medium text-amber-700 bg-amber-50 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
+                >
+                  Ketua Departemen
+                </Badge>
+              )}
               <span>•</span>
               <span className="flex items-center gap-1">
                 <Building2 className="size-3" /> {member.department_nama} ({member.department_kode})
@@ -180,7 +198,22 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
       </div>
 
       {/* 2. Banner Informasi Status Periode & Pasca-Approval */}
-      {isReadOnly && (
+      {isReadOnly && readOnlyReason === "self_assessment_blocked" && (
+        <div
+          data-testid="banner-self-assessment-blocked"
+          className="p-3.5 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-900 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5"
+        >
+          <ShieldAlert className="size-4 shrink-0 text-amber-600 mt-0.5" />
+          <div>
+            <p className="font-semibold">Penilaian Mandiri Dibatasi (Mode Baca-Saja)</p>
+            <p className="mt-0.5">
+              Sebagai <strong>Ketua Departemen</strong>, Anda tidak dapat menilai diri Anda sendiri. Formulir penilaian Ketua Departemen hanya dapat diisi dan diperbarui oleh <strong>Admin (SDM)</strong> atau <strong>Super Admin</strong>.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isReadOnly && readOnlyReason !== "self_assessment_blocked" && (
         <div className="p-3.5 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-900 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
           <Lock className="size-4 shrink-0 text-amber-600 mt-0.5" />
           <div>

@@ -340,118 +340,113 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
             setDeptId("none")
             setCreateOpen(true)
           }}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs"
+          className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-xs justify-center"
         >
           <Plus className="size-4 mr-1.5" />
           Buat Akun Kadep Baru
         </Button>
       </div>
 
-      {/* Tampilan Desktop: Tabel Standar 8 Kolom */}
+      {/* Tampilan Desktop & Tablet (>= md): Tabel Bebas Scroll Horizontal (Data Menumpuk ke Bawah) */}
       <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-14 text-center">No.</TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Nama Kepala"
-                    direction={sortBy === "nama" ? sortOrder : false}
-                    onToggle={() => handleSort("nama")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Email Login"
-                    direction={sortBy === "email" ? sortOrder : false}
-                    onToggle={() => handleSort("email")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="No. HP"
-                    type="general"
-                    direction={sortBy === "no_hp" ? sortOrder : false}
-                    onToggle={() => handleSort("no_hp")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Departemen Terkait"
-                    direction={sortBy === "department" ? sortOrder : false}
-                    onToggle={() => handleSort("department")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Status Akun"
-                    type="general"
-                    direction={sortBy === "is_active" ? sortOrder : false}
-                    onToggle={() => handleSort("is_active")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Terdaftar"
-                    type="date"
-                    direction={sortBy === "created_at" ? sortOrder : false}
-                    onToggle={() => handleSort("created_at")}
-                  />
-                </TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAccounts.length > 0 ? (
-                filteredAccounts.map((account, idx) => {
-                  const initials = account.nama
-                    .split(" ")
-                    .slice(0, 2)
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
+        <Table className="w-full">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12 text-center text-xs">No.</TableHead>
+              <TableHead className="w-[52%]">
+                <SortableHeader
+                  label="Kepala Departemen & Kontak"
+                  direction={sortBy === "nama" ? sortOrder : false}
+                  onToggle={() => handleSort("nama")}
+                />
+              </TableHead>
+              <TableHead className="w-[38%]">
+                <SortableHeader
+                  label="Departemen & Registrasi"
+                  direction={sortBy === "department" ? sortOrder : false}
+                  onToggle={() => handleSort("department")}
+                />
+              </TableHead>
+              <TableHead className="w-16 text-right">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredAccounts.length > 0 ? (
+              filteredAccounts.map((account, idx) => {
+                const initials = account.nama
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
 
-                  return (
-                    <TableRow key={account.id}>
-                      <TableCell className="text-center font-mono text-xs text-muted-foreground">
-                        {idx + 1}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="size-8">
-                            {account.foto_url && (
-                              <AvatarImage
-                                src={account.foto_url}
-                                alt={account.nama}
-                                className="object-cover"
-                              />
-                            )}
-                            <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium text-foreground">
-                            {account.nama}
-                          </span>
+                return (
+                  <TableRow key={account.id} className="hover:bg-muted/40 transition-colors">
+                    <TableCell className="text-center font-mono text-xs text-muted-foreground align-top pt-3.5">
+                      {idx + 1}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <Avatar className="size-9 shrink-0 mt-0.5">
+                          {account.foto_url && (
+                            <AvatarImage
+                              src={account.foto_url}
+                              alt={account.nama}
+                              className="object-cover"
+                            />
+                          )}
+                          <AvatarFallback className="text-xs bg-primary text-primary-foreground font-bold">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-foreground text-sm">
+                              {account.nama}
+                            </span>
+                            <Badge
+                              variant={account.is_active ? "default" : "secondary"}
+                              className={cn(
+                                "text-[10px] px-1.5 py-0 shrink-0",
+                                account.is_active
+                                  ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
+                                  : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
+                              )}
+                            >
+                              {account.is_active ? (
+                                <>
+                                  <CheckCircle2 className="size-2.5 mr-1 shrink-0" />
+                                  <span>Aktif</span>
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="size-2.5 mr-1 shrink-0" />
+                                  <span>Nonaktif</span>
+                                </>
+                              )}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono flex-wrap">
+                            <span className="truncate" title={account.email}>
+                              {account.email}
+                            </span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>{account.no_hp || "Tanpa No. HP"}</span>
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
-                        {account.email}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs">
-                        {account.no_hp || "-"}
-                      </TableCell>
-                      <TableCell>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="space-y-1 min-w-0">
                         {account.department ? (
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <Building className="size-3.5 text-muted-foreground shrink-0" />
-                            <span className="text-xs font-medium">
+                            <span className="text-xs sm:text-sm font-medium text-foreground">
                               {account.department.nama}
                             </span>
                             <Badge
                               variant="outline"
-                              className="text-[10px] uppercase font-mono px-1 py-0"
+                              className="text-[10px] uppercase font-mono px-1 py-0 shrink-0"
                             >
                               {account.department.kode}
                             </Badge>
@@ -461,100 +456,78 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
                             Belum ditugaskan
                           </span>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={account.is_active ? "default" : "secondary"}
-                          className={
-                            account.is_active
-                              ? "bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white"
-                              : "bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground"
-                          }
-                        >
-                          {account.is_active ? (
-                            <>
-                              <CheckCircle2 className="size-3 mr-1 shrink-0" />
-                              <span>Aktif</span>
-                            </>
-                          ) : (
-                            <>
-                              <XCircle className="size-3 mr-1 shrink-0" />
-                              <span>Nonaktif</span>
-                            </>
-                          )}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {formatDateJakarta(account.created_at)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-8 p-0"
-                              aria-label="Aksi Akun"
-                            >
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-52">
-                            <DropdownMenuItem onClick={() => openEditModal(account)}>
-                              <Pencil className="size-4 mr-2 text-primary" />
-                              Edit Profil & Departemen
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setResetAccount(account)
-                                setNewPassword("")
-                              }}
-                            >
-                              <KeyRound className="size-4 mr-2 text-primary" />
-                              Reset Kata Sandi
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleToggleStatus(account)}
-                            >
-                              {account.is_active ? (
-                                <>
-                                  <XCircle className="size-4 mr-2 text-amber-600" />
-                                  Nonaktifkan Akun
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
-                                  Aktifkan Akun
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setDeleteAccount(account)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="size-4 mr-2" />
-                              Hapus Akun
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    Tidak ada akun ketua departemen yang ditemukan.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Terdaftar: <span className="font-medium text-foreground">{formatDateJakarta(account.created_at)}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right align-top pt-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 p-0"
+                            aria-label="Aksi Akun"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuItem onClick={() => openEditModal(account)}>
+                            <Pencil className="size-4 mr-2 text-primary" />
+                            Edit Profil & Departemen
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setResetAccount(account)
+                              setNewPassword("")
+                            }}
+                          >
+                            <KeyRound className="size-4 mr-2 text-primary" />
+                            Reset Kata Sandi
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleToggleStatus(account)}
+                          >
+                            {account.is_active ? (
+                              <>
+                                <XCircle className="size-4 mr-2 text-amber-600" />
+                                Nonaktifkan Akun
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
+                                Aktifkan Akun
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setDeleteAccount(account)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="size-4 mr-2" />
+                            Hapus Akun
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  Tidak ada akun ketua departemen yang ditemukan.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
       {/* Tampilan Mobile: Kartu Akun Responsif Bebas Scroll Horizontal */}

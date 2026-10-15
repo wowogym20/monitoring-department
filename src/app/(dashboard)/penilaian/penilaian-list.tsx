@@ -39,6 +39,7 @@ import {
   ClipboardList,
   Filter,
   RefreshCw,
+  RotateCcw,
   X,
 } from "lucide-react"
 
@@ -99,6 +100,20 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
       }
       router.push(`/penilaian?${params.toString()}`)
     })
+  }
+
+  // Cek apakah ada filter aktif selain nilai default
+  const hasActiveFilter =
+    Boolean(searchQuery) ||
+    statusFilter !== "all" ||
+    (userRole !== "user" && Boolean(selectedDepartmentId) && selectedDepartmentId !== "all")
+
+  const handleResetFilters = () => {
+    setSearchQuery("")
+    setStatusFilter("all")
+    if (selectedDepartmentId && selectedDepartmentId !== "all") {
+      handleDepartmentChange("all")
+    }
   }
 
   // Filter dan sortir anggota berdasarkan pencarian, status, dan kolom yang dipilih
@@ -183,7 +198,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
         <div
           className={cn(
             "grid gap-3 sm:gap-4 items-end",
-            userRole === "super_admin" || userRole === "admin"
+            userRole === "super_admin" || userRole === "admin" || (userRole === "user" && departments.length > 0)
               ? "grid-cols-1 sm:grid-cols-2"
               : "grid-cols-1 sm:max-w-md"
           )}
@@ -256,8 +271,8 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             </Select>
           </div>
 
-          {/* Selector Departemen (Khusus Admin & Super Admin) */}
-          {(userRole === "super_admin" || userRole === "admin") && (
+          {/* Selector Departemen (Admin & Super Admin: Dropdown Interaktif; User: Indikator Terkunci) */}
+          {userRole === "super_admin" || userRole === "admin" ? (
             <div className="space-y-1.5">
               <label
                 htmlFor="select-filter-dept"
@@ -293,6 +308,24 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                 </SelectContent>
               </Select>
             </div>
+          ) : (
+            departments.length > 0 && (
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-foreground/85 flex items-center gap-1.5">
+                  <Building2 className="size-3.5 text-primary" />
+                  <span>Departemen Anda</span>
+                </label>
+                <div className="flex items-center gap-2 px-3 h-9.5 rounded-md border border-border bg-muted/40 text-xs text-foreground font-medium select-none">
+                  <span className="truncate">{departments[0].nama}</span>
+                  <Badge
+                    variant="outline"
+                    className="font-mono text-[10px] px-1.5 py-0 border-border text-muted-foreground shrink-0 ml-auto"
+                  >
+                    {departments[0].kode}
+                  </Badge>
+                </div>
+              </div>
+            )
           )}
         </div>
       </div>
@@ -378,31 +411,91 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
         </Card>
       )}
 
-      {/* 4. Filter Pencarian & Status Tab */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative w-full lg:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-          <Input
-            placeholder="Cari nama, NIG, atau jabatan..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 pr-8 text-xs h-9.5 bg-background w-full"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-              aria-label="Hapus kata kunci pencarian"
-              title="Hapus pencarian"
-            >
-              <X className="size-3.5" />
-            </button>
-          )}
+      {/* 4. Filter Toolbar: Pencarian, Filter Departemen & Status Tab */}
+      <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1">
+            {/* Input Pencarian */}
+            <div className="relative w-full sm:w-64 lg:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+              <Input
+                id="search-penilaian-toolbar"
+                placeholder="Cari nama, NIG, atau jabatan..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 text-xs h-9.5 bg-background w-full"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                  aria-label="Hapus kata kunci pencarian"
+                  title="Hapus pencarian"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Departemen di Toolbar (Khusus Super Admin & Admin) */}
+            {(userRole === "super_admin" || userRole === "admin") && (
+              <div className="w-full sm:w-56">
+                <Select
+                  value={selectedDepartmentId || "all"}
+                  onValueChange={handleDepartmentChange}
+                  disabled={isPending}
+                >
+                  <SelectTrigger
+                    id="select-toolbar-dept"
+                    aria-label="Filter departemen penilaian di toolbar"
+                    className="w-full h-9.5 text-xs bg-background"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Building2 className="size-3.5 text-primary shrink-0" />
+                      <SelectValue placeholder="Semua Departemen" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" className="text-xs py-2">
+                      Semua Departemen
+                    </SelectItem>
+                    {departments.map((d) => (
+                      <SelectItem key={d.id} value={d.id} className="text-xs py-2">
+                        <span className="font-medium">{d.nama}</span>{" "}
+                        <span className="text-muted-foreground text-[10px] font-mono">
+                          ({d.kode})
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Tombol Reset Filter */}
+            {hasActiveFilter && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetFilters}
+                className="h-9 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:border-destructive/40 hover:bg-destructive/10 gap-1.5 self-start sm:self-auto cursor-pointer transition-colors"
+                title="Reset semua filter ke default"
+              >
+                <RotateCcw className="size-3.5" />
+                <span>Reset</span>
+              </Button>
+            )}
+          </div>
+
+          {/* Indikator Jumlah Anggota Ditemukan */}
+          <div className="text-xs text-muted-foreground self-end sm:self-center shrink-0">
+            Menampilkan <strong className="text-foreground">{filteredMembers.length}</strong> anggota
+          </div>
         </div>
 
         {/* Filter Pill Status */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 flex-nowrap sm:flex-wrap">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 flex-nowrap sm:flex-wrap">
           <Button
             size="sm"
             variant={statusFilter === "all" ? "default" : "outline"}
@@ -536,8 +629,18 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                 {filteredMembers.map((member) => (
                   <TableRow key={member.id} className="hover:bg-muted/30">
                     <TableCell>
-                      <div className="font-semibold text-foreground text-sm">
-                        {member.nama}
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground text-sm">
+                          {member.nama}
+                        </span>
+                        {member.is_ketua && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] px-1.5 py-0 font-medium text-amber-700 bg-amber-50 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
+                          >
+                            Ketua Dept
+                          </Badge>
+                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {member.nip ? `NIG: ${member.nip} • ` : ""}
@@ -587,10 +690,43 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                             )}
                           </Link>
                         </Button>
+                      ) : member.is_self ? (
+                        <div className="flex flex-col items-end gap-1">
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                            className="h-8 text-xs font-medium border-border/80"
+                            data-testid={`btn-lihat-${member.id}`}
+                          >
+                            <Link
+                              href={`/penilaian/${member.id}${
+                                selectedPeriode ? `?periodeId=${selectedPeriode.id}` : ""
+                              }`}
+                            >
+                              Lihat Detail <ArrowRight className="ml-1 size-3.5" />
+                            </Link>
+                          </Button>
+                          <span className="text-[10px] text-muted-foreground italic">
+                            Dinilai oleh Admin/SDM
+                          </span>
+                        </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">
-                          Hanya Lihat
-                        </span>
+                        <Button
+                          asChild
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 text-xs text-muted-foreground"
+                          data-testid={`btn-lihat-${member.id}`}
+                        >
+                          <Link
+                            href={`/penilaian/${member.id}${
+                              selectedPeriode ? `?periodeId=${selectedPeriode.id}` : ""
+                            }`}
+                          >
+                            Lihat Detail <ArrowRight className="ml-1 size-3.5" />
+                          </Link>
+                        </Button>
                       )}
                     </TableCell>
                   </TableRow>
@@ -608,9 +744,19 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-sm text-foreground truncate">
-                      {member.nama}
-                    </h3>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="font-semibold text-sm text-foreground truncate">
+                        {member.nama}
+                      </h3>
+                      {member.is_ketua && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] px-1.5 py-0 font-medium text-amber-700 bg-amber-50 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
+                        >
+                          Ketua Dept
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {member.nip ? `${member.nip} • ` : ""}
                       {member.jabatan}
@@ -632,7 +778,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                     <SkorBadge skor={member.skor_rata} />
                   </div>
 
-                  {member.can_edit && (
+                  {member.can_edit ? (
                     <Button
                       asChild
                       size="sm"
@@ -650,6 +796,44 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                         }`}
                       >
                         {member.status === "unassessed" ? "Nilai" : "Ubah"}
+                        <ArrowRight className="ml-1 size-3.5" />
+                      </Link>
+                    </Button>
+                  ) : member.is_self ? (
+                    <div className="flex flex-col items-end gap-0.5">
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="h-8 text-xs font-medium"
+                        data-testid={`btn-lihat-mobile-${member.id}`}
+                      >
+                        <Link
+                          href={`/penilaian/${member.id}${
+                            selectedPeriode ? `?periodeId=${selectedPeriode.id}` : ""
+                          }`}
+                        >
+                          Lihat Detail
+                          <ArrowRight className="ml-1 size-3.5" />
+                        </Link>
+                      </Button>
+                      <span className="text-[10px] text-muted-foreground italic">
+                        Dinilai oleh Admin/SDM
+                      </span>
+                    </div>
+                  ) : (
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 text-xs text-muted-foreground"
+                    >
+                      <Link
+                        href={`/penilaian/${member.id}${
+                          selectedPeriode ? `?periodeId=${selectedPeriode.id}` : ""
+                        }`}
+                      >
+                        Lihat
                         <ArrowRight className="ml-1 size-3.5" />
                       </Link>
                     </Button>

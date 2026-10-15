@@ -458,241 +458,252 @@ export function UserManager({
   return (
     <div className="space-y-6">
       {/* 1. Ringkasan Kartu Metrik */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         <Card className="border-border shadow-2xs">
-          <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-xs font-medium text-muted-foreground">
+          <CardHeader className="p-3 sm:px-4 sm:pt-4 sm:pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-[11px] sm:text-xs font-medium text-muted-foreground truncate">
               Total Pengguna
             </CardTitle>
-            <UsersRound className="size-4 text-muted-foreground" />
+            <UsersRound className="size-3.5 sm:size-4 text-muted-foreground shrink-0" />
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="text-2xl font-bold">{totalCount}</div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+          <CardContent className="p-3 pt-0 sm:px-4 sm:pb-4 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold">{totalCount}</div>
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
               Seluruh akun terdaftar di sistem
             </p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-2xs">
-          <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-xs font-medium text-purple-700 dark:text-purple-300">
+          <CardHeader className="p-3 sm:px-4 sm:pt-4 sm:pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-[11px] sm:text-xs font-medium text-purple-700 dark:text-purple-300 truncate">
               Super Admin
             </CardTitle>
-            <Shield className="size-4 text-purple-600 dark:text-purple-400" />
+            <Shield className="size-3.5 sm:size-4 text-purple-600 dark:text-purple-400 shrink-0" />
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
+          <CardContent className="p-3 pt-0 sm:px-4 sm:pb-4 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-purple-700 dark:text-purple-300">
               {superAdminCount}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
               Administrator & Pimpinan Lembaga
             </p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-2xs">
-          <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-xs font-medium text-sky-700 dark:text-sky-300">
+          <CardHeader className="p-3 sm:px-4 sm:pt-4 sm:pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-[11px] sm:text-xs font-medium text-sky-700 dark:text-sky-300 truncate">
               Koordinator (Admin)
             </CardTitle>
-            <Briefcase className="size-4 text-sky-600 dark:text-sky-400" />
+            <Briefcase className="size-3.5 sm:size-4 text-sky-600 dark:text-sky-400 shrink-0" />
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="text-2xl font-bold text-sky-700 dark:text-sky-300">
+          <CardContent className="p-3 pt-0 sm:px-4 sm:pb-4 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-sky-700 dark:text-sky-300">
               {sdmCount}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
               Tim Verifikator & Evaluator
             </p>
           </CardContent>
         </Card>
 
         <Card className="border-border shadow-2xs">
-          <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
-            <CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+          <CardHeader className="p-3 sm:px-4 sm:pt-4 sm:pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-[11px] sm:text-xs font-medium text-emerald-700 dark:text-emerald-300 truncate">
               Kepala Departemen
             </CardTitle>
-            <UserCog className="size-4 text-emerald-600 dark:text-emerald-400" />
+            <UserCog className="size-3.5 sm:size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           </CardHeader>
-          <CardContent className="px-4 pb-4">
-            <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+          <CardContent className="p-3 pt-0 sm:px-4 sm:pb-4 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-emerald-700 dark:text-emerald-300">
               {ketuaCount}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
               Kepala dari masing-masing departemen
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* 2. Bar Aksi: Pencarian, Filter & Tombol Tambah */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="flex flex-1 flex-wrap sm:flex-nowrap gap-2 items-center">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Cari nama, email, nomor HP, atau departemen..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 text-sm"
-            />
-            {search && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 -translate-y-1/2 size-6 text-muted-foreground"
-                onClick={() => setSearch("")}
-              >
-                <X className="size-3.5" />
-              </Button>
-            )}
+      {/* 2. Bar Aksi: Pencarian, Filter & Tombol Tambah (Mobile & Desktop Optimized) */}
+      <div className="space-y-2.5">
+        <div className="flex flex-col lg:flex-row gap-2.5 items-stretch lg:items-center justify-between">
+          {/* Kontainer Pencarian & Filter */}
+          <div className="flex flex-col sm:flex-row flex-1 gap-2 items-stretch sm:items-center">
+            {/* Input Pencarian (Full width di Mobile, flex-1 di Desktop) */}
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+              <Input
+                id="search-pengguna"
+                aria-label="Cari pengguna"
+                placeholder="Cari nama, email, no. HP, departemen..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9 pr-8 text-sm h-10 sm:h-9 w-full bg-background"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                  aria-label="Hapus kata kunci pencarian"
+                  title="Hapus pencarian"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Dropdown: Grid 2 Kolom (50% - 50%) di Mobile, flex di Desktop */}
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center shrink-0">
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger
+                  id="filter-role-pengguna"
+                  aria-label="Filter berdasarkan Role"
+                  className="w-full sm:w-[155px] text-xs h-10 sm:h-9 bg-background"
+                >
+                  <SelectValue placeholder="Pilih Role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Role</SelectItem>
+                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                  <SelectItem value="admin">Koordinator</SelectItem>
+                  <SelectItem value="user">Kepala Departemen</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger
+                  id="filter-status-pengguna"
+                  aria-label="Filter status keaktifan akun"
+                  className="w-full sm:w-[135px] text-xs h-10 sm:h-9 bg-background"
+                >
+                  <SelectValue placeholder="Status Akun" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Status</SelectItem>
+                  <SelectItem value="active">Aktif</SelectItem>
+                  <SelectItem value="inactive">Nonaktif</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-[160px] text-xs">
-              <SelectValue placeholder="Pilih Role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Role</SelectItem>
-              <SelectItem value="super_admin">Super Admin</SelectItem>
-              <SelectItem value="admin">Koordinator</SelectItem>
-              <SelectItem value="user">Kepala Departemen</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[140px] text-xs">
-              <SelectValue placeholder="Status Akun" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Semua Status</SelectItem>
-              <SelectItem value="active">Aktif</SelectItem>
-              <SelectItem value="inactive">Nonaktif</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Tombol Tambah Pengguna (Full width di Mobile, shrink-0 di Desktop) */}
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            id="btn-tambah-pengguna"
+            className="w-full sm:w-auto h-10 sm:h-9 bg-emerald-700 hover:bg-emerald-800 text-white font-medium shrink-0 shadow-xs cursor-pointer justify-center text-sm transition-colors"
+          >
+            <Plus className="size-4 mr-1.5 shrink-0" />
+            <span>Tambah Pengguna</span>
+          </Button>
         </div>
 
-        <Button
-          onClick={() => setIsCreateOpen(true)}
-          className="bg-emerald-700 hover:bg-emerald-800 text-white shrink-0"
-        >
-          <Plus className="size-4 mr-1.5" />
-          Tambah Pengguna
-        </Button>
+        {/* Baris Status Filter & Tombol Reset Ringkas */}
+        {(search || roleFilter !== "all" || statusFilter !== "all") && (
+          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+            <span>
+              Menampilkan <strong>{sortedUsers.length}</strong> dari {initialUsers.length} pengguna
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSearch("")
+                setRoleFilter("all")
+                setStatusFilter("all")
+              }}
+              className="text-xs text-emerald-700 dark:text-emerald-400 hover:underline font-medium inline-flex items-center gap-1 cursor-pointer"
+            >
+              <X className="size-3" />
+              Reset Filter
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 3. Tampilan Desktop (>= md): Tabel Data */}
+      {/* 3. Tampilan Desktop & Tablet (>= md): Tabel Bebas Scroll Horizontal (Data Menumpuk ke Bawah) */}
       <div className="hidden md:block rounded-md border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-14 text-center">No.</TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Nama Pengguna"
-                    direction={sortBy === "nama" ? sortOrder : false}
-                    onToggle={() => handleSort("nama")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Email Login"
-                    direction={sortBy === "email" ? sortOrder : false}
-                    onToggle={() => handleSort("email")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Role"
-                    type="general"
-                    direction={sortBy === "role" ? sortOrder : false}
-                    onToggle={() => handleSort("role")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Departemen Terkait"
-                    direction={sortBy === "department" ? sortOrder : false}
-                    onToggle={() => handleSort("department")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="No. HP"
-                    type="general"
-                    direction={sortBy === "no_hp" ? sortOrder : false}
-                    onToggle={() => handleSort("no_hp")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Status"
-                    type="general"
-                    direction={sortBy === "is_active" ? sortOrder : false}
-                    onToggle={() => handleSort("is_active")}
-                  />
-                </TableHead>
-                <TableHead>
-                  <SortableHeader
-                    label="Terdaftar"
-                    type="date"
-                    direction={sortBy === "created_at" ? sortOrder : false}
-                    onToggle={() => handleSort("created_at")}
-                  />
-                </TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedUsers.length > 0 ? (
-                sortedUsers.map((user, idx) => {
-                  const initials = user.nama
-                    .split(" ")
-                    .slice(0, 2)
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                  const isSelf = user.id === currentUserId
+        <Table className="w-full">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12 text-center text-xs">No.</TableHead>
+              <TableHead className="w-[52%]">
+                <SortableHeader
+                  label="Pengguna & Akses Role"
+                  direction={sortBy === "nama" ? sortOrder : false}
+                  onToggle={() => handleSort("nama")}
+                />
+              </TableHead>
+              <TableHead className="w-[38%]">
+                <SortableHeader
+                  label="Penugasan & Registrasi"
+                  direction={sortBy === "department" ? sortOrder : false}
+                  onToggle={() => handleSort("department")}
+                />
+              </TableHead>
+              <TableHead className="w-16 text-right">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedUsers.length > 0 ? (
+              sortedUsers.map((user, idx) => {
+                const initials = user.nama
+                  .split(" ")
+                  .slice(0, 2)
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                const isSelf = user.id === currentUserId
 
-                  return (
-                    <TableRow key={user.id}>
-                      <TableCell className="text-center font-mono text-xs text-muted-foreground">
-                        {idx + 1}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="size-8">
-                            {user.foto_url && (
-                              <AvatarImage src={user.foto_url} alt={user.nama} />
+                return (
+                  <TableRow key={user.id} className="hover:bg-muted/40 transition-colors">
+                    <TableCell className="text-center font-mono text-xs text-muted-foreground align-top pt-3.5">
+                      {idx + 1}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <Avatar className="size-9 shrink-0 mt-0.5">
+                          {user.foto_url && (
+                            <AvatarImage src={user.foto_url} alt={user.nama} />
+                          )}
+                          <AvatarFallback className="text-xs bg-muted font-medium">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-semibold text-foreground text-sm">
+                              {user.nama}
+                            </span>
+                            {isSelf && (
+                              <Badge variant="secondary" className="text-[10px] py-0 px-1.5 shrink-0">
+                                Anda
+                              </Badge>
                             )}
-                            <AvatarFallback className="text-xs bg-muted">
-                              {initials}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-semibold text-foreground flex items-center gap-1.5">
-                              <span>{user.nama}</span>
-                              {isSelf && (
-                                <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
-                                  Anda
-                                </Badge>
-                              )}
-                            </div>
+                            <div className="shrink-0">{renderRoleBadge(user.role)}</div>
+                            <div className="shrink-0">{renderStatusBadge(user.is_active)}</div>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground font-mono flex-wrap">
+                            <span className="truncate" title={user.email}>
+                              {user.email}
+                            </span>
+                            <span className="text-muted-foreground/50">•</span>
+                            <span>{user.no_hp || "Tanpa No. HP"}</span>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-sm font-mono text-muted-foreground">
-                        {user.email}
-                      </TableCell>
-                      <TableCell>{renderRoleBadge(user.role)}</TableCell>
-                      <TableCell>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <div className="space-y-1 min-w-0">
                         {user.role === "user" ? (
                           user.department ? (
-                            <div className="flex items-center gap-1 text-sm font-medium text-foreground">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <Building className="size-3.5 text-muted-foreground shrink-0" />
-                              <span>{user.department.nama}</span>
+                              <span className="text-xs sm:text-sm font-medium text-foreground">
+                                {user.department.nama}
+                              </span>
                             </div>
                           ) : (
                             <span className="text-xs italic text-muted-foreground">
@@ -700,86 +711,82 @@ export function UserManager({
                             </span>
                           )
                         ) : (
-                          <span className="text-xs text-muted-foreground">
-                            Lintas Departemen
+                          <span className="text-xs font-medium text-muted-foreground">
+                            Lintas Seluruh Departemen
                           </span>
                         )}
-                      </TableCell>
-                      <TableCell className="text-xs font-mono text-muted-foreground">
-                        {user.no_hp || "-"}
-                      </TableCell>
-                      <TableCell>{renderStatusBadge(user.is_active)}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {formatDateJakarta(user.created_at)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="size-8">
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenEdit(user)}>
-                              <Pencil className="size-4 mr-2" />
-                              Edit Pengguna
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setResetUser(user)}>
-                              <KeyRound className="size-4 mr-2" />
-                              Reset Password
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => setStatusTarget(user)}
-                              disabled={isSelf && user.is_active}
-                              title={
-                                isSelf && user.is_active
-                                  ? "Anda tidak dapat menonaktifkan akun sendiri"
-                                  : undefined
-                              }
-                            >
-                              {user.is_active ? (
-                                <>
-                                  <XCircle className="size-4 mr-2 text-orange-600" />
-                                  Nonaktifkan Akun
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
-                                  Aktifkan Akun
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => setDeleteTarget(user)}
-                              disabled={isSelf}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="size-4 mr-2" />
-                              Hapus Akun
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="h-32 text-center text-muted-foreground"
-                  >
-                    Tidak ada data pengguna yang sesuai dengan kriteria pencarian.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Terdaftar: <span className="font-medium text-foreground">{formatDateJakarta(user.created_at)}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right align-top pt-3">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="size-8 p-0" aria-label="Aksi Pengguna">
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-52">
+                          <DropdownMenuItem onClick={() => handleOpenEdit(user)}>
+                            <Pencil className="size-4 mr-2" />
+                            Edit Pengguna
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setResetUser(user)}>
+                            <KeyRound className="size-4 mr-2" />
+                            Reset Password
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setStatusTarget(user)}
+                            disabled={isSelf && user.is_active}
+                            title={
+                              isSelf && user.is_active
+                                ? "Anda tidak dapat menonaktifkan akun sendiri"
+                                : undefined
+                            }
+                          >
+                            {user.is_active ? (
+                              <>
+                                <XCircle className="size-4 mr-2 text-orange-600" />
+                                Nonaktifkan Akun
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="size-4 mr-2 text-emerald-600" />
+                                Aktifkan Akun
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setDeleteTarget(user)}
+                            disabled={isSelf}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="size-4 mr-2" />
+                            Hapus Akun
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="h-32 text-center text-muted-foreground"
+                >
+                  Tidak ada data pengguna yang sesuai dengan kriteria pencarian.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
 
-      {/* 4. Tampilan Mobile (< md): Kartu */}
+      {/* 4. Tampilan Mobile (< md): Kartu Pengguna */}
       <div className="grid grid-cols-1 gap-3 md:hidden">
         {sortedUsers.length > 0 ? (
           sortedUsers.map((user) => {
@@ -792,57 +799,59 @@ export function UserManager({
             const isSelf = user.id === currentUserId
 
             return (
-              <Card key={user.id} className="border-border">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="size-10">
+              <Card key={user.id} className="border-border shadow-2xs">
+                <CardContent className="p-3.5 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <Avatar className="size-9 shrink-0">
                         {user.foto_url && (
                           <AvatarImage src={user.foto_url} alt={user.nama} />
                         )}
-                        <AvatarFallback className="text-xs bg-muted">
+                        <AvatarFallback className="text-xs bg-muted font-medium">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <div className="font-semibold text-foreground flex items-center gap-1.5">
-                          <span>{user.nama}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-semibold text-foreground flex items-center gap-1.5 text-sm">
+                          <span className="truncate">{user.nama}</span>
                           {isSelf && (
-                            <Badge variant="secondary" className="text-[10px] py-0 px-1">
+                            <Badge variant="secondary" className="text-[10px] py-0 px-1 shrink-0">
                               Anda
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground font-mono">
+                        <p className="text-xs text-muted-foreground font-mono truncate">
                           {user.email}
                         </p>
                       </div>
                     </div>
-                    {renderStatusBadge(user.is_active)}
+                    <div className="shrink-0">
+                      {renderStatusBadge(user.is_active)}
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-xs">
                     <div>{renderRoleBadge(user.role)}</div>
                     {user.role === "user" && user.department && (
-                      <Badge variant="outline" className="text-xs flex items-center gap-1">
-                        <Building className="size-3" />
-                        {user.department.nama}
+                      <Badge variant="outline" className="text-xs flex items-center gap-1 max-w-full">
+                        <Building className="size-3 shrink-0" />
+                        <span className="truncate">{user.department.nama}</span>
                       </Badge>
                     )}
                   </div>
 
-                  <div className="border-t border-border/60 pt-2 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">
-                      No. HP: {user.no_hp || "-"}
+                  <div className="border-t border-border/60 pt-2 flex items-center justify-between text-xs">
+                    <span className="text-[11px] text-muted-foreground font-mono">
+                      {user.no_hp ? user.no_hp : "No. HP: -"}
                     </span>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 px-2">
-                          <MoreHorizontal className="size-4 mr-1" />
+                        <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs gap-1 font-medium border-border shadow-2xs">
+                          <MoreHorizontal className="size-3.5" />
                           <span>Opsi</span>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem onClick={() => handleOpenEdit(user)}>
                           <Pencil className="size-4 mr-2" />
                           Edit Pengguna
@@ -884,8 +893,28 @@ export function UserManager({
             )
           })
         ) : (
-          <div className="text-center py-8 text-sm text-muted-foreground border border-dashed rounded-lg">
-            Tidak ada pengguna yang sesuai.
+          <div className="text-center py-8 px-4 text-sm text-muted-foreground border border-dashed rounded-lg bg-muted/20 space-y-2">
+            <UsersRound className="size-8 mx-auto text-muted-foreground/60" />
+            <p className="font-medium text-foreground">Tidak ada pengguna yang sesuai</p>
+            <p className="text-xs text-muted-foreground">
+              {search || roleFilter !== "all" || statusFilter !== "all"
+                ? "Coba ubah kata kunci pencarian atau reset filter yang sedang aktif."
+                : "Belum ada data pengguna yang terdaftar."}
+            </p>
+            {(search || roleFilter !== "all" || statusFilter !== "all") && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearch("")
+                  setRoleFilter("all")
+                  setStatusFilter("all")
+                }}
+                className="mt-2 text-xs"
+              >
+                Reset Filter
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -1003,18 +1032,19 @@ export function UserManager({
               </div>
             )}
 
-            <DialogFooter className="pt-2">
+            <DialogFooter className="pt-2 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsCreateOpen(false)}
                 disabled={isCreating}
+                className="w-full sm:w-auto"
               >
                 Batal
               </Button>
               <Button
                 type="submit"
-                className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white"
                 disabled={isCreating}
               >
                 {isCreating && <Loader2 className="size-4 mr-1.5 animate-spin" />}
@@ -1129,18 +1159,19 @@ export function UserManager({
                 </div>
               )}
 
-              <DialogFooter className="pt-2">
+              <DialogFooter className="pt-2 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setEditUser(null)}
                   disabled={isEditing}
+                  className="w-full sm:w-auto"
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                  className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white"
                   disabled={isEditing}
                 >
                   {isEditing && <Loader2 className="size-4 mr-1.5 animate-spin" />}
@@ -1178,7 +1209,7 @@ export function UserManager({
                 />
               </div>
 
-              <DialogFooter className="pt-2">
+              <DialogFooter className="pt-2 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
                 <Button
                   type="button"
                   variant="outline"
@@ -1187,12 +1218,13 @@ export function UserManager({
                     setResetPasswordBaru("")
                   }}
                   disabled={isResetting}
+                  className="w-full sm:w-auto"
                 >
                   Batal
                 </Button>
                 <Button
                   type="submit"
-                  className="bg-emerald-700 hover:bg-emerald-800 text-white"
+                  className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white"
                   disabled={isResetting}
                 >
                   {isResetting && (
@@ -1227,15 +1259,17 @@ export function UserManager({
                 : `Akun '${statusTarget?.nama}' akan diaktifkan kembali dan dapat login ke aplikasi.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isTogglingStatus}>Batal</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+            <AlertDialogCancel disabled={isTogglingStatus} className="w-full sm:w-auto mt-0">
+              Batal
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmToggleStatus}
               disabled={isTogglingStatus}
               className={
-                statusTarget?.is_active
+                (statusTarget?.is_active
                   ? "bg-orange-600 hover:bg-orange-700 text-white"
-                  : "bg-emerald-700 hover:bg-emerald-800 text-white"
+                  : "bg-emerald-700 hover:bg-emerald-800 text-white") + " w-full sm:w-auto"
               }
             >
               {isTogglingStatus && (
@@ -1264,12 +1298,14 @@ export function UserManager({
               permanen. Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+          <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+            <AlertDialogCancel disabled={isDeleting} className="w-full sm:w-auto mt-0">
+              Batal
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               disabled={isDeleting}
-              className="bg-destructive hover:bg-destructive/90 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-white w-full sm:w-auto"
             >
               {isDeleting && <Loader2 className="size-4 mr-1.5 animate-spin" />}
               Ya, Hapus Permanen
