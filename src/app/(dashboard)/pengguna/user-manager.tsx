@@ -959,10 +959,10 @@ export function UserManager({
                     Super Admin (Akses Penuh Tata Kelola & Sistem)
                   </SelectItem>
                   <SelectItem value="admin">
-                    SDM (Verifikator & Rekapitulasi Lintas Departemen)
+                    Koordinator (Verifikator & Rekapitulasi Lintas Departemen)
                   </SelectItem>
                   <SelectItem value="user">
-                    Ketua Departemen (Evaluator Departemen)
+                    Kepala Departemen (Evaluator Departemen)
                   </SelectItem>
                 </SelectContent>
               </Select>
