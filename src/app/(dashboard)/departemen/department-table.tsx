@@ -1241,17 +1241,17 @@ export function DepartmentTable({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserCheck className="size-5 text-emerald-600 dark:text-emerald-400" />
-              Pilih atau Ganti Ketua Departemen
+              Pilih atau Ganti Kadep Departemen
             </DialogTitle>
             <DialogDescription>
-              Tentukan ketua untuk <strong>{assignDept?.nama}</strong>. Mengganti ketua
+              Tentukan Kadep untuk <strong>{assignDept?.nama}</strong>. Mengganti Kadep
               tidak akan menghapus riwayat penilaian lama.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleAssignKetua} className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="select-ketua">Akun Ketua Departemen</Label>
+              <Label htmlFor="select-ketua">Akun Kepala Departemen</Label>
               <Select
                 value={selectedKetuaId}
                 onValueChange={setSelectedKetuaId}
@@ -1261,7 +1261,7 @@ export function DepartmentTable({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">
-                    (Kosongkan / Tanpa Ketua)
+                    (Kosongkan / Tanpa Kadep)
                   </SelectItem>
                   {eligibleKetua.map((k) => (
                     <SelectItem key={k.id} value={k.id}>
@@ -1272,7 +1272,7 @@ export function DepartmentTable({
                   {assignDept?.ketua &&
                     !eligibleKetua.some((k) => k.id === assignDept.ketua?.id) && (
                       <SelectItem value={assignDept.ketua.id}>
-                        {assignDept.ketua.nama} (Ketua Saat Ini)
+                        {assignDept.ketua.nama} (Kedep Saat Ini)
                       </SelectItem>
                     )}
                 </SelectContent>
