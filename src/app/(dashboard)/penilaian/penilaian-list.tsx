@@ -708,7 +708,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                             </Link>
                           </Button>
                           <span className="text-[10px] text-muted-foreground italic">
-                            Dinilai oleh Admin/SDM
+                            Dinilai oleh Admin/Koordinator
                           </span>
                         </div>
                       ) : (
