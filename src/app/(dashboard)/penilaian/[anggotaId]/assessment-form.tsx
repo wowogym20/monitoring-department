@@ -173,7 +173,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
               {member.nama}
             </h1>
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-1">
-              <span>{member.nip ? `NIP: ${member.nip}` : "Tanpa NIP"}</span>
+              <span>{member.nip ? `NIG: ${member.nip}` : "Tanpa NIP"}</span>
               <span>•</span>
               <span className="font-medium text-foreground">{member.jabatan}</span>
               {isKetua && (
@@ -181,7 +181,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
                   variant="outline"
                   className="text-[10px] px-1.5 py-0 font-medium text-amber-700 bg-amber-50 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
                 >
-                  Ketua Departemen
+                  Kepala Departemen
                 </Badge>
               )}
               <span>•</span>
@@ -207,7 +207,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
           <div>
             <p className="font-semibold">Penilaian Mandiri Dibatasi (Mode Baca-Saja)</p>
             <p className="mt-0.5">
-              Sebagai <strong>Ketua Departemen</strong>, Anda tidak dapat menilai diri Anda sendiri. Formulir penilaian Ketua Departemen hanya dapat diisi dan diperbarui oleh <strong>Admin (SDM)</strong> atau <strong>Super Admin</strong>.
+              Sebagai <strong>Kepala Departemen</strong>, Anda tidak dapat menilai diri Anda sendiri. Formulir penilaian Kepala Departemen hanya dapat diisi dan diperbarui oleh <strong>Admin/Koordinator </strong> atau <strong>Super Admin</strong>.
             </p>
           </div>
         </div>
