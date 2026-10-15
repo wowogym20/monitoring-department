@@ -512,7 +512,7 @@ export function DepartmentTable({
       },
       {
         accessorKey: "ketua",
-        header: "Ketua Departemen",
+        header: "Kepala Departemen",
         cell: ({ row }) => {
           const ketua = row.original.ketua
           return (
