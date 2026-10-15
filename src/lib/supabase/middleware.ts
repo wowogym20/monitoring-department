@@ -78,8 +78,8 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  // Lewatkan request API auth langsung tanpa intervensi redirect
-  if (pathname.startsWith("/api/auth")) {
+  // Lewatkan request API auth dan keep-alive cron langsung tanpa intervensi redirect
+  if (pathname.startsWith("/api/auth") || pathname === "/api/keep-alive") {
     return { supabaseResponse, user: null, role: null }
   }
 
