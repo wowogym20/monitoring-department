@@ -980,7 +980,7 @@ export function DepartmentTable({
                 <div className="pt-2.5 border-t border-border/60 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <span className="text-[11px] text-muted-foreground block font-medium mb-0.5">
-                      Ketua Departemen
+                      Kepala Departemen
                     </span>
                     {dept.ketua ? (
                       <div>
