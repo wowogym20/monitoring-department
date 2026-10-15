@@ -1241,7 +1241,7 @@ export function DepartmentTable({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserCheck className="size-5 text-emerald-600 dark:text-emerald-400" />
-              Pilih atau Ganti Kadep Departemen
+              Pilih atau Ganti Kepala Departemen
             </DialogTitle>
             <DialogDescription>
               Tentukan Kadep untuk <strong>{assignDept?.nama}</strong>. Mengganti Kadep
