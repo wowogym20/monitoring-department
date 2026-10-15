@@ -236,7 +236,7 @@ export function UserManager({
             className="bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800 font-semibold gap-1"
           >
             <Briefcase className="size-3" />
-            SDM
+            Koordinator
           </Badge>
         )
       case "user":
@@ -246,7 +246,7 @@ export function UserManager({
             className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 font-semibold gap-1"
           >
             <UserCog className="size-3" />
-            Ketua Departemen
+            Kepala Departemen
           </Badge>
         )
       default:
@@ -493,7 +493,7 @@ export function UserManager({
         <Card className="border-border shadow-2xs">
           <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-xs font-medium text-sky-700 dark:text-sky-300">
-              SDM (Admin)
+              Koordinator (Admin)
             </CardTitle>
             <Briefcase className="size-4 text-sky-600 dark:text-sky-400" />
           </CardHeader>
@@ -502,7 +502,7 @@ export function UserManager({
               {sdmCount}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5">
-              Tim Verifikator & Evaluator SDM
+              Tim Verifikator & Evaluator
             </p>
           </CardContent>
         </Card>
@@ -555,8 +555,8 @@ export function UserManager({
             <SelectContent>
               <SelectItem value="all">Semua Role</SelectItem>
               <SelectItem value="super_admin">Super Admin</SelectItem>
-              <SelectItem value="admin">SDM</SelectItem>
-              <SelectItem value="user">Ketua Departemen</SelectItem>
+              <SelectItem value="admin">Koordinator</SelectItem>
+              <SelectItem value="user">Kepala Departemen</SelectItem>
             </SelectContent>
           </Select>
 
@@ -1084,8 +1084,8 @@ export function UserManager({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="super_admin">Super Admin</SelectItem>
-                    <SelectItem value="admin">SDM</SelectItem>
-                    <SelectItem value="user">Ketua Departemen</SelectItem>
+                    <SelectItem value="admin">Koordinator</SelectItem>
+                    <SelectItem value="user">Kepala Departemen</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1113,7 +1113,7 @@ export function UserManager({
                           {d.ketua_id === editUser.id
                             ? "(Saat Ini)"
                             : d.ketua_id
-                            ? "(Sudah ada ketua lain)"
+                            ? "(Sudah ada Kadep lain)"
                             : ""}
                         </SelectItem>
                       ))}
@@ -1124,7 +1124,7 @@ export function UserManager({
                 <div className="rounded-md bg-muted/60 p-2.5 text-xs text-muted-foreground flex items-center gap-2">
                   <Info className="size-4 shrink-0 text-sky-600" />
                   <span>
-                    Role {editRole === "super_admin" ? "Super Admin" : "SDM"} bertugas di tingkat lembaga dan memiliki akses lintas seluruh departemen.
+                    Role {editRole === "super_admin" ? "Super Admin" : "Koordinator"} bertugas di tingkat lembaga dan memiliki akses lintas seluruh departemen.
                   </span>
                 </div>
               )}
