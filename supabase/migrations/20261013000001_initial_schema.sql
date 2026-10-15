@@ -4,10 +4,24 @@
 --              RLS Policies, dan Triggers (skor rata-rata, audit log, revert status)
 -- ==============================================================================
 
--- 1. ENUMS
-CREATE TYPE public.user_role AS ENUM ('super_admin', 'admin', 'user');
-CREATE TYPE public.assessment_status AS ENUM ('draft', 'submitted', 'revision_requested', 'approved');
-CREATE TYPE public.period_status AS ENUM ('open', 'closed');
+-- 1. ENUMS (Idempotent: aman dieksekusi di database branch / preview)
+DO $$ BEGIN
+    CREATE TYPE public.user_role AS ENUM ('super_admin', 'admin', 'user');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE public.assessment_status AS ENUM ('draft', 'submitted', 'revision_requested', 'approved');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE public.period_status AS ENUM ('open', 'closed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- 2. TABEL: PROFILES
 -- Menyimpan data profil akun pengguna yang terhubung ke auth.users

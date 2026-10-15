@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Badge } from "@/components/ui/badge"
 import { SortableHeader } from "@/components/ui/sortable-header"
 import { Label } from "@/components/ui/label"
@@ -783,9 +784,8 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
 
             <div className="space-y-1.5">
               <Label htmlFor="ketua-pass">Kata Sandi Awal</Label>
-              <Input
+              <PasswordInput
                 id="ketua-pass"
-                type="password"
                 required
                 placeholder="Minimal 8 karakter"
                 value={password}
@@ -992,9 +992,8 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
           <form onSubmit={handleResetPassword} className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label htmlFor="reset-pass">Kata Sandi Baru</Label>
-              <Input
+              <PasswordInput
                 id="reset-pass"
-                type="password"
                 required
                 placeholder="Minimal 8 karakter"
                 value={newPassword}
