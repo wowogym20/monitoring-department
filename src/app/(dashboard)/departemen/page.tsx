@@ -57,6 +57,8 @@ export default async function DepartemenPage({
       ? sortByParam
       : "nama"
 
+  const isSuperAdmin = currentUser.role === "super_admin"
+
   const [departmentsResult, eligibleKetua] = await Promise.all([
     getDepartmentsServer({
       search,
@@ -67,7 +69,7 @@ export default async function DepartemenPage({
       sortOrder,
       sortBy,
     }),
-    getEligibleKetuaList(),
+    isSuperAdmin ? getEligibleKetuaList() : Promise.resolve([]),
   ])
 
   return (

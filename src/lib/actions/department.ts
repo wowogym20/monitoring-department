@@ -269,7 +269,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
  * Belum memegang departemen manapun, atau saat ini memegang departemen tertentu (currentDepartmentId).
  */
 export async function getEligibleKetuaList(currentDepartmentId?: string | null) {
-  await requireRole("super_admin")
+  await requireRole("super_admin", "admin")
   const supabase = await createClient()
 
   // Ambil semua departemen yang sudah memiliki ketua
