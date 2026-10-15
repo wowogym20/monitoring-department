@@ -895,7 +895,7 @@ export function UserManager({
           <DialogHeader>
             <DialogTitle>Tambah Pengguna Baru</DialogTitle>
             <DialogDescription>
-              Buat akun pengguna baru dengan memilih role: Super Admin, SDM, atau Ketua Departemen.
+              Buat akun pengguna baru dengan memilih role: Super Admin, Koordinator, atau Kepala Departemen.
             </DialogDescription>
           </DialogHeader>
 
@@ -998,7 +998,7 @@ export function UserManager({
               <div className="rounded-md bg-muted/60 p-2.5 text-xs text-muted-foreground flex items-center gap-2">
                 <Info className="size-4 shrink-0 text-sky-600" />
                 <span>
-                  Role {createRole === "super_admin" ? "Super Admin" : "SDM"} memiliki wewenang tingkat pusat dan hak akses sistem lintas seluruh departemen.
+                  Role {createRole === "super_admin" ? "Super Admin" : "Koordinator"} memiliki wewenang tingkat pusat dan hak akses sistem lintas seluruh departemen.
                 </span>
               </div>
             )}
