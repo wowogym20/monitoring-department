@@ -20,6 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { AppFooter } from "@/components/layout/app-footer"
 import {
   resetPasswordSchema,
   ResetPasswordInput,
@@ -63,12 +64,12 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative">
+    <div className="min-h-screen flex flex-col justify-between items-center bg-background px-4 pt-8 pb-3 relative">
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 my-auto py-8">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 mb-1">
             <span className="size-3.5 rounded-full bg-primary inline-block" />
@@ -181,6 +182,8 @@ export default function ResetPasswordPage() {
           )}
         </Card>
       </div>
+
+      <AppFooter className="max-w-md" />
     </div>
   )
 }

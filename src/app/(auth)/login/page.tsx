@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Loader2, Lock, Mail, ShieldAlert, Eye, EyeOff, ArrowLeft } from "lucide-react"
+import { AppFooter } from "@/components/layout/app-footer"
 
 function LoginForm() {
   const router = useRouter()
@@ -184,7 +185,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8 relative">
+    <div className="min-h-screen flex flex-col justify-between items-center bg-background px-4 pt-8 pb-3 relative">
       {/* Navigasi Pojok Kiri Atas ke Beranda */}
       <div className="absolute top-4 left-4">
         <Button
@@ -205,7 +206,7 @@ export default function LoginPage() {
         <ThemeToggle />
       </div>
 
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-md space-y-6 my-auto py-8">
         {/* Brand Header */}
         <div className="text-center space-y-3 flex flex-col items-center">
           <Link
@@ -251,6 +252,8 @@ export default function LoginPage() {
           Tidak memiliki akun? Hubungi super-admin untuk pembuatan akses.
         </p>
       </div>
+
+      <AppFooter className="max-w-md" />
     </div>
   )
 }

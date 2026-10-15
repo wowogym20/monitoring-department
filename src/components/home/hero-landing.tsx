@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { AppFooter } from "@/components/layout/app-footer"
 
 interface HeroLandingProps {
   isLoggedIn: boolean
@@ -230,13 +231,8 @@ export function HeroLanding({ isLoggedIn, userEmail }: HeroLandingProps) {
         )}
       </section>
 
-      {/* FOOTER MINIMALIS */}
-      <footer className="w-full max-w-6xl text-center z-10 shrink-0 pt-2 border-t border-border/40">
-        <p className="text-[10px] sm:text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Pondok Modern Tazakka. Seluruh Hak Cipta
-          Dilindungi.
-        </p>
-      </footer>
+      {/* FOOTER */}
+      <AppFooter className="max-w-6xl z-10" />
 
       {/* MODAL PANDUAN INSTALASI PWA (iOS / Browser Fallback) */}
       {showIosGuide && (
