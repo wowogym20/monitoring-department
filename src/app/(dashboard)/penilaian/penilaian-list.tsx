@@ -638,7 +638,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                             variant="outline"
                             className="text-[10px] px-1.5 py-0 font-medium text-amber-700 bg-amber-50 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800"
                           >
-                            Ketua Dept
+                            Kadep
                           </Badge>
                         )}
                       </div>
