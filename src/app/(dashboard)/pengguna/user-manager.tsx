@@ -510,7 +510,7 @@ export function UserManager({
         <Card className="border-border shadow-2xs">
           <CardHeader className="pb-2 pt-4 px-4 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              Ketua Departemen
+              Kepala Departemen
             </CardTitle>
             <UserCog className="size-4 text-emerald-600 dark:text-emerald-400" />
           </CardHeader>
