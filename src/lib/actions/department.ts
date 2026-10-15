@@ -12,6 +12,8 @@ import {
   type AssignKetuaInput,
 } from "@/lib/validations/master-data"
 
+export type FillingStatus = "completed" | "partial" | "unfilled"
+
 export interface DepartmentListItem {
   id: string
   nama: string
@@ -25,13 +27,26 @@ export interface DepartmentListItem {
     nama: string
     no_hp: string | null
   } | null
+  total_members: number
+  assessed_count: number
+  draft_count: number
+  filling_status: FillingStatus
+}
+
+export interface DepartmentCompletionSummary {
+  total: number
+  completed: number
+  partial: number
+  unfilled: number
+  periodName: string | null
 }
 
 export interface DepartmentFilterParams {
   search?: string
   status?: "all" | "active" | "inactive"
+  fillingStatus?: "all" | "completed" | "partial" | "unfilled"
   page?: number
-  pageSize?: number
+  pageSize?: number | "all"
   sortOrder?: "asc" | "desc"
   sortBy?: "nama" | "kode" | "is_active" | "created_at"
 }
@@ -39,7 +54,7 @@ export interface DepartmentFilterParams {
 import { z } from "zod"
 
 /**
- * Mengambil daftar departemen dengan filter status, pencarian, dan paginasi sisi server.
+ * Mengambil daftar departemen dengan filter status, pencarian, status pengisian penilaian, dan paginasi sisi server.
  */
 export async function getDepartmentsServer(params: DepartmentFilterParams = {}) {
   await requireRole("super_admin", "admin")
@@ -48,12 +63,56 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
   const {
     search = "",
     status = "all",
+    fillingStatus = "all",
     page = 1,
     pageSize = 10,
     sortOrder = "asc",
     sortBy = "nama",
   } = params
 
+  // 1. Ambil periode penilaian aktif (open) atau periode terbaru
+  const { data: openPeriod } = await supabase
+    .from("assessment_periods")
+    .select("id, nama, status")
+    .eq("status", "open")
+    .order("tanggal_mulai", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  // 2. Ambil seluruh anggota aktif per departemen
+  const { data: membersList } = await supabase
+    .from("members")
+    .select("id, department_id")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+
+  const deptMembersCountMap = new Map<string, number>()
+  for (const m of membersList || []) {
+    deptMembersCountMap.set(m.department_id, (deptMembersCountMap.get(m.department_id) || 0) + 1)
+  }
+
+  // 3. Ambil penilaian pada periode aktif
+  let assessmentsList: Array<{ department_id: string; status: string }> = []
+  if (openPeriod) {
+    const { data: rawAssess } = await supabase
+      .from("assessments")
+      .select("department_id, status")
+      .eq("period_id", openPeriod.id)
+      .is("deleted_at", null)
+    assessmentsList = rawAssess || []
+  }
+
+  const deptAssessedCountMap = new Map<string, number>()
+  const deptDraftCountMap = new Map<string, number>()
+  for (const a of assessmentsList) {
+    if (a.status === "draft") {
+      deptDraftCountMap.set(a.department_id, (deptDraftCountMap.get(a.department_id) || 0) + 1)
+    } else {
+      deptAssessedCountMap.set(a.department_id, (deptAssessedCountMap.get(a.department_id) || 0) + 1)
+    }
+  }
+
+  // 4. Query departemen dasar
   let query = supabase
     .from("departments")
     .select(
@@ -66,8 +125,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
       created_at,
       updated_at,
       ketua:profiles!departments_ketua_id_fkey(id, nama, no_hp)
-    `,
-      { count: "exact" }
+    `
     )
 
   if (status === "active") {
@@ -80,8 +138,6 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
     query = query.or(`nama.ilike.%${search.trim()}%,kode.ilike.%${search.trim()}%`)
   }
 
-  const from = (page - 1) * pageSize
-  const to = from + pageSize - 1
   const isAscending = sortOrder !== "desc"
 
   if (sortBy === "kode") {
@@ -94,9 +150,7 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
     query = query.order("nama", { ascending: isAscending })
   }
 
-  query = query.range(from, to)
-
-  const { data, count, error } = await query
+  const { data, error } = await query
 
   if (error) {
     console.error("Error fetching departments:", error.message)
@@ -104,42 +158,109 @@ export async function getDepartmentsServer(params: DepartmentFilterParams = {}) 
       data: [] as DepartmentListItem[],
       total: 0,
       page,
-      pageSize,
+      pageSize: typeof pageSize === "number" ? pageSize : 10,
       totalPages: 0,
+      summary: {
+        total: 0,
+        completed: 0,
+        partial: 0,
+        unfilled: 0,
+        periodName: null,
+      },
+      activePeriod: null,
     }
   }
 
-  // Cast hasil query karena relasi single profile bisa terdeteksi array atau object oleh TypeScript
-  const departments: DepartmentListItem[] = ((data as unknown) as Array<Record<string, unknown>>).map(
-    (item) => ({
-      id: String(item.id),
-      nama: String(item.nama),
-      kode: String(item.kode),
-      ketua_id: item.ketua_id ? String(item.ketua_id) : null,
-      is_active: Boolean(item.is_active),
-      created_at: String(item.created_at),
-      updated_at: String(item.updated_at),
-      ketua: item.ketua
-        ? {
-            id: String((item.ketua as Record<string, unknown>).id),
-            nama: String((item.ketua as Record<string, unknown>).nama),
-            no_hp: (item.ketua as Record<string, unknown>).no_hp
-              ? String((item.ketua as Record<string, unknown>).no_hp)
-              : null,
-          }
-        : null,
-    })
+  // 5. Rakit departemen dengan status pengisian
+  const allDepartments: DepartmentListItem[] = ((data as unknown) as Array<Record<string, unknown>>).map(
+    (item) => {
+      const deptId = String(item.id)
+      const totalMembers = deptMembersCountMap.get(deptId) || 0
+      const assessedCount = deptAssessedCountMap.get(deptId) || 0
+      const draftCount = deptDraftCountMap.get(deptId) || 0
+
+      let filling_status: FillingStatus = "unfilled"
+      if (totalMembers > 0 && assessedCount >= totalMembers) {
+        filling_status = "completed"
+      } else if (assessedCount > 0) {
+        filling_status = "partial"
+      } else {
+        filling_status = "unfilled"
+      }
+
+      return {
+        id: deptId,
+        nama: String(item.nama),
+        kode: String(item.kode),
+        ketua_id: item.ketua_id ? String(item.ketua_id) : null,
+        is_active: Boolean(item.is_active),
+        created_at: String(item.created_at),
+        updated_at: String(item.updated_at),
+        ketua: item.ketua
+          ? {
+              id: String((item.ketua as Record<string, unknown>).id),
+              nama: String((item.ketua as Record<string, unknown>).nama),
+              no_hp: (item.ketua as Record<string, unknown>).no_hp
+                ? String((item.ketua as Record<string, unknown>).no_hp)
+                : null,
+            }
+          : null,
+        total_members: totalMembers,
+        assessed_count: assessedCount,
+        draft_count: draftCount,
+        filling_status,
+      }
+    }
   )
 
-  const total = count || 0
-  const totalPages = Math.ceil(total / pageSize)
+  // 6. Ringkasan kepatuhan pengisian departemen aktif
+  let completedCount = 0
+  let partialCount = 0
+  let unfilledCount = 0
+
+  allDepartments.forEach((d) => {
+    if (d.filling_status === "completed") completedCount++
+    else if (d.filling_status === "partial") partialCount++
+    else unfilledCount++
+  })
+
+  const completionSummary: DepartmentCompletionSummary = {
+    total: allDepartments.length,
+    completed: completedCount,
+    partial: partialCount,
+    unfilled: unfilledCount,
+    periodName: openPeriod?.nama || null,
+  }
+
+  // 7. Filter status pengisian jika dipilih
+  let filteredList = allDepartments
+  if (fillingStatus && fillingStatus !== "all") {
+    filteredList = allDepartments.filter((d) => d.filling_status === fillingStatus)
+  }
+
+  // 8. Paginasi fleksibel (5, 10, 25, 50, all)
+  const isAll = pageSize === "all"
+  const resolvedPageSize = isAll
+    ? Math.max(filteredList.length, 1)
+    : typeof pageSize === "number" && pageSize > 0
+    ? pageSize
+    : 10
+  const total = filteredList.length
+  const totalPages = isAll ? 1 : Math.max(1, Math.ceil(total / resolvedPageSize))
+  const currentPage = Math.min(Math.max(1, page), totalPages)
+
+  const paginatedData = isAll
+    ? filteredList
+    : filteredList.slice((currentPage - 1) * resolvedPageSize, currentPage * resolvedPageSize)
 
   return {
-    data: departments,
+    data: paginatedData,
     total,
-    page,
-    pageSize,
+    page: currentPage,
+    pageSize: resolvedPageSize,
     totalPages,
+    summary: completionSummary,
+    activePeriod: openPeriod,
   }
 }
 

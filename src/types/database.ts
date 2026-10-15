@@ -403,6 +403,38 @@ export interface Database {
           }
         ]
       }
+      system_settings: {
+        Row: {
+          key: string
+          value: Json
+          deskripsi: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          key: string
+          value: Json
+          deskripsi?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          key?: string
+          value?: Json
+          deskripsi?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -437,3 +469,4 @@ export type Assessment = Database["public"]["Tables"]["assessments"]["Row"]
 export type AssessmentScore = Database["public"]["Tables"]["assessment_scores"]["Row"]
 export type AssessmentComment = Database["public"]["Tables"]["assessment_comments"]["Row"]
 export type AuditLog = Database["public"]["Tables"]["audit_logs"]["Row"]
+export type SystemSetting = Database["public"]["Tables"]["system_settings"]["Row"]

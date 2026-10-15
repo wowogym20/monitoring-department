@@ -405,7 +405,7 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30 hover:bg-muted/30">
-                      <TableHead className="w-12 text-center text-xs font-semibold py-3 px-3">No</TableHead>
+                      <TableHead className="w-14 text-center text-xs font-semibold py-3 px-3">No.</TableHead>
                       <TableHead className="text-xs font-semibold py-3 px-4">Aspek Penilaian</TableHead>
                       <TableHead className="w-28 text-center text-xs font-semibold py-3 px-3">Nilai (1-5)</TableHead>
                       <TableHead className="w-36 text-right text-xs font-semibold py-3 px-4">Kategori</TableHead>

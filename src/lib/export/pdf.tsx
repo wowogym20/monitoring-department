@@ -230,7 +230,7 @@ export function RekapPdfDocument({ dataset }: RekapPdfDocumentProps) {
             <View style={styles.table}>
               {/* Header Tabel */}
               <View style={styles.tableRowHeader} wrap={false}>
-                <Text style={styles.thNo}>No</Text>
+                <Text style={styles.thNo}>No.</Text>
                 <Text style={styles.thNama}>Nama Anggota</Text>
                 <Text style={styles.thNip}>NIG</Text>
                 <Text style={styles.thJabatan}>Jabatan</Text>

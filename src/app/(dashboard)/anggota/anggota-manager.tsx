@@ -593,7 +593,7 @@ export function AnggotaManager({
                   aria-label="Pilih semua anggota di halaman ini"
                 />
               </TableHead>
-              <TableHead className="w-12 text-center">No</TableHead>
+              <TableHead className="w-14 text-center">No.</TableHead>
               <TableHead>
                 <SortableHeader
                   label="NIG"

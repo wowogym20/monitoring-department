@@ -821,6 +821,65 @@ export async function approveAssessmentAction(input: ApproveAssessmentInput) {
 }
 
 /**
+ * 3b. Server Action: Menyetujui Banyak Penilaian Sekaligus (Bulk Approval)
+ * Hanya penilaian dengan status 'submitted' yang akan diubah ke 'approved'
+ * Hak akses: super_admin & admin
+ */
+export async function bulkApproveAssessmentsAction(assessmentIds: string[]) {
+  try {
+    await requireRole("super_admin", "admin")
+    if (!Array.isArray(assessmentIds) || assessmentIds.length === 0) {
+      return { success: false, error: "Tidak ada penilaian yang dipilih untuk disetujui." }
+    }
+
+    const adminClient = createAdminClient()
+
+    // 1. Ambil penilaian berstatus submitted yang valid
+    const { data: eligibleAssessments, error: fetchErr } = await adminClient
+      .from("assessments")
+      .select("id, status, member_id")
+      .in("id", assessmentIds)
+      .eq("status", "submitted")
+      .is("deleted_at", null)
+
+    if (fetchErr || !eligibleAssessments || eligibleAssessments.length === 0) {
+      return {
+        success: false,
+        error: "Tidak ada penilaian berstatus 'submitted' yang valid untuk disetujui.",
+      }
+    }
+
+    const targetIds = eligibleAssessments.map((a) => a.id)
+
+    // 2. Batch update status to approved
+    const { error: updateErr } = await adminClient
+      .from("assessments")
+      .update({
+        status: "approved",
+        updated_at: new Date().toISOString(),
+      })
+      .in("id", targetIds)
+
+    if (updateErr) {
+      return { success: false, error: `Gagal menyetujui penilaian massal: ${updateErr.message}` }
+    }
+
+    revalidatePath("/rekap")
+    revalidatePath("/penilaian")
+    revalidatePath("/dashboard")
+
+    return {
+      success: true,
+      count: targetIds.length,
+      message: `Berhasil menyetujui ${targetIds.length} penilaian.`,
+    }
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Terjadi kesalahan pada server"
+    return { success: false, error: errorMsg }
+  }
+}
+
+/**
  * 4. Server Action: Meminta Revisi Penilaian (Status: revision_requested)
  * Validasi transisi status: Hanya boleh dari 'submitted' atau 'approved' (PRD Bagian 9)
  * Wajib disertai komentar/catatan revisi

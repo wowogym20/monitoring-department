@@ -17,9 +17,7 @@ export default async function AspekPage() {
           Aspek Penilaian
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {currentUser.role === "super_admin"
-            ? "Kelola aspek penilaian kinerja, urutan formulir, dan panduan rubrik skala 1–5."
-            : "Daftar aspek penilaian kinerja dan pedoman skala Likert 1–5 (Mode Baca SDM)."}
+          Kelola aspek penilaian kinerja, urutan formulir, dan panduan rubrik skala 1–5.
         </p>
       </div>
 

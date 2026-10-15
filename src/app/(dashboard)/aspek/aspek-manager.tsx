@@ -67,7 +67,7 @@ export function AspekManager({
   currentUserRole,
 }: AspekManagerProps) {
   const router = useRouter()
-  const isSuperAdmin = currentUserRole === "super_admin"
+  const isSuperAdmin = currentUserRole === "super_admin" || currentUserRole === "admin"
 
   // Dialog states
   const [createOpen, setCreateOpen] = React.useState(false)

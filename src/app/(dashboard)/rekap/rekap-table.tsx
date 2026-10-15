@@ -33,7 +33,17 @@ import {
 } from "@/components/ui/select"
 import { SkorBadge } from "@/components/penilaian/skor-badge"
 import { StatusBadge } from "@/components/penilaian/status-badge"
-import { RekapTableItem } from "@/lib/actions/rekap"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
+import { bulkApproveAssessmentsAction, RekapTableItem } from "@/lib/actions/rekap"
 import { AssessmentPeriod, UserRole } from "@/types/database"
 import { formatDateId } from "@/lib/date"
 import {
@@ -52,6 +62,10 @@ import {
   Layers,
   User,
   X,
+  CheckCheck,
+  CheckCircle2,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react"
 
 interface RekapTableProps {
@@ -139,9 +153,105 @@ export function RekapTable({
     })
   }
 
+  const canApprove = userRole === "super_admin" || userRole === "admin"
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([])
+  const [bulkDialogOpen, setBulkDialogOpen] = React.useState(false)
+  const [isApproving, setIsApproving] = React.useState(false)
+
+  // Bersihkan pilihan jika data/halaman/filter berganti
+  React.useEffect(() => {
+    setSelectedIds([])
+  }, [selectedPeriodId, selectedDepartmentId, currentPage, currentStatus, currentSearch])
+
+  const handleBulkApprove = async () => {
+    if (selectedIds.length === 0) return
+    setIsApproving(true)
+    try {
+      const res = await bulkApproveAssessmentsAction(selectedIds)
+      if (res.success) {
+        toast.success(res.message)
+        setSelectedIds([])
+        setBulkDialogOpen(false)
+        router.refresh()
+      } else {
+        toast.error(res.error)
+      }
+    } catch {
+      toast.error("Terjadi kesalahan sistem saat menyetujui penilaian.")
+    } finally {
+      setIsApproving(false)
+    }
+  }
+
   // Definisi Kolom TanStack Table
   const columns: ColumnDef<RekapTableItem>[] = React.useMemo(
     () => [
+      ...(canApprove
+        ? [
+            {
+              id: "select",
+              header: () => {
+                const submittedRows = data.filter((item) => item.status === "submitted")
+                const isAllSelected =
+                  submittedRows.length > 0 &&
+                  submittedRows.every((item) => selectedIds.includes(item.id))
+                const isSomeSelected =
+                  submittedRows.some((item) => selectedIds.includes(item.id)) && !isAllSelected
+
+                return (
+                  <div className="flex items-center justify-center pl-1">
+                    <Checkbox
+                      checked={isAllSelected ? true : isSomeSelected ? "indeterminate" : false}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedIds((prev) => {
+                            const newSet = new Set(prev)
+                            submittedRows.forEach((item) => newSet.add(item.id))
+                            return Array.from(newSet)
+                          })
+                        } else {
+                          setSelectedIds((prev) => {
+                            const newSet = new Set(prev)
+                            submittedRows.forEach((item) => newSet.delete(item.id))
+                            return Array.from(newSet)
+                          })
+                        }
+                      }}
+                      disabled={submittedRows.length === 0}
+                      aria-label="Pilih semua penilaian submitted"
+                    />
+                  </div>
+                )
+              },
+              cell: ({ row }: { row: { original: RekapTableItem } }) => {
+                const isSubmitted = row.original.status === "submitted"
+                const isSelected = selectedIds.includes(row.original.id)
+
+                return (
+                  <div className="flex items-center justify-center pl-1">
+                    <Checkbox
+                      checked={isSelected}
+                      disabled={!isSubmitted}
+                      onCheckedChange={(checked) => {
+                        setSelectedIds((prev) =>
+                          checked
+                            ? [...prev, row.original.id]
+                            : prev.filter((id) => id !== row.original.id)
+                        )
+                      }}
+                      aria-label={`Pilih penilaian ${row.original.member_nama}`}
+                      title={
+                        isSubmitted
+                          ? "Pilih untuk persetujuan massal"
+                          : `Status '${row.original.status}' tidak dapat disetujui`
+                      }
+                    />
+                  </div>
+                )
+              },
+            },
+          ]
+        : []),
       {
         accessorKey: "member_nama",
         header: ({ column }) => {
@@ -306,7 +416,7 @@ export function RekapTable({
         },
       },
     ],
-    []
+    [canApprove, selectedIds, data]
   )
 
   const [sorting, setSorting] = React.useState<SortingState>([])
@@ -704,6 +814,95 @@ export function RekapTable({
           </div>
         </div>
       </div>
+
+      {/* Floating Bulk Action Bar */}
+      {canApprove && selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-foreground text-background px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-3 border border-border/20 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="size-4 text-emerald-400" />
+            <span className="text-xs font-semibold">
+              {selectedIds.length} penilaian berstatus &apos;submitted&apos; dipilih
+            </span>
+          </div>
+          <div className="h-4 w-px bg-muted-foreground/30" />
+          <Button
+            size="sm"
+            variant="default"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs h-8 px-3 gap-1.5 shadow-sm"
+            onClick={() => setBulkDialogOpen(true)}
+            disabled={isApproving}
+          >
+            <CheckCheck className="size-3.5" />
+            <span>Setujui Terpilih</span>
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-muted-foreground hover:text-background hover:bg-white/10 text-xs h-8 px-2"
+            onClick={() => setSelectedIds([])}
+            disabled={isApproving}
+          >
+            Batal
+          </Button>
+        </div>
+      )}
+
+      {/* Dialog Konfirmasi Bulk Approval */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCheck className="size-5 text-emerald-600" />
+              <span>Konfirmasi Persetujuan Massal</span>
+            </DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin menyetujui secara massal <strong>{selectedIds.length}</strong> penilaian kinerja yang telah dipilih?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="p-3 bg-muted/50 rounded-lg text-xs space-y-1.5 border border-border">
+            <p className="font-medium text-foreground">
+              Ketentuan persetujuan:
+            </p>
+            <ul className="list-disc pl-4 space-y-1 text-muted-foreground">
+              <li>Status seluruh penilaian yang dipilih akan berubah menjadi <strong>Disetujui (Approved)</strong>.</li>
+              <li>Aksi ini dilakukan dalam kapasitas Anda sebagai verifikator/penerima laporan.</li>
+              <li>Riwayat audit log persetujuan akan tercatat otomatis di sistem.</li>
+            </ul>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setBulkDialogOpen(false)}
+              disabled={isApproving}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              onClick={handleBulkApprove}
+              disabled={isApproving}
+            >
+              {isApproving ? (
+                <>
+                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                  <span>Memproses...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCheck className="size-3.5 mr-1.5" />
+                  <span>Ya, Setujui {selectedIds.length} Penilaian</span>
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

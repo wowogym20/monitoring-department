@@ -15,9 +15,8 @@ export default async function FormPenilaianAnggotaPage({
   params,
   searchParams,
 }: FormPenilaianAnggotaPageProps) {
-  // Hanya super_admin dan ketua departemen (user) yang boleh mengakses formulir penilaian
-  // Admin SDM dilarang membuka form ini sesuai PRD Bagian 10 tabel matriks akses
-  await requireRole("super_admin", "user")
+  // Super_admin, admin (SDM/Koordinator), dan ketua departemen (user) boleh mengakses formulir penilaian
+  await requireRole("super_admin", "admin", "user")
 
   const { anggotaId } = await params
   const { periodeId } = await searchParams

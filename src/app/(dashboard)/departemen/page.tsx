@@ -30,7 +30,25 @@ export default async function DepartemenPage({
     typeof resolvedParams.page === "string"
       ? Math.max(1, parseInt(resolvedParams.page, 10) || 1)
       : 1
-  const pageSize = 10
+  const pageSizeParam = resolvedParams.pageSize
+  let pageSize: number | "all" = 10
+  if (pageSizeParam === "all" || pageSizeParam === "semua") {
+    pageSize = "all"
+  } else if (typeof pageSizeParam === "string") {
+    const parsed = parseInt(pageSizeParam, 10)
+    if ([5, 10, 25, 50].includes(parsed)) {
+      pageSize = parsed
+    }
+  }
+
+  const fillingStatusParam = resolvedParams.fillingStatus
+  const fillingStatus =
+    fillingStatusParam === "completed" ||
+    fillingStatusParam === "partial" ||
+    fillingStatusParam === "unfilled"
+      ? fillingStatusParam
+      : "all"
+
   const sortOrder =
     resolvedParams.sort === "desc" ? "desc" : "asc"
   const sortByParam = resolvedParams.sortBy
@@ -40,7 +58,15 @@ export default async function DepartemenPage({
       : "nama"
 
   const [departmentsResult, eligibleKetua] = await Promise.all([
-    getDepartmentsServer({ search, status, page, pageSize, sortOrder, sortBy }),
+    getDepartmentsServer({
+      search,
+      status,
+      fillingStatus,
+      page,
+      pageSize,
+      sortOrder,
+      sortBy,
+    }),
     getEligibleKetuaList(),
   ])
 
@@ -54,7 +80,7 @@ export default async function DepartemenPage({
           <p className="text-sm text-muted-foreground mt-1">
             {currentUser.role === "super_admin"
               ? "Kelola struktur 14 departemen, status keaktifan, dan penugasan ketua departemen."
-              : "Daftar struktur 14 departemen dan ketua yang bertugas (Mode Baca)."}
+              : "Monitoring struktur 14 departemen, status pengisian penilaian, dan penugasan ketua departemen."}
           </p>
         </div>
       </div>
@@ -74,6 +100,10 @@ export default async function DepartemenPage({
           totalPages={departmentsResult.totalPages}
           currentUserRole={currentUser.role}
           eligibleKetua={eligibleKetua}
+          summary={departmentsResult.summary}
+          activePeriodName={departmentsResult.activePeriod?.nama || null}
+          currentFillingStatus={fillingStatus}
+          currentPageSize={pageSizeParam === "all" || pageSizeParam === "semua" ? "all" : String(pageSize)}
         />
       </Suspense>
     </div>

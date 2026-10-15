@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { requireRole } from "@/lib/auth"
 import {
   createAspectSchema,
@@ -36,16 +37,16 @@ export async function getAspekListServer(): Promise<AssessmentAspect[]> {
 }
 
 /**
- * Server Action: Tambah Aspek Penilaian Baru (Khusus Super Admin)
+ * Server Action: Tambah Aspek Penilaian Baru (Super Admin & Admin SDM)
  */
 export async function createAspectAction(input: CreateAspectInput) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = createAspectSchema.parse(input)
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
-    const { error } = await supabase.from("assessment_aspects").insert({
+    const { error } = await adminClient.from("assessment_aspects").insert({
       nama: validated.nama,
       deskripsi: validated.deskripsi,
       urutan: validated.urutan,
@@ -65,16 +66,16 @@ export async function createAspectAction(input: CreateAspectInput) {
 }
 
 /**
- * Server Action: Ubah Aspek Penilaian (Khusus Super Admin)
+ * Server Action: Ubah Aspek Penilaian (Super Admin & Admin SDM)
  */
 export async function updateAspectAction(input: UpdateAspectInput) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = updateAspectSchema.parse(input)
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("assessment_aspects")
       .update({
         nama: validated.nama,
@@ -99,17 +100,17 @@ export async function updateAspectAction(input: UpdateAspectInput) {
 import { z } from "zod"
 
 /**
- * Server Action: Toggle Aktif/Nonaktif Aspek (Khusus Super Admin)
+ * Server Action: Toggle Aktif/Nonaktif Aspek (Super Admin & Admin SDM)
  */
 export async function toggleAspectStatusAction(id: string, is_active: boolean) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validatedId = z.string().uuid("ID Aspek tidak valid").parse(id)
     const validatedActive = z.boolean().parse(is_active)
 
-    const supabase = await createClient()
-    const { error } = await supabase
+    const adminClient = createAdminClient()
+    const { error } = await adminClient
       .from("assessment_aspects")
       .update({ is_active: validatedActive })
       .eq("id", validatedId)
@@ -130,17 +131,17 @@ export async function toggleAspectStatusAction(id: string, is_active: boolean) {
 }
 
 /**
- * Server Action: Ubah Urutan Aspek (Naik / Turun) (Khusus Super Admin)
+ * Server Action: Ubah Urutan Aspek (Naik / Turun) (Super Admin & Admin SDM)
  */
 export async function reorderAspectAction(input: ReorderAspectInput) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = reorderAspectSchema.parse(input)
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     // 1. Ambil semua aspek terurut
-    const { data: aspects, error: fetchErr } = await supabase
+    const { data: aspects, error: fetchErr } = await adminClient
       .from("assessment_aspects")
       .select("id, urutan")
       .order("urutan", { ascending: true })
@@ -177,13 +178,13 @@ export async function reorderAspectAction(input: ReorderAspectInput) {
     }
 
     // Update item saat ini
-    await supabase
+    await adminClient
       .from("assessment_aspects")
       .update({ urutan: newCurrentUrutan })
       .eq("id", currentItem.id)
 
     // Update item target
-    await supabase
+    await adminClient
       .from("assessment_aspects")
       .update({ urutan: newTargetUrutan })
       .eq("id", targetItem.id)
@@ -197,17 +198,17 @@ export async function reorderAspectAction(input: ReorderAspectInput) {
 }
 
 /**
- * Server Action: Hapus Aspek Penilaian (Khusus Super Admin)
+ * Server Action: Hapus Aspek Penilaian (Super Admin & Admin SDM)
  */
 export async function deleteAspectAction(id: string) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validatedId = z.string().uuid("ID Aspek tidak valid").parse(id)
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     // Cek apakah aspek sudah digunakan dalam lembar penilaian
-    const { count, error: countErr } = await supabase
+    const { count, error: countErr } = await adminClient
       .from("assessment_scores")
       .select("*", { count: "exact", head: true })
       .eq("aspect_id", validatedId)
@@ -224,7 +225,7 @@ export async function deleteAspectAction(id: string) {
       }
     }
 
-    const { error: delErr } = await supabase
+    const { error: delErr } = await adminClient
       .from("assessment_aspects")
       .delete()
       .eq("id", validatedId)

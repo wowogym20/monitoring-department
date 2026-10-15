@@ -352,7 +352,7 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">No</TableHead>
+                <TableHead className="w-14 text-center">No.</TableHead>
                 <TableHead>
                   <SortableHeader
                     label="Nama Kepala"
@@ -413,7 +413,7 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
 
                   return (
                     <TableRow key={account.id}>
-                      <TableCell className="font-mono text-xs text-muted-foreground">
+                      <TableCell className="text-center font-mono text-xs text-muted-foreground">
                         {idx + 1}
                       </TableCell>
                       <TableCell>

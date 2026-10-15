@@ -365,7 +365,7 @@ export function PeriodeManager({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">#</TableHead>
+              <TableHead className="w-14 text-center">No.</TableHead>
               <TableHead>
                 <SortableHeader
                   label="Nama Periode"
@@ -412,7 +412,7 @@ export function PeriodeManager({
             {sortedPeriods.length > 0 ? (
               sortedPeriods.map((period, idx) => (
                 <TableRow key={period.id}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
+                  <TableCell className="text-center font-mono text-xs text-muted-foreground">
                     {idx + 1}
                   </TableCell>
                   <TableCell className="font-semibold text-foreground">

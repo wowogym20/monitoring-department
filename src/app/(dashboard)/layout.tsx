@@ -6,6 +6,8 @@ import {
   SIDEBAR_COOKIE_NAME,
   SIDEBAR_PREF_COOKIE,
 } from "@/components/layout/sidebar-context"
+import { getSystemSettingsAction } from "@/lib/actions/settings"
+import { MaintenanceBanner } from "@/components/system/maintenance-banner"
 
 export default async function DashboardLayout({
   children,
@@ -14,6 +16,9 @@ export default async function DashboardLayout({
 }) {
   // Verifikasi role dan sesi pengguna terautentikasi
   const currentUser = await requireRole()
+
+  // Ambil pengaturan sistem (branding & maintenance)
+  const settings = await getSystemSettingsAction()
 
   // Baca preferensi sidebar dari cookie di Server Component untuk menghindari hydration mismatch / flicker
   const cookieStore = await cookies()
@@ -36,7 +41,15 @@ export default async function DashboardLayout({
           departmentName: currentUser.department?.nama || null,
           fotoUrl: currentUser.foto_url,
         }}
+        appName={settings.general.appName}
+        appTagline={settings.general.appTagline}
+        logoUrl={settings.general.logoUrl}
       >
+        <MaintenanceBanner
+          isActive={settings.system.maintenance.isActive}
+          message={settings.system.maintenance.message}
+          userRole={currentUser.role}
+        />
         {children}
       </AppShell>
     </SidebarProvider>

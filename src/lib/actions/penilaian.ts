@@ -15,6 +15,7 @@ import {
   AssessmentAspect,
   Assessment,
   AssessmentStatus,
+  Database,
 } from "@/types/database"
 
 export interface PenilaianMemberItem {
@@ -192,6 +193,7 @@ export async function getAssessmentDashboardDataServer(params: {
     const assessment = assessmentsMap.get(m.id)
     const canEdit =
       currentUser.role === "super_admin" ||
+      currentUser.role === "admin" ||
       (currentUser.role === "user" && currentUser.department?.id === m.department_id)
 
     return {
@@ -267,8 +269,8 @@ export async function getAssessmentDetailServer(
   memberId: string,
   periodeId?: string
 ): Promise<PenilaianDetailData> {
-  // Hanya super_admin dan ketua departemen (user) yang boleh mengakses form
-  const currentUser = await requireRole("super_admin", "user")
+  // Super_admin, admin (SDM/Koordinator), dan ketua departemen (user) boleh mengakses form
+  const currentUser = await requireRole("super_admin", "admin", "user")
   const supabase = await createClient()
   const adminClient = createAdminClient()
 
@@ -415,7 +417,7 @@ export async function getAssessmentDetailServer(
  */
 export async function saveAssessmentAction(input: SaveAssessmentInput) {
   try {
-    const currentUser = await requireRole("super_admin", "user")
+    const currentUser = await requireRole("super_admin", "admin", "user")
     const validated = saveAssessmentSchema.parse(input)
     const supabase = await createClient()
     const adminClient = createAdminClient()
@@ -482,7 +484,7 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
 
     // 4. Cari apakah sudah ada baris assessment untuk (period_id, member_id)
     // Termasuk yang mungkin soft-deleted untuk menghindari duplikasi constraint uq_assessments_period_member
-    const { data: existingAssessment } = await supabase
+    const { data: existingAssessment } = await adminClient
       .from("assessments")
       .select("id, status, deleted_at")
       .eq("period_id", validated.period_id)
@@ -495,7 +497,7 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
       // Mode Ubah / Pulihkan jika soft-deleted
       assessmentId = existingAssessment.id
 
-      const updatePayload: Record<string, unknown> = {
+      const updatePayload: Database["public"]["Tables"]["assessments"]["Update"] = {
         status: validated.status,
         catatan: validated.catatan,
         evaluator_id: currentUser.id,
@@ -505,7 +507,7 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
 
       // Jika sebelumnya approved lalu diubah ketua, trigger DB fn_validate_assessment_rules
       // akan otomatis merevert status ke 'submitted'.
-      const { error: updateError } = await supabase
+      const { error: updateError } = await adminClient
         .from("assessments")
         .update(updatePayload)
         .eq("id", assessmentId)
@@ -518,7 +520,7 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
       }
     } else {
       // Mode Buat Baru
-      const insertPayload: Record<string, unknown> = {
+      const insertPayload: Database["public"]["Tables"]["assessments"]["Insert"] = {
         period_id: validated.period_id,
         member_id: validated.member_id,
         department_id: member.department_id,
@@ -531,7 +533,7 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
         insertPayload.submitted_at = new Date().toISOString()
       }
 
-      const { data: inserted, error: insertError } = await supabase
+      const { data: inserted, error: insertError } = await adminClient
         .from("assessments")
         .insert(insertPayload)
         .select("id")
@@ -556,7 +558,7 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
         updated_at: new Date().toISOString(),
       }))
 
-      const { error: scoresError } = await supabase
+      const { error: scoresError } = await adminClient
         .from("assessment_scores")
         .upsert(scoresPayload, {
           onConflict: "assessment_id, aspect_id",
@@ -596,12 +598,12 @@ export async function saveAssessmentAction(input: SaveAssessmentInput) {
  */
 export async function deleteAssessmentAction(input: DeleteAssessmentInput) {
   try {
-    const currentUser = await requireRole("super_admin", "user")
+    const currentUser = await requireRole("super_admin", "admin", "user")
     const validated = deleteAssessmentSchema.parse(input)
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
     // 1. Ambil data penilaian saat ini
-    const { data: assessment, error: fetchErr } = await supabase
+    const { data: assessment, error: fetchErr } = await adminClient
       .from("assessments")
       .select(`
         id,
@@ -645,7 +647,7 @@ export async function deleteAssessmentAction(input: DeleteAssessmentInput) {
     }
 
     // 4. Lakukan soft delete
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await adminClient
       .from("assessments")
       .update({
         deleted_at: new Date().toISOString(),

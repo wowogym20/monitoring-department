@@ -194,7 +194,7 @@ export function DeptScoreChart({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12 text-center">No</TableHead>
+                  <TableHead className="w-14 text-center">No.</TableHead>
                   <TableHead>Departemen</TableHead>
                   <TableHead className="text-right">Skor Rata-rata</TableHead>
                   <TableHead>Kategori</TableHead>

@@ -10,6 +10,7 @@ import {
   FileSpreadsheet,
   User,
   BookOpen,
+  Settings,
   type LucideIcon,
 } from "lucide-react"
 import { UserRole } from "@/types/database"
@@ -89,5 +90,11 @@ export const navigationItems: NavItem[] = [
     href: "/profil",
     icon: User,
     roles: ["super_admin", "admin", "user"],
+  },
+  {
+    title: "Pengaturan",
+    href: "/pengaturan",
+    icon: Settings,
+    roles: ["super_admin"],
   },
 ]

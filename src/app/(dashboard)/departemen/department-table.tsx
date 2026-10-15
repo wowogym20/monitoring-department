@@ -61,8 +61,11 @@ import {
   Loader2,
   CheckCircle2,
   XCircle,
+  AlertCircle,
+  Layers,
 } from "lucide-react"
 import { formatDateJakarta } from "@/lib/date"
+import { cn } from "@/lib/utils"
 import {
   createDepartmentAction,
   updateDepartmentAction,
@@ -70,6 +73,7 @@ import {
   toggleDepartmentStatusAction,
   deleteDepartmentAction,
   type DepartmentListItem,
+  type DepartmentCompletionSummary,
 } from "@/lib/actions/department"
 import { UserRole } from "@/types/database"
 
@@ -81,6 +85,10 @@ interface DepartmentTableProps {
   totalPages: number
   currentUserRole: UserRole
   eligibleKetua: Array<{ id: string; nama: string; no_hp: string | null }>
+  summary?: DepartmentCompletionSummary
+  activePeriodName?: string | null
+  currentFillingStatus?: string
+  currentPageSize?: string
 }
 
 export function DepartmentTable({
@@ -91,6 +99,10 @@ export function DepartmentTable({
   totalPages,
   currentUserRole,
   eligibleKetua,
+  summary,
+  activePeriodName,
+  currentFillingStatus = "all",
+  currentPageSize = "10",
 }: DepartmentTableProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -142,6 +154,83 @@ export function DepartmentTable({
     params.set("page", "1")
     router.push(`/departemen?${params.toString()}`)
   }
+
+  const currentFillingStatusParam = searchParams.get("fillingStatus") || currentFillingStatus || "all"
+  const pageSizeValue = searchParams.get("pageSize") || currentPageSize || "10"
+  const isAll = pageSizeValue === "all" || pageSizeValue === "semua"
+
+  const handleFillingStatusFilterChange = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (val !== "all") {
+      params.set("fillingStatus", val)
+    } else {
+      params.delete("fillingStatus")
+    }
+    params.set("page", "1")
+    router.push(`/departemen?${params.toString()}`)
+  }
+
+  const handlePageSizeChange = (val: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (val === "10") {
+      params.delete("pageSize")
+    } else {
+      params.set("pageSize", val)
+    }
+    params.set("page", "1")
+    router.push(`/departemen?${params.toString()}`)
+  }
+
+  const renderFillingStatusBadge = React.useCallback((dept: DepartmentListItem) => {
+    if (dept.filling_status === "completed") {
+      return (
+        <div className="flex flex-col space-y-0.5 min-w-[130px]">
+          <Badge
+            variant="default"
+            className="w-fit bg-emerald-700 text-white hover:bg-emerald-700 dark:bg-emerald-700 dark:text-white text-[11px] px-2 py-0.5 font-medium"
+          >
+            <CheckCircle2 className="size-3 mr-1 shrink-0" />
+            <span>Sudah Mengisi</span>
+          </Badge>
+          <span className="text-[11px] text-muted-foreground font-mono">
+            {dept.assessed_count} / {dept.total_members} dinilai
+          </span>
+        </div>
+      )
+    }
+
+    if (dept.filling_status === "partial") {
+      return (
+        <div className="flex flex-col space-y-0.5 min-w-[130px]">
+          <Badge
+            variant="outline"
+            className="w-fit border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[11px] px-2 py-0.5 font-medium"
+          >
+            <AlertCircle className="size-3 mr-1 shrink-0" />
+            <span>Sebagian</span>
+          </Badge>
+          <span className="text-[11px] text-muted-foreground font-mono">
+            {dept.assessed_count} / {dept.total_members} dinilai{dept.draft_count > 0 ? ` (${dept.draft_count} draf)` : ""}
+          </span>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-col space-y-0.5 min-w-[130px]">
+        <Badge
+          variant="secondary"
+          className="w-fit bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground text-[11px] px-2 py-0.5 font-medium"
+        >
+          <XCircle className="size-3 mr-1 shrink-0" />
+          <span>Belum Mengisi</span>
+        </Badge>
+        <span className="text-[11px] text-muted-foreground font-mono">
+          0 / {dept.total_members} dinilai
+        </span>
+      </div>
+    )
+  }, [])
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -376,11 +465,11 @@ export function DepartmentTable({
     () => [
       {
         id: "index",
-        header: "#",
+        header: () => <div className="text-center">No.</div>,
         cell: ({ row }) => (
-          <span className="text-xs font-mono text-muted-foreground">
+          <div className="text-center font-mono text-xs text-muted-foreground">
             {(page - 1) * pageSize + row.index + 1}
-          </span>
+          </div>
         ),
       },
       {
@@ -463,6 +552,11 @@ export function DepartmentTable({
         },
       },
       {
+        accessorKey: "filling_status",
+        header: "Status Pengisian",
+        cell: ({ row }) => renderFillingStatusBadge(row.original),
+      },
+      {
         accessorKey: "is_active",
         header: () => (
           <SortableHeader
@@ -485,7 +579,17 @@ export function DepartmentTable({
           ]
         : []),
     ],
-    [isSuperAdmin, page, pageSize, currentSortBy, currentSort, handleSortToggle, renderStatusBadge, renderActionMenu]
+    [
+      isSuperAdmin,
+      page,
+      pageSize,
+      currentSortBy,
+      currentSort,
+      handleSortToggle,
+      renderStatusBadge,
+      renderFillingStatusBadge,
+      renderActionMenu,
+    ]
   )
 
   const table = useReactTable({
@@ -498,10 +602,52 @@ export function DepartmentTable({
 
   return (
     <div className="space-y-4">
+      {/* Kartu Ringkasan Kepatuhan Pengisian Penilaian Departemen */}
+      {summary && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Card className="p-3.5 rounded-xl border border-border bg-card shadow-2xs flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-muted-foreground font-medium">Total Departemen</span>
+              <p className="text-xl font-bold text-foreground">{summary.total}</p>
+              {summary.periodName && (
+                <span className="text-[10px] text-muted-foreground truncate max-w-[180px] block">
+                  Periode: {summary.periodName}
+                </span>
+              )}
+            </div>
+            <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Building2 className="size-5" />
+            </div>
+          </Card>
+
+          <Card className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 shadow-2xs flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">Sudah Mengisi Lengkap</span>
+              <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{summary.completed}</p>
+              <span className="text-[10px] text-muted-foreground">100% anggota dinilai</span>
+            </div>
+            <div className="size-9 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="size-5" />
+            </div>
+          </Card>
+
+          <Card className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 shadow-2xs flex items-center justify-between">
+            <div className="space-y-0.5">
+              <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">Belum Lengkap / Belum Mengisi</span>
+              <p className="text-xl font-bold text-amber-800 dark:text-amber-300">{summary.partial + summary.unfilled}</p>
+              <span className="text-[10px] text-muted-foreground">{summary.unfilled} belum mengisi sama sekali</span>
+            </div>
+            <div className="size-9 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <AlertCircle className="size-5" />
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Search, Filter & Action Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="flex flex-1 items-center gap-2">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-1 flex-wrap sm:flex-nowrap items-center gap-2">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               id="search-departemen"
@@ -529,6 +675,21 @@ export function DepartmentTable({
               </button>
             )}
           </div>
+
+          <Select
+            value={currentFillingStatusParam}
+            onValueChange={handleFillingStatusFilterChange}
+          >
+            <SelectTrigger className="w-36 sm:w-44 text-sm shrink-0" aria-label="Filter status pengisian">
+              <SelectValue placeholder="Status Pengisian" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Pengisian</SelectItem>
+              <SelectItem value="completed">Sudah Mengisi</SelectItem>
+              <SelectItem value="partial">Sebagian</SelectItem>
+              <SelectItem value="unfilled">Belum Mengisi</SelectItem>
+            </SelectContent>
+          </Select>
 
           <Select
             value={currentStatus}
@@ -568,7 +729,13 @@ export function DepartmentTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="font-semibold">
+                  <TableHead
+                    key={header.id}
+                    className={cn(
+                      "font-semibold",
+                      header.column.id === "index" && "w-14 text-center px-2"
+                    )}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -585,7 +752,12 @@ export function DepartmentTable({
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className={cn(
+                        cell.column.id === "index" && "text-center px-2"
+                      )}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -688,6 +860,16 @@ export function DepartmentTable({
                     </Button>
                   )}
                 </div>
+
+                {/* Status Pengisian Penilaian */}
+                <div className="pt-2.5 border-t border-border/60 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-muted-foreground font-medium">
+                    Status Pengisian
+                  </span>
+                  <div>
+                    {renderFillingStatusBadge(dept)}
+                  </div>
+                </div>
               </Card>
             )
           })
@@ -700,37 +882,60 @@ export function DepartmentTable({
         )}
       </div>
 
-      {/* Server Pagination Footer */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground px-1">
-        <p>
-          Menampilkan baris {(page - 1) * pageSize + 1} -{" "}
-          {Math.min(page * pageSize, total)} dari total {total} departemen
-        </p>
-        <div className="flex items-center gap-1.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1}
-            className="h-8 px-2.5 text-xs"
-          >
-            <ChevronLeft className="size-3.5 mr-1" />
-            Sebelumnya
-          </Button>
-          <span className="px-2 font-medium">
-            Halaman {page} dari {Math.max(totalPages, 1)}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handlePageChange(page + 1)}
-            disabled={page >= totalPages}
-            className="h-8 px-2.5 text-xs"
-          >
-            Berikutnya
-            <ChevronRight className="size-3.5 ml-1" />
-          </Button>
+      {/* Server Pagination Footer with Page Size Selector */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground px-1 pt-1">
+        <div className="flex flex-wrap items-center gap-3">
+          <p>
+            {isAll
+              ? `Menampilkan seluruh ${total} departemen`
+              : `Menampilkan baris ${(page - 1) * pageSize + 1} - ${Math.min(page * pageSize, total)} dari total ${total} departemen`}
+          </p>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px]">Tampilkan:</span>
+            <Select value={pageSizeValue} onValueChange={handlePageSizeChange}>
+              <SelectTrigger className="h-7 w-24 text-xs bg-background" aria-label="Pilih jumlah baris per halaman">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5" className="text-xs">5</SelectItem>
+                <SelectItem value="10" className="text-xs">10 (Default)</SelectItem>
+                <SelectItem value="25" className="text-xs">25</SelectItem>
+                <SelectItem value="50" className="text-xs">50</SelectItem>
+                <SelectItem value="all" className="text-xs">Semua</SelectItem>
+              </SelectContent>
+            </Select>
+            <span className="text-[11px]">baris</span>
+          </div>
         </div>
+
+        {!isAll && (
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page <= 1}
+              className="h-8 px-2.5 text-xs"
+            >
+              <ChevronLeft className="size-3.5 mr-1" />
+              Sebelumnya
+            </Button>
+            <span className="px-2 font-medium">
+              Halaman {page} dari {Math.max(totalPages, 1)}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={page >= totalPages}
+              className="h-8 px-2.5 text-xs"
+            >
+              Berikutnya
+              <ChevronRight className="size-3.5 ml-1" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* DIALOG 1: Tambah Departemen */}

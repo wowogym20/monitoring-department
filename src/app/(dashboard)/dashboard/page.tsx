@@ -21,6 +21,8 @@ import { ScoreDistribution } from "@/components/dashboard/score-distribution"
 import { PeriodSelector } from "@/components/dashboard/period-selector"
 import { EmptyState } from "@/components/dashboard/empty-state"
 import { SuperAdminShortcuts } from "@/components/dashboard/superadmin-shortcuts"
+import { getSystemSettingsAction } from "@/lib/actions/settings"
+import { AnnouncementBanner } from "@/components/dashboard/announcement-banner"
 
 interface DashboardPageProps {
   searchParams: Promise<{
@@ -31,10 +33,21 @@ interface DashboardPageProps {
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const currentUser = await requireRole("super_admin", "admin", "user")
   const resolvedSearchParams = await searchParams
-  const data = await getDashboardData(resolvedSearchParams?.periodId)
+  const [data, systemSettings] = await Promise.all([
+    getDashboardData(resolvedSearchParams?.periodId),
+    getSystemSettingsAction(),
+  ])
 
   if (!data) {
-    return <EmptyState type="no_period" role={currentUser.role} />
+    return (
+      <div className="space-y-6">
+        <AnnouncementBanner
+          announcement={systemSettings.content.announcement}
+          userRole={currentUser.role}
+        />
+        <EmptyState type="no_period" role={currentUser.role} />
+      </div>
+    )
   }
 
   const isKetua = data.role === "user"
@@ -42,6 +55,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
   return (
     <div className="space-y-6">
+      {/* 0. Banner Pengumuman Global (Jika Dikonfigurasi Aktif oleh Super-Admin) */}
+      <AnnouncementBanner
+        announcement={systemSettings.content.announcement}
+        userRole={currentUser.role}
+      />
+
       {/* 1. Header Banner & Selamat Datang */}
       <div className="p-5 sm:p-6 rounded-xl border border-border bg-gradient-to-r from-card to-muted/40 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

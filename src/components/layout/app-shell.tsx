@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client"
 
 import * as React from "react"
@@ -6,7 +7,6 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { navigationItems } from "@/components/layout/nav-items"
 import { UserRole } from "@/types/database"
-import Image from "next/image"
 import { Header } from "@/components/layout/header"
 import { useSidebar } from "@/components/layout/sidebar-context"
 import {
@@ -28,9 +28,18 @@ interface AppShellProps {
     departmentName?: string | null
     fotoUrl?: string | null
   }
+  appName?: string
+  appTagline?: string
+  logoUrl?: string
 }
 
-export function AppShell({ children, user }: AppShellProps) {
+export function AppShell({
+  children,
+  user,
+  appName = "Monitoring Departemen",
+  appTagline = "Sistem Penilaian Kinerja",
+  logoUrl = "/Logo.jpeg",
+}: AppShellProps) {
   const pathname = usePathname()
   const { isCollapsed, mobileOpen, setMobileOpen } = useSidebar()
   const { data: unreadCommentsCount = 0 } = useUnreadComments(user.role)
@@ -54,21 +63,20 @@ export function AppShell({ children, user }: AppShellProps) {
         <SheetContent side="left" className="w-72 p-0 flex flex-col">
           <SheetHeader className="h-16 px-4 border-b border-border flex flex-row items-center gap-3 space-y-0 text-left shrink-0">
             <div className="size-9 rounded-full overflow-hidden shrink-0 border border-border/80 shadow-2xs bg-muted/20 flex items-center justify-center">
-              <Image
-                src="/Logo.jpeg"
-                alt="Logo Tazakka"
+              <img
+                src={logoUrl || "/Logo.jpeg"}
+                alt={appName}
                 width={36}
                 height={36}
                 className="size-full object-cover aspect-square"
-                priority
               />
             </div>
             <div className="flex flex-col min-w-0">
-              <SheetTitle className="text-sm font-bold tracking-tight leading-tight">
-                Monitoring Departemen
+              <SheetTitle className="text-sm font-bold tracking-tight leading-tight truncate">
+                {appName}
               </SheetTitle>
               <p className="text-[11px] text-muted-foreground leading-tight truncate">
-                Sistem Penilaian Kinerja
+                {appTagline}
               </p>
             </div>
           </SheetHeader>
@@ -162,7 +170,7 @@ export function AppShell({ children, user }: AppShellProps) {
               "flex items-center gap-3 min-w-0 rounded-md transition-colors",
               isCollapsed ? "justify-center p-1 hover:bg-muted" : "w-full"
             )}
-            title="Monitoring Departemen"
+            title={appName}
           >
             <div
               className={cn(
@@ -170,22 +178,21 @@ export function AppShell({ children, user }: AppShellProps) {
                 isCollapsed ? "size-8" : "size-9"
               )}
             >
-              <Image
-                src="/Logo.jpeg"
-                alt="Logo Tazakka"
+              <img
+                src={logoUrl || "/Logo.jpeg"}
+                alt={appName}
                 width={isCollapsed ? 32 : 36}
                 height={isCollapsed ? 32 : 36}
                 className="size-full object-cover aspect-square"
-                priority
               />
             </div>
             {!isCollapsed && (
               <div className="flex flex-col min-w-0 overflow-hidden">
                 <h1 className="font-bold text-sm tracking-tight leading-tight truncate text-foreground">
-                  Monitoring Departemen
+                  {appName}
                 </h1>
                 <p className="text-[11px] text-muted-foreground leading-tight truncate">
-                  Sistem Penilaian Kinerja
+                  {appTagline}
                 </p>
               </div>
             )}

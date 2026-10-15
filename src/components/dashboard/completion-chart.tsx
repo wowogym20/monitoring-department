@@ -199,7 +199,7 @@ export function CompletionChart({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12 text-center">No</TableHead>
+                  <TableHead className="w-14 text-center">No.</TableHead>
                   <TableHead>Departemen</TableHead>
                   <TableHead className="text-right">Selesai</TableHead>
                   <TableHead className="text-right">Belum Selesai</TableHead>
