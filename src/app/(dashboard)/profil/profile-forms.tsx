@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
@@ -58,9 +59,15 @@ export function AccountProfileCard({
   isActive,
   departmentNama,
 }: AccountProfileCardProps) {
+  const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(initialFotoUrl)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+
+  // Sinkronisasi previewUrl bila initialFotoUrl diperbarui dari server
+  React.useEffect(() => {
+    setPreviewUrl(initialFotoUrl)
+  }, [initialFotoUrl])
 
   const initials = nama
     ? nama
@@ -95,6 +102,7 @@ export function AccountProfileCard({
 
     if (file.size > 2 * 1024 * 1024) {
       toast.error("Ukuran berkas maksimal 2MB")
+      if (fileInputRef.current) fileInputRef.current.value = ""
       return
     }
 
@@ -107,6 +115,7 @@ export function AccountProfileCard({
         if (result.success && result.fotoUrl) {
           setPreviewUrl(result.fotoUrl)
           toast.success(result.message || "Foto profil berhasil diperbarui")
+          router.refresh()
         } else {
           toast.error(result.error || "Gagal mengunggah foto profil")
         }
@@ -116,6 +125,8 @@ export function AccountProfileCard({
             ? err.message
             : "Terjadi kesalahan saat mengunggah foto"
         )
+      } finally {
+        if (fileInputRef.current) fileInputRef.current.value = ""
       }
     })
   }
@@ -128,6 +139,7 @@ export function AccountProfileCard({
           setPreviewUrl(null)
           if (fileInputRef.current) fileInputRef.current.value = ""
           toast.success(result.message || "Foto profil berhasil dihapus")
+          router.refresh()
         } else {
           toast.error(result.error || "Gagal menghapus foto profil")
         }

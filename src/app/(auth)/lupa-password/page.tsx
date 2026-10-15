@@ -77,7 +77,7 @@ export default function LupaPasswordPage() {
           </p>
         </div>
 
-        <Card className="border-border shadow-md">
+        <Card className="border-2 border-border/90 dark:border-border/70 shadow-xl shadow-black/5 dark:shadow-black/40 ring-1 ring-border/50 dark:ring-white/10 bg-card/95 backdrop-blur-xs">
           <CardHeader className="space-y-1">
             <CardTitle className="text-xl font-bold">Lupa Kata Sandi</CardTitle>
             <CardDescription className="text-xs sm:text-sm">

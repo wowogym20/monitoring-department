@@ -73,6 +73,20 @@ export async function uploadAvatarAction(formData: FormData) {
   const fileName = `avatar-${Date.now()}.${ext}`
   const filePath = `${user.id}/${fileName}`
 
+  // Pastikan bucket avatars tersedia
+  try {
+    const { data: bucket } = await adminClient.storage.getBucket("avatars")
+    if (!bucket) {
+      await adminClient.storage.createBucket("avatars", {
+        public: false,
+        fileSizeLimit: 2 * 1024 * 1024,
+        allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+      })
+    }
+  } catch (bucketErr) {
+    console.warn("Pemeriksaan bucket avatars:", bucketErr)
+  }
+
   // 2. Upload ke bucket avatars menggunakan adminClient untuk menjamin permission
   const fileBuffer = await file.arrayBuffer()
   const { error: uploadError } = await adminClient.storage

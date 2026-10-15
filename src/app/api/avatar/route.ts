@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { z } from "zod"
 
 const avatarPathSchema = z
@@ -29,8 +30,10 @@ export async function GET(request: Request) {
     return new NextResponse("Unauthorized", { status: 401 })
   }
 
-  // Unduh objek avatar dari bucket privat
-  const { data, error } = await supabase.storage.from("avatars").download(path)
+  // Unduh objek avatar dari bucket privat menggunakan adminClient
+  // agar role user tidak terhambat oleh keterbatasan RLS Supabase Storage
+  const adminClient = createAdminClient()
+  const { data, error } = await adminClient.storage.from("avatars").download(path)
 
   if (error || !data) {
     return new NextResponse("Avatar tidak ditemukan", { status: 404 })
