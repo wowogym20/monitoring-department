@@ -62,7 +62,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-  Layers,
+  Clock,
 } from "lucide-react"
 import { formatDateJakarta } from "@/lib/date"
 import { cn } from "@/lib/utils"
@@ -603,46 +603,201 @@ export function DepartmentTable({
   return (
     <div className="space-y-4">
       {/* Kartu Ringkasan Kepatuhan Pengisian Penilaian Departemen */}
-      {summary && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Card className="p-3.5 rounded-xl border border-border bg-card shadow-2xs flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-[11px] text-muted-foreground font-medium">Total Departemen</span>
-              <p className="text-xl font-bold text-foreground">{summary.total}</p>
-              {summary.periodName && (
-                <span className="text-[10px] text-muted-foreground truncate max-w-[180px] block">
-                  Periode: {summary.periodName}
-                </span>
-              )}
-            </div>
-            <div className="size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <Building2 className="size-5" />
-            </div>
-          </Card>
+      {summary && (() => {
+        const percentCompleted =
+          summary.total > 0
+            ? Math.round((summary.completed / summary.total) * 100)
+            : 0
+        const periodDisplay = summary.periodName || activePeriodName || null
 
-          <Card className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 shadow-2xs flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium">Sudah Mengisi Lengkap</span>
-              <p className="text-xl font-bold text-emerald-800 dark:text-emerald-300">{summary.completed}</p>
-              <span className="text-[10px] text-muted-foreground">100% anggota dinilai</span>
-            </div>
-            <div className="size-9 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="size-5" />
-            </div>
-          </Card>
+        return (
+          <div className="space-y-3">
+            {/* 1. Header Ringkasan Kepatuhan & Progress Bar */}
+            <div className="p-3.5 sm:p-4 rounded-xl border border-border bg-gradient-to-r from-card via-card to-muted/20 shadow-2xs space-y-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xs sm:text-sm font-bold text-foreground tracking-tight">
+                    Tingkat Kepatuhan Pengisian Penilaian
+                  </h3>
+                  {periodDisplay && (
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] sm:text-[11px] font-semibold bg-background/80 text-muted-foreground border-border"
+                    >
+                      Periode: {periodDisplay}
+                    </Badge>
+                  )}
+                </div>
 
-          <Card className="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 shadow-2xs flex items-center justify-between">
-            <div className="space-y-0.5">
-              <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">Belum Lengkap / Belum Mengisi</span>
-              <p className="text-xl font-bold text-amber-800 dark:text-amber-300">{summary.partial + summary.unfilled}</p>
-              <span className="text-[10px] text-muted-foreground">{summary.unfilled} belum mengisi sama sekali</span>
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">
+                    {summary.completed} dari {summary.total}
+                  </span>
+                  <span>departemen tuntas</span>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "ml-1 text-[11px] font-bold border",
+                      percentCompleted === 100
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800"
+                        : "bg-primary/10 text-primary border-primary/20"
+                    )}
+                  >
+                    {percentCompleted}%
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Progress Bar Visual */}
+              <div className="w-full h-2 rounded-full bg-muted/60 overflow-hidden">
+                <div
+                  className="h-full bg-emerald-600 dark:bg-emerald-500 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${percentCompleted}%` }}
+                  role="progressbar"
+                  aria-valuenow={percentCompleted}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                />
+              </div>
             </div>
-            <div className="size-9 rounded-lg bg-amber-500/10 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
-              <AlertCircle className="size-5" />
+
+            {/* 2. Grid Responsif 4 Kartu Metrik (2x2 di Mobile, 4x1 di Desktop) */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+              {/* Kartu 1: Total Departemen */}
+              <button
+                type="button"
+                onClick={() => handleFillingStatusFilterChange("all")}
+                title="Klik untuk melihat semua departemen"
+                className={cn(
+                  "p-3 sm:p-3.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between shadow-2xs group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                  currentFillingStatusParam === "all"
+                    ? "bg-card border-primary/50 ring-2 ring-primary/20"
+                    : "bg-card border-border hover:border-primary/40 hover:bg-muted/30"
+                )}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className="text-[11px] sm:text-xs font-semibold text-muted-foreground truncate">
+                    Total Departemen
+                  </span>
+                  <div className="size-7 sm:size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Building2 className="size-3.5 sm:size-4" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                    {summary.total}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 truncate">
+                    14 Departemen Resmi
+                  </p>
+                </div>
+              </button>
+
+              {/* Kartu 2: Sudah Lengkap (100%) */}
+              <button
+                type="button"
+                onClick={() =>
+                  handleFillingStatusFilterChange(
+                    currentFillingStatusParam === "completed" ? "all" : "completed"
+                  )
+                }
+                title="Klik untuk memfilter departemen yang sudah lengkap"
+                className={cn(
+                  "p-3 sm:p-3.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between shadow-2xs group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500",
+                  currentFillingStatusParam === "completed"
+                    ? "bg-emerald-500/10 border-emerald-500 ring-2 ring-emerald-500/25"
+                    : "bg-emerald-500/5 border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                )}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className="text-[11px] sm:text-xs font-semibold text-emerald-800 dark:text-emerald-300 truncate">
+                    Sudah Lengkap
+                  </span>
+                  <div className="size-7 sm:size-8 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <CheckCircle2 className="size-3.5 sm:size-4" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight text-emerald-900 dark:text-emerald-200">
+                    {summary.completed}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-emerald-700/80 dark:text-emerald-400/80 mt-0.5 truncate">
+                    100% anggota dinilai
+                  </p>
+                </div>
+              </button>
+
+              {/* Kartu 3: Sedang Mengisi (Parsial) */}
+              <button
+                type="button"
+                onClick={() =>
+                  handleFillingStatusFilterChange(
+                    currentFillingStatusParam === "partial" ? "all" : "partial"
+                  )
+                }
+                title="Klik untuk memfilter departemen yang sedang mengisi"
+                className={cn(
+                  "p-3 sm:p-3.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between shadow-2xs group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
+                  currentFillingStatusParam === "partial"
+                    ? "bg-sky-500/10 border-sky-500 ring-2 ring-sky-500/25"
+                    : "bg-sky-500/5 border-sky-500/20 hover:border-sky-500/40 hover:bg-sky-500/10"
+                )}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className="text-[11px] sm:text-xs font-semibold text-sky-800 dark:text-sky-300 truncate">
+                    Sedang Mengisi
+                  </span>
+                  <div className="size-7 sm:size-8 rounded-lg bg-sky-500/15 text-sky-700 dark:text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Clock className="size-3.5 sm:size-4" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight text-sky-900 dark:text-sky-200">
+                    {summary.partial}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-sky-700/80 dark:text-sky-400/80 mt-0.5 truncate">
+                    Sebagian anggota dinilai
+                  </p>
+                </div>
+              </button>
+
+              {/* Kartu 4: Belum Mengisi (0%) */}
+              <button
+                type="button"
+                onClick={() =>
+                  handleFillingStatusFilterChange(
+                    currentFillingStatusParam === "unfilled" ? "all" : "unfilled"
+                  )
+                }
+                title="Klik untuk memfilter departemen yang belum mengisi"
+                className={cn(
+                  "p-3 sm:p-3.5 rounded-xl border text-left transition-all duration-150 flex flex-col justify-between shadow-2xs group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500",
+                  currentFillingStatusParam === "unfilled"
+                    ? "bg-amber-500/10 border-amber-500 ring-2 ring-amber-500/25"
+                    : "bg-amber-500/5 border-amber-500/20 hover:border-amber-500/40 hover:bg-amber-500/10"
+                )}
+              >
+                <div className="flex items-center justify-between w-full mb-2">
+                  <span className="text-[11px] sm:text-xs font-semibold text-amber-800 dark:text-amber-300 truncate">
+                    Belum Mengisi
+                  </span>
+                  <div className="size-7 sm:size-8 rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <AlertCircle className="size-3.5 sm:size-4" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight text-amber-900 dark:text-amber-200">
+                    {summary.unfilled}
+                  </p>
+                  <p className="text-[10px] sm:text-[11px] text-amber-700/80 dark:text-amber-400/80 mt-0.5 truncate">
+                    0% progres evaluasi
+                  </p>
+                </div>
+              </button>
             </div>
-          </Card>
-        </div>
-      )}
+          </div>
+        )
+      })()}
 
       {/* Search, Filter & Action Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">

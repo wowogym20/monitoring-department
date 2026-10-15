@@ -14,6 +14,7 @@ import {
   ArrowRight,
   ExternalLink,
   Settings,
+  UsersRound,
 } from "lucide-react"
 
 export interface SuperAdminShortcutsProps {
@@ -105,7 +106,7 @@ export function SuperAdminShortcuts({ governance }: SuperAdminShortcutsProps) {
           Pintasan Cepat Tata Kelola Pimpinan
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
           {/* Pintasan Ekspor */}
           <Link href="/ekspor" className="block group">
             <Card className="h-full border-border bg-card hover:bg-muted/50 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all shadow-2xs">
@@ -140,6 +141,26 @@ export function SuperAdminShortcuts({ governance }: SuperAdminShortcutsProps) {
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
                     Buka / Tutup Periode
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Pintasan Manajemen Pengguna */}
+          <Link href="/pengguna" className="block group">
+            <Card className="h-full border-border bg-card hover:bg-muted/50 hover:border-emerald-400 dark:hover:border-emerald-600 transition-all shadow-2xs">
+              <CardContent className="p-3.5 sm:p-4 flex flex-col justify-between h-full space-y-2">
+                <div className="p-2 w-fit rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300">
+                  <UsersRound className="size-4" aria-hidden="true" />
+                </div>
+                <div>
+                  <div className="font-bold text-xs sm:text-sm text-foreground group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors flex items-center justify-between">
+                    <span>Pengguna</span>
+                    <ExternalLink className="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
+                    Admin, SDM & Ketua
                   </p>
                 </div>
               </CardContent>

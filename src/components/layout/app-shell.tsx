@@ -5,7 +5,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { navigationItems } from "@/components/layout/nav-items"
+import { navigationItems, NAV_SECTION_LABELS, type NavSection } from "@/components/layout/nav-items"
 import { UserRole } from "@/types/database"
 import { Header } from "@/components/layout/header"
 import { useSidebar } from "@/components/layout/sidebar-context"
@@ -56,6 +56,15 @@ export function AppShell({
       return item
     })
 
+  const navSections: NavSection[] = ["main", "admin"]
+  const groupedNavItems = navSections
+    .map((section) => ({
+      section,
+      label: NAV_SECTION_LABELS[section],
+      items: filteredNavItems.filter((item) => item.section === section),
+    }))
+    .filter((group) => group.items.length > 0)
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background text-foreground">
       {/* Mobile Navigation Sheet (Dapat dibuka via tombol hamburger di Header) */}
@@ -82,47 +91,66 @@ export function AppShell({
           </SheetHeader>
 
           {/* Daftar Tautan Menu Mobile */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1">
-            {filteredNavItems.map((item) => {
-              const isActive =
-                pathname === item.href ||
-                (item.href !== "/dashboard" && pathname.startsWith(item.href))
-              const Icon = item.icon
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileOpen(false)}
-                  title={item.title}
-                  className={cn(
-                    "flex items-center gap-3 w-full rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors cursor-pointer",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  )}
-                >
-                  <Icon
+          <nav className="flex-1 overflow-y-auto p-3 space-y-3">
+            {groupedNavItems.map((group, groupIdx) => (
+              <div key={group.section} className="space-y-1">
+                {groupedNavItems.length > 1 && (
+                  <div
                     className={cn(
-                      "size-4 shrink-0 transition-colors",
-                      isActive ? "text-primary-foreground" : "text-muted-foreground"
+                      "px-3 py-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase select-none",
+                      groupIdx > 0 && "pt-2"
                     )}
-                  />
-                  <span className="flex-1 truncate text-left">{item.title}</span>
-                  {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
-                    <span
+                  >
+                    {group.label}
+                  </div>
+                )}
+                {group.items.map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== "/dashboard" && pathname.startsWith(item.href))
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      title={item.title}
                       className={cn(
-                        "text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                        "flex items-center gap-3 w-full rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors cursor-pointer",
                         isActive
-                          ? "bg-primary-foreground/20 text-primary-foreground"
-                          : "bg-orange-500 text-white shadow-xs"
+                          ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
                       )}
                     >
-                      {item.unreadCount}
-                    </span>
-                  )}
-                </Link>
-              )
-            })}
+                      <Icon
+                        className={cn(
+                          "size-4 shrink-0 transition-colors",
+                          isActive ? "text-primary-foreground" : "text-muted-foreground"
+                        )}
+                      />
+                      <span className="flex-1 truncate text-left">{item.title}</span>
+                      {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
+                        <span
+                          className={cn(
+                            "text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                            isActive
+                              ? "bg-primary-foreground/20 text-primary-foreground"
+                              : "bg-orange-500 text-white shadow-xs"
+                          )}
+                        >
+                          {item.unreadCount}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })}
+                {groupedNavItems.length > 1 && groupIdx < groupedNavItems.length - 1 && (
+                  <div className="pt-2">
+                    <hr className="border-border/60" />
+                  </div>
+                )}
+              </div>
+            ))}
           </nav>
 
           {/* Footer Mobile Sheet: Navigasi ke Halaman Beranda di Bagian Bawah */}
@@ -200,63 +228,90 @@ export function AppShell({
         </div>
 
         {/* Daftar Tautan Menu Desktop */}
-        <nav className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-1 overflow-x-hidden">
-          {filteredNavItems.map((item) => {
-            const isActive =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href))
-            const Icon = item.icon
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.title}
-                className={cn(
-                  "flex items-center rounded-lg text-sm transition-colors relative cursor-pointer",
-                  isCollapsed
-                    ? "justify-center size-10 mx-auto"
-                    : "gap-3 px-3 py-2.5 w-full",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-xs font-semibold"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground font-medium"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "size-4 shrink-0 transition-colors",
-                    isActive ? "text-primary-foreground" : "text-muted-foreground"
-                  )}
-                />
-                <span
-                  className={cn(
-                    "transition-opacity duration-200",
-                    isCollapsed ? "sr-only" : "flex-1 truncate text-left"
-                  )}
-                >
-                  {item.title}
-                </span>
-                {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
-                  isCollapsed ? (
-                    <span
-                      className="absolute top-1.5 right-1.5 size-2 bg-orange-500 rounded-full ring-2 ring-card"
-                      aria-label={`${item.unreadCount} notifikasi belum dibaca`}
+        <nav className="flex-1 overflow-y-auto p-2 sm:p-3 space-y-3 overflow-x-hidden">
+          {groupedNavItems.map((group, groupIdx) => (
+            <div key={group.section} className="space-y-1">
+              {groupedNavItems.length > 1 && (
+                isCollapsed ? (
+                  groupIdx > 0 ? (
+                    <div className="py-1">
+                      <div className="h-px w-8 mx-auto bg-border/80" />
+                    </div>
+                  ) : null
+                ) : (
+                  <div
+                    className={cn(
+                      "px-3 py-1.5 text-[11px] font-bold tracking-wider text-muted-foreground uppercase select-none",
+                      groupIdx > 0 && "pt-2"
+                    )}
+                  >
+                    {group.label}
+                  </div>
+                )
+              )}
+              {group.items.map((item) => {
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href))
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    title={item.title}
+                    className={cn(
+                      "flex items-center rounded-lg text-sm transition-colors relative cursor-pointer",
+                      isCollapsed
+                        ? "justify-center size-10 mx-auto"
+                        : "gap-3 px-3 py-2.5 w-full",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-xs font-semibold"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground font-medium"
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "size-4 shrink-0 transition-colors",
+                        isActive ? "text-primary-foreground" : "text-muted-foreground"
+                      )}
                     />
-                  ) : (
                     <span
                       className={cn(
-                        "text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0",
-                        isActive
-                          ? "bg-primary-foreground/20 text-primary-foreground"
-                          : "bg-orange-500 text-white shadow-xs"
+                        "transition-opacity duration-200",
+                        isCollapsed ? "sr-only" : "flex-1 truncate text-left"
                       )}
                     >
-                      {item.unreadCount}
+                      {item.title}
                     </span>
-                  )
-                )}
-              </Link>
-            )
-          })}
+                    {typeof item.unreadCount === "number" && item.unreadCount > 0 && (
+                      isCollapsed ? (
+                        <span
+                          className="absolute top-1.5 right-1.5 size-2 bg-orange-500 rounded-full ring-2 ring-card"
+                          aria-label={`${item.unreadCount} notifikasi belum dibaca`}
+                        />
+                      ) : (
+                        <span
+                          className={cn(
+                            "text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                            isActive
+                              ? "bg-primary-foreground/20 text-primary-foreground"
+                              : "bg-orange-500 text-white shadow-xs"
+                          )}
+                        >
+                          {item.unreadCount}
+                        </span>
+                      )
+                    )}
+                  </Link>
+                )
+              })}
+              {groupedNavItems.length > 1 && !isCollapsed && groupIdx < groupedNavItems.length - 1 && (
+                <div className="pt-2">
+                  <hr className="border-border/60" />
+                </div>
+              )}
+            </div>
+          ))}
         </nav>
 
         {/* Footer Sidebar: Navigasi ke Halaman Beranda di Bagian Bawah */}
