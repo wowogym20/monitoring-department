@@ -81,8 +81,8 @@ export default async function DepartemenPage({
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {currentUser.role === "super_admin"
-              ? "Kelola struktur 14 departemen, status keaktifan, dan penugasan ketua departemen."
-              : "Monitoring struktur 14 departemen, status pengisian penilaian, dan penugasan ketua departemen."}
+              ? "Kelola struktur 15 departemen, status keaktifan, dan penugasan Kepala Departemen."
+              : "Monitoring struktur 15 departemen, status pengisian penilaian, dan penugasan Kepala Departemen."}
           </p>
         </div>
       </div>
