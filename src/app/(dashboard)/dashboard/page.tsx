@@ -74,8 +74,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 className="text-xs bg-card font-semibold border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
               >
                 {currentUser.role === "super_admin" && "Super-Admin"}
-                {currentUser.role === "admin" && "Admin SDM"}
-                {currentUser.role === "user" && "Ketua Departemen"}
+                {currentUser.role === "admin" && "Admin Koordinator"}
+                {currentUser.role === "user" && "Kepala Departemen"}
               </Badge>
             </div>
 
