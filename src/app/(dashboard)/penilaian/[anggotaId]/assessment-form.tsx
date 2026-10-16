@@ -36,9 +36,17 @@ import {
   Lock,
   Loader2,
   ShieldAlert,
+  ClipboardCheck,
+  Briefcase,
+  Award,
 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import {
+  parseAssessmentComments,
+  serializeAssessmentComments,
+  type AssessmentComments,
+} from "@/lib/penilaian"
 
 interface AssessmentFormProps {
   initialData: PenilaianDetailData
@@ -60,7 +68,9 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
 
   // State nilai per aspek { [aspect_id]: nilai (1-5) }
   const [scores, setScores] = useState<Record<string, number>>(initialData.scores || {})
-  const [catatan, setCatatan] = useState<string>(assessment?.catatan || "")
+  const [comments, setComments] = useState<AssessmentComments>(() =>
+    parseAssessmentComments(assessment?.catatan)
+  )
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -100,11 +110,13 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
         nilai,
       }))
 
+      const serializedCatatan = serializeAssessmentComments(comments)
+
       const res = await saveAssessmentAction({
         period_id: periode.id,
         member_id: member.id,
         status,
-        catatan: catatan.trim() ? catatan.trim() : null,
+        catatan: serializedCatatan,
         scores: scoresArray,
       })
 
@@ -405,31 +417,107 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
         })}
       </div>
 
-      {/* 5. Catatan Umum Evaluasi (Opsional) */}
-      <Card className="border border-border/80 shadow-2xs">
-        <CardHeader className="py-3 px-4 sm:px-6">
-          <CardTitle className="text-sm font-semibold text-foreground">
-            Catatan Evaluasi (Opsional)
-          </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground">
-            Tuliskan apresiasi, saran pengembangan, atau catatan khusus untuk anggota ini.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="px-4 sm:px-6 pb-4">
-          <Textarea
-            id="input-catatan"
-            value={catatan}
-            onChange={(e) => setCatatan(e.target.value)}
-            disabled={isReadOnly || isSubmitting}
-            placeholder="Contoh: Sangat proaktif dalam menyelesaikan amanah program dan kedisiplinan mengajar yang luar biasa..."
-            className="min-h-[100px] text-xs resize-y"
-            maxLength={2000}
-          />
-          <p className="text-[11px] text-muted-foreground text-right mt-1">
-            {catatan.length}/2000 karakter
+      {/* 5. Tiga Komentar Evaluasi: Evaluasi, Proker, & Hasil Usaha (Opsional) */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-base font-bold text-foreground">
+            Catatan Evaluasi, Proker, & Hasil Usaha (Opsional)
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Berikan umpan balik terperinci meliputi evaluasi kinerja, keterlibatan program kerja, dan hasil usaha anggota.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* 1. Evaluasi */}
+        <Card className="border border-border/80 shadow-2xs">
+          <CardHeader className="py-3 px-4 sm:px-6">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <ClipboardCheck className="size-4 text-primary" />
+              1. Evaluasi Kinerja & Pengembangan
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Apresiasi, kedisiplinan, catatan perilaku kerja, atau rekomendasi pembinaan personal untuk anggota ini.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6 pb-4">
+            <Textarea
+              id="input-catatan"
+              data-testid="input-catatan-evaluasi"
+              value={comments.evaluasi}
+              onChange={(e) =>
+                setComments((prev) => ({ ...prev, evaluasi: e.target.value }))
+              }
+              disabled={isReadOnly || isSubmitting}
+              placeholder="Contoh: Sangat disiplin, memiliki integritas tinggi, dan responsif terhadap arahan pimpinan..."
+              className="min-h-[85px] text-xs resize-y"
+              maxLength={2000}
+            />
+            <p className="text-[11px] text-muted-foreground text-right mt-1">
+              {comments.evaluasi.length}/2000 karakter
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 2. Proker */}
+        <Card className="border border-border/80 shadow-2xs">
+          <CardHeader className="py-3 px-4 sm:px-6">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Briefcase className="size-4 text-primary" />
+              2. Catatan Program Kerja (Proker)
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Keterlibatan aktif, eksekusi tanggung jawab program, atau kendala dalam menjalankan program kerja yang diampu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6 pb-4">
+            <Textarea
+              id="input-catatan-proker"
+              data-testid="input-catatan-proker"
+              value={comments.proker}
+              onChange={(e) =>
+                setComments((prev) => ({ ...prev, proker: e.target.value }))
+              }
+              disabled={isReadOnly || isSubmitting}
+              placeholder="Contoh: Menjalankan amanah kepanitiaan ujian dan penyusunan modul tepat waktu sesuai target departemen..."
+              className="min-h-[85px] text-xs resize-y"
+              maxLength={2000}
+            />
+            <p className="text-[11px] text-muted-foreground text-right mt-1">
+              {comments.proker.length}/2000 karakter
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* 3. Hasil Usaha */}
+        <Card className="border border-border/80 shadow-2xs">
+          <CardHeader className="py-3 px-4 sm:px-6">
+            <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Award className="size-4 text-primary" />
+              3. Hasil Usaha & Capaian
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground">
+              Hasil karya nyata, output produktivitas, inovasi perbaikan, atau kontribusi konkret bagi departemen.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-4 sm:px-6 pb-4">
+            <Textarea
+              id="input-catatan-hasil-usaha"
+              data-testid="input-catatan-hasil-usaha"
+              value={comments.hasil_usaha}
+              onChange={(e) =>
+                setComments((prev) => ({ ...prev, hasil_usaha: e.target.value }))
+              }
+              disabled={isReadOnly || isSubmitting}
+              placeholder="Contoh: Berhasil meningkatkan efisiensi administrasi departemen dan menyelesaikan laporan capaian triwulan..."
+              className="min-h-[85px] text-xs resize-y"
+              maxLength={2000}
+            />
+            <p className="text-[11px] text-muted-foreground text-right mt-1">
+              {comments.hasil_usaha.length}/2000 karakter
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* 6. Sticky Bottom Action Bar (Mobile 360px & Desktop Responsive) */}
       <div

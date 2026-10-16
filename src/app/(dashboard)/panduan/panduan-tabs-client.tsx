@@ -487,7 +487,7 @@ export function PanduanTabsClient() {
                 step: "03",
                 title: "Pengisian Lembar Penilaian (Skala Likert 1–5)",
                 actor: "Kepala Departemen (User)",
-                desc: "Ketua mengisi skor 1–5 pada 7 aspek dan memberikan catatan evaluasi. Nilai dapat disimpan sebagai Draf (Draft) atau langsung dikirimkan ke Koordinator (Submit).",
+                desc: "Ketua mengisi skor 1–5 pada 7 aspek dan memberikan 3 catatan komentar (evaluasi, proker, hasil usaha). Nilai dapat disimpan sebagai Draf (Draft) atau langsung dikirimkan ke Koordinator (Submit).",
                 icon: ClipboardCheck,
                 badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
               },

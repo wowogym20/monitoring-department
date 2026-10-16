@@ -46,6 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DepartmentCombobox } from "@/components/ui/department-combobox"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -474,25 +475,17 @@ export function AnggotaManager({
             {/* Filter Departemen (Khusus Admin & Super Admin) */}
             {showDeptFilter && (
               <div>
-                <Select
+                <DepartmentCombobox
+                  id="filter-departemen"
+                  ariaLabel="Filter berdasarkan departemen"
+                  departments={departments}
                   value={departmentId}
                   onValueChange={(val) => {
                     setDepartmentId(val)
                     setPage(1)
                   }}
-                >
-                  <SelectTrigger id="filter-departemen" aria-label="Filter berdasarkan departemen" className="w-full">
-                    <SelectValue placeholder="Pilih Departemen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Departemen</SelectItem>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.nama} ({dept.kode})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  className="w-full"
+                />
               </div>
             )}
 

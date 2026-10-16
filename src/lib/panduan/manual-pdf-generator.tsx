@@ -330,7 +330,7 @@ const SectionUserGuide = () => (
     <View style={styles.bulletItem}>
       <Text style={styles.bulletDot}>2.</Text>
       <Text style={styles.bulletContent}>
-        <Text style={{ fontFamily: "Helvetica-Bold" }}>Catatan Evaluasi:</Text> Tuliskan catatan apresiasi atau saran pengembangan anggota.
+        <Text style={{ fontFamily: "Helvetica-Bold" }}>Catatan Evaluasi, Proker, & Hasil Usaha:</Text> Tuliskan umpan balik terstruktur mencakup evaluasi kinerja, program kerja (proker), dan hasil usaha anggota.
       </Text>
     </View>
     <View style={styles.bulletItem}>

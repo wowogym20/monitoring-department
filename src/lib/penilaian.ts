@@ -54,3 +54,76 @@ export function isKetuaMember(
 
   return false
 }
+
+export interface AssessmentComments {
+  evaluasi: string
+  proker: string
+  hasil_usaha: string
+}
+
+/**
+ * Parsing data catatan penilaian ke objek 3 komentar terstruktur:
+ * - evaluasi
+ * - proker
+ * - hasil_usaha
+ * Menjaga kompatibilitas dengan format teks lama (legacy plain text string).
+ */
+export function parseAssessmentComments(raw: string | null | undefined): AssessmentComments {
+  if (!raw || !raw.trim()) {
+    return { evaluasi: "", proker: "", hasil_usaha: "" }
+  }
+
+  const trimmed = raw.trim()
+
+  try {
+    const parsed = JSON.parse(trimmed)
+    if (parsed && typeof parsed === "object") {
+      return {
+        evaluasi: typeof parsed.evaluasi === "string" ? parsed.evaluasi : "",
+        proker: typeof parsed.proker === "string" ? parsed.proker : "",
+        hasil_usaha: typeof parsed.hasil_usaha === "string" ? parsed.hasil_usaha : "",
+      }
+    }
+  } catch {
+    // Jika bukan JSON (format lama teks biasa), masukkan ke bagian evaluasi
+    return {
+      evaluasi: trimmed,
+      proker: "",
+      hasil_usaha: "",
+    }
+  }
+
+  return { evaluasi: "", proker: "", hasil_usaha: "" }
+}
+
+/**
+ * Serialisasi 3 komentar menjadi JSON string untuk disimpan ke kolom `catatan`.
+ * Mengembalikan `null` jika ketiga komentar kosong setelah di-trim.
+ */
+export function serializeAssessmentComments(comments: AssessmentComments): string | null {
+  const evaluasi = comments.evaluasi?.trim() || ""
+  const proker = comments.proker?.trim() || ""
+  const hasil_usaha = comments.hasil_usaha?.trim() || ""
+
+  if (!evaluasi && !proker && !hasil_usaha) {
+    return null
+  }
+
+  return JSON.stringify({
+    evaluasi,
+    proker,
+    hasil_usaha,
+  })
+}
+
+/**
+ * Memeriksa apakah minimal salah satu komentar telah diisi.
+ */
+export function hasAssessmentComments(comments: AssessmentComments): boolean {
+  return Boolean(
+    comments.evaluasi?.trim() ||
+    comments.proker?.trim() ||
+    comments.hasil_usaha?.trim()
+  )
+}
+

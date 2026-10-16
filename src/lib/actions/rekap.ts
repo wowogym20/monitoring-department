@@ -20,6 +20,7 @@ import {
   UserRole,
 } from "@/types/database"
 import { z } from "zod"
+import { parseAssessmentComments } from "@/lib/penilaian"
 
 export interface RekapTableItem {
   id: string // assessment_id
@@ -652,12 +653,35 @@ export async function getAssessmentDetailWithAuditAndCommentsServer(
         }
 
         if (log.data_lama?.catatan !== log.data_baru?.catatan) {
-          perubahanList.push({
-            field: "catatan",
-            label: "Catatan Evaluasi",
-            nilai_lama: (log.data_lama?.catatan as string) || "(Kosong)",
-            nilai_baru: (log.data_baru?.catatan as string) || "(Kosong)",
-          })
+          const oldC = parseAssessmentComments(log.data_lama?.catatan as string | null)
+          const newC = parseAssessmentComments(log.data_baru?.catatan as string | null)
+
+          if (oldC.evaluasi !== newC.evaluasi) {
+            perubahanList.push({
+              field: "catatan_evaluasi",
+              label: "Catatan Evaluasi Kinerja",
+              nilai_lama: oldC.evaluasi || "(Kosong)",
+              nilai_baru: newC.evaluasi || "(Kosong)",
+            })
+          }
+
+          if (oldC.proker !== newC.proker) {
+            perubahanList.push({
+              field: "catatan_proker",
+              label: "Catatan Program Kerja",
+              nilai_lama: oldC.proker || "(Kosong)",
+              nilai_baru: newC.proker || "(Kosong)",
+            })
+          }
+
+          if (oldC.hasil_usaha !== newC.hasil_usaha) {
+            perubahanList.push({
+              field: "catatan_hasil_usaha",
+              label: "Catatan Hasil Usaha",
+              nilai_lama: oldC.hasil_usaha || "(Kosong)",
+              nilai_baru: newC.hasil_usaha || "(Kosong)",
+            })
+          }
         }
       } else if (log.aksi === "DELETE") {
         deskripsi = `Menghapus lembar penilaian`

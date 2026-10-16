@@ -11,7 +11,7 @@ export const saveAssessmentSchema = z.object({
   status: z.enum(["draft", "submitted"]),
   catatan: z
     .string()
-    .max(2000, "Catatan umum maksimal 2000 karakter")
+    .max(7000, "Catatan maksimal 7000 karakter")
     .optional()
     .nullable()
     .transform((val) => (val && val.trim() !== "" ? val.trim() : null)),

@@ -31,6 +31,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DepartmentCombobox } from "@/components/ui/department-combobox"
 import { SkorBadge } from "@/components/penilaian/skor-badge"
 import { StatusBadge } from "@/components/penilaian/status-badge"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -588,24 +589,14 @@ export function RekapTable({
                 <Building className="size-3.5 text-primary" />
                 <span>Departemen</span>
               </label>
-              <Select
+              <DepartmentCombobox
+                id="select-filter-dept"
+                ariaLabel="Filter departemen penilaian"
+                departments={departments}
                 value={selectedDepartmentId || "all"}
                 onValueChange={(val) => updateQuery({ departmentId: val, page: "1" })}
-              >
-                <SelectTrigger id="select-filter-dept" aria-label="Filter departemen penilaian" className="h-9.5 text-xs bg-background w-full">
-                  <SelectValue placeholder="Semua Departemen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs py-2">
-                    Semua Departemen
-                  </SelectItem>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id} className="text-xs py-2">
-                      {d.nama} ({d.kode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                className="h-9.5 text-xs bg-background w-full"
+              />
             </div>
           )}
 

@@ -55,7 +55,11 @@ import {
   Calendar,
   UserCheck,
   FileText,
+  ClipboardCheck,
+  Briefcase,
+  Award,
 } from "lucide-react"
+import { parseAssessmentComments } from "@/lib/penilaian"
 
 interface AssessmentDetailViewProps {
   data: AssessmentDetailRekapData
@@ -76,6 +80,7 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
   const [replyText, setReplyText] = useState("")
 
   const { assessment, scores, comments, auditLogs, currentUser } = data
+  const evaluationComments = parseAssessmentComments(assessment.catatan)
 
   const isLeaderOrAdmin =
     currentUser.role === "super_admin" || currentUser.role === "admin"
@@ -488,17 +493,67 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
             </CardContent>
           </Card>
 
-          {/* Catatan Evaluasi Umum */}
+          {/* Tiga Komentar Evaluasi: Evaluasi, Proker, & Hasil Usaha */}
           <Card className="border border-border/80 shadow-2xs">
-            <CardHeader className="p-4 sm:p-5 pb-2">
-              <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
+            <CardHeader className="p-4 sm:p-5 pb-3 bg-muted/15 border-b border-border/60">
+              <CardTitle className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
                 <FileText className="size-4 text-primary" />
-                Catatan Evaluasi Umum
+                Catatan Evaluasi, Proker, & Hasil Usaha
               </CardTitle>
+              <CardDescription className="text-xs">
+                Catatan dan umpan balik komprehensif dari penilai untuk anggota ini.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="p-4 sm:p-5 pt-1">
-              <div className="text-xs sm:text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed bg-muted/25 p-3.5 rounded-lg border border-border/70">
-                {assessment.catatan || "(Tidak ada catatan evaluasi tertulis dari Ketua)"}
+            <CardContent className="p-4 sm:p-5 space-y-4">
+              {/* 1. Evaluasi Kinerja */}
+              <div className="space-y-1.5 p-3.5 rounded-lg border border-border/70 bg-muted/20">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <ClipboardCheck className="size-4 text-emerald-600 dark:text-emerald-400" />
+                  <span>1. Evaluasi Kinerja & Pengembangan</span>
+                </div>
+                <div className="text-xs sm:text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed pl-6">
+                  {evaluationComments.evaluasi ? (
+                    evaluationComments.evaluasi
+                  ) : (
+                    <span className="italic text-muted-foreground text-xs">
+                      (Tidak ada catatan evaluasi tertulis)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 2. Program Kerja (Proker) */}
+              <div className="space-y-1.5 p-3.5 rounded-lg border border-border/70 bg-muted/20">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <Briefcase className="size-4 text-blue-600 dark:text-blue-400" />
+                  <span>2. Catatan Program Kerja (Proker)</span>
+                </div>
+                <div className="text-xs sm:text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed pl-6">
+                  {evaluationComments.proker ? (
+                    evaluationComments.proker
+                  ) : (
+                    <span className="italic text-muted-foreground text-xs">
+                      (Tidak ada catatan program kerja tertulis)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. Hasil Usaha & Capaian */}
+              <div className="space-y-1.5 p-3.5 rounded-lg border border-border/70 bg-muted/20">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <Award className="size-4 text-amber-600 dark:text-amber-400" />
+                  <span>3. Hasil Usaha & Capaian</span>
+                </div>
+                <div className="text-xs sm:text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed pl-6">
+                  {evaluationComments.hasil_usaha ? (
+                    evaluationComments.hasil_usaha
+                  ) : (
+                    <span className="italic text-muted-foreground text-xs">
+                      (Tidak ada catatan hasil usaha tertulis)
+                    </span>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DepartmentCombobox } from "@/components/ui/department-combobox"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -252,22 +253,16 @@ export function EksporClient({ periods, departments }: EksporClientProps) {
               <Building2 className="size-3.5 text-primary shrink-0" />
               <span>Departemen</span>
             </Label>
-            <Select value={selectedDeptId} onValueChange={setSelectedDeptId}>
-              <SelectTrigger id="dept-select" aria-label="Pilih cakupan departemen" className="w-full h-9 text-xs sm:text-sm bg-background">
-                <SelectValue placeholder="Semua Departemen" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-xs sm:text-sm py-1.5">
-                  <span className="font-medium">Semua Departemen (Rekap Lengkap)</span>
-                </SelectItem>
-                {departments.map((d) => (
-                  <SelectItem key={d.id} value={d.id} className="text-xs sm:text-sm py-1.5">
-                    <span className="font-medium">{d.nama}</span>{" "}
-                    <span className="text-muted-foreground text-[10px] font-mono">({d.kode})</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <DepartmentCombobox
+              id="dept-select"
+              ariaLabel="Pilih cakupan departemen"
+              departments={departments}
+              value={selectedDeptId}
+              onValueChange={setSelectedDeptId}
+              allLabel="Semua Departemen (Rekap Lengkap)"
+              placeholder="Semua Departemen"
+              className="w-full h-9 text-xs sm:text-sm bg-background"
+            />
             <p className="text-[11px] text-muted-foreground">
               Pilih &quot;Semua Departemen&quot; untuk mengunduh seluruh 14 departemen sekaligus, atau pilih salah satu departemen spesifik.
             </p>

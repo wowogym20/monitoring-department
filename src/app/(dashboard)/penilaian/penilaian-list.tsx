@@ -41,7 +41,12 @@ import {
   RefreshCw,
   RotateCcw,
   X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react"
+import { DepartmentCombobox } from "@/components/ui/department-combobox"
 
 // Helper untuk merapikan nama periode agar tidak mengulang kata "Periode Penilaian"
 function formatPeriodDisplay(name: string): string {
@@ -82,6 +87,9 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
     userRole,
   } = initialData
 
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number | "all">(10)
+
   const handlePeriodChange = (periodeId: string) => {
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString())
@@ -111,10 +119,16 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
   const handleResetFilters = () => {
     setSearchQuery("")
     setStatusFilter("all")
+    setCurrentPage(1)
     if (selectedDepartmentId && selectedDepartmentId !== "all") {
       handleDepartmentChange("all")
     }
   }
+
+  // Reset pagination ke halaman 1 jika filter atau pencarian berubah
+  React.useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, statusFilter, selectedDepartmentId])
 
   // Filter dan sortir anggota berdasarkan pencarian, status, dan kolom yang dipilih
   const filteredMembers = React.useMemo(() => {
@@ -159,6 +173,21 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
       return sortOrder === "asc" ? cmp : -cmp
     })
   }, [members, searchQuery, statusFilter, sortBy, sortOrder])
+
+  // Logika pembagian halaman (pagination)
+  const totalItems = filteredMembers.length
+  const totalPages =
+    pageSize === "all"
+      ? 1
+      : Math.max(1, Math.ceil(totalItems / (typeof pageSize === "number" ? pageSize : 10)))
+  const safePage = Math.min(Math.max(1, currentPage), totalPages)
+  const rowOffset = pageSize === "all" ? 0 : (safePage - 1) * pageSize
+
+  const paginatedMembers = React.useMemo(() => {
+    if (pageSize === "all") return filteredMembers
+    const start = (safePage - 1) * pageSize
+    return filteredMembers.slice(start, start + pageSize)
+  }, [filteredMembers, safePage, pageSize])
 
   return (
     <div className="space-y-6">
@@ -271,7 +300,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             </Select>
           </div>
 
-          {/* Selector Departemen (Admin & Super Admin: Dropdown Interaktif; User: Indikator Terkunci) */}
+          {/* Selector Departemen (Admin & Super Admin: Combobox Searchable; User: Indikator Terkunci) */}
           {userRole === "super_admin" || userRole === "admin" ? (
             <div className="space-y-1.5">
               <label
@@ -281,32 +310,14 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                 <Building2 className="size-3.5 text-primary" />
                 <span>Departemen</span>
               </label>
-              <Select
+              <DepartmentCombobox
+                id="select-filter-dept"
                 value={selectedDepartmentId || "all"}
                 onValueChange={handleDepartmentChange}
+                departments={departments}
                 disabled={isPending}
-              >
-                <SelectTrigger
-                  id="select-filter-dept"
-                  aria-label="Pilih departemen penilaian"
-                  className="w-full h-9.5 text-xs bg-background"
-                >
-                  <SelectValue placeholder="Semua Departemen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs py-2">
-                    Semua Departemen
-                  </SelectItem>
-                  {departments.map((d) => (
-                    <SelectItem key={d.id} value={d.id} className="text-xs py-2">
-                      <span className="font-medium">{d.nama}</span>{" "}
-                      <span className="text-muted-foreground text-[10px] font-mono">
-                        ({d.kode})
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                ariaLabel="Pilih departemen penilaian"
+              />
             </div>
           ) : (
             departments.length > 0 && (
@@ -441,35 +452,14 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             {/* Filter Departemen di Toolbar (Khusus Super Admin & Admin) */}
             {(userRole === "super_admin" || userRole === "admin") && (
               <div className="w-full sm:w-56">
-                <Select
+                <DepartmentCombobox
+                  id="select-toolbar-dept"
                   value={selectedDepartmentId || "all"}
                   onValueChange={handleDepartmentChange}
+                  departments={departments}
                   disabled={isPending}
-                >
-                  <SelectTrigger
-                    id="select-toolbar-dept"
-                    aria-label="Filter departemen penilaian di toolbar"
-                    className="w-full h-9.5 text-xs bg-background"
-                  >
-                    <div className="flex items-center gap-2 truncate">
-                      <Building2 className="size-3.5 text-primary shrink-0" />
-                      <SelectValue placeholder="Semua Departemen" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="text-xs py-2">
-                      Semua Departemen
-                    </SelectItem>
-                    {departments.map((d) => (
-                      <SelectItem key={d.id} value={d.id} className="text-xs py-2">
-                        <span className="font-medium">{d.nama}</span>{" "}
-                        <span className="text-muted-foreground text-[10px] font-mono">
-                          ({d.kode})
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  ariaLabel="Filter departemen penilaian di toolbar"
+                />
               </div>
             )}
 
@@ -592,7 +582,8 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
-                  <TableHead className="w-[30%]">
+                  <TableHead className="w-12 text-center text-xs font-semibold">No.</TableHead>
+                  <TableHead className="w-[28%]">
                     <SortableHeader
                       label="Anggota"
                       direction={sortBy === "nama" ? sortOrder : false}
@@ -606,7 +597,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                       onToggle={() => handleSort("department")}
                     />
                   </TableHead>
-                  <TableHead className="w-[20%]">
+                  <TableHead className="w-[18%]">
                     <SortableHeader
                       label="Status Penilaian"
                       type="general"
@@ -614,7 +605,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                       onToggle={() => handleSort("status")}
                     />
                   </TableHead>
-                  <TableHead className="w-[15%]">
+                  <TableHead className="w-[14%]">
                     <SortableHeader
                       label="Skor Akhir"
                       type="numeric"
@@ -626,8 +617,11 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMembers.map((member) => (
+                {paginatedMembers.map((member, index) => (
                   <TableRow key={member.id} className="hover:bg-muted/30">
+                    <TableCell className="text-center font-mono text-xs text-muted-foreground font-medium">
+                      {rowOffset + index + 1}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-foreground text-sm">
@@ -737,7 +731,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
 
           {/* Tampilan Mobile Card (Optimal untuk Viewport 360px) */}
           <div className="grid grid-cols-1 gap-3 md:hidden">
-            {filteredMembers.map((member) => (
+            {paginatedMembers.map((member, index) => (
               <Card
                 key={member.id}
                 className="border border-border/80 shadow-2xs p-3.5 space-y-3"
@@ -745,6 +739,9 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center justify-center size-5 rounded bg-muted text-[10px] font-bold text-muted-foreground font-mono">
+                        #{rowOffset + index + 1}
+                      </span>
                       <h3 className="font-semibold text-sm text-foreground truncate">
                         {member.nama}
                       </h3>
@@ -841,6 +838,104 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                 </div>
               </Card>
             ))}
+          </div>
+
+          {/* Bilah Paginasi Data Penilaian */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3.5 p-3.5 sm:p-4 rounded-xl border border-border bg-card shadow-2xs">
+            <div className="text-xs text-muted-foreground order-2 sm:order-1 text-center sm:text-left">
+              Menampilkan{" "}
+              <strong className="text-foreground">
+                {totalItems === 0 ? 0 : rowOffset + 1}
+              </strong>
+              –
+              <strong className="text-foreground">
+                {Math.min(rowOffset + (pageSize === "all" ? totalItems : pageSize), totalItems)}
+              </strong>{" "}
+              dari <strong className="text-foreground">{totalItems}</strong> anggota
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-3 order-1 sm:order-2 w-full sm:w-auto">
+              {/* Dropdown Ukuran Halaman */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  Baris:
+                </span>
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(val) => {
+                    setPageSize(val === "all" ? "all" : parseInt(val, 10))
+                    setCurrentPage(1)
+                  }}
+                >
+                  <SelectTrigger
+                    id="select-page-size-penilaian"
+                    aria-label="Jumlah baris per halaman"
+                    className="h-8 w-[95px] text-xs bg-background"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10" className="text-xs">10 baris</SelectItem>
+                    <SelectItem value="25" className="text-xs">25 baris</SelectItem>
+                    <SelectItem value="50" className="text-xs">50 baris</SelectItem>
+                    <SelectItem value="all" className="text-xs">Semua</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Tombol Navigasi Halaman */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={pageSize === "all" || safePage <= 1}
+                  title="Halaman Pertama"
+                  id="btn-first-page-penilaian"
+                >
+                  <ChevronsLeft className="size-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  disabled={pageSize === "all" || safePage <= 1}
+                  title="Halaman Sebelumnya"
+                  id="btn-prev-page-penilaian"
+                >
+                  <ChevronLeft className="size-3.5" />
+                </Button>
+
+                <span className="px-2.5 text-xs font-semibold text-foreground whitespace-nowrap">
+                  {pageSize === "all" ? "1 / 1" : `${safePage} / ${Math.max(totalPages, 1)}`}
+                </span>
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  disabled={pageSize === "all" || safePage >= totalPages}
+                  title="Halaman Selanjutnya"
+                  id="btn-next-page-penilaian"
+                >
+                  <ChevronRight className="size-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={pageSize === "all" || safePage >= totalPages}
+                  title="Halaman Terakhir"
+                  id="btn-last-page-penilaian"
+                >
+                  <ChevronsRight className="size-3.5" />
+                </Button>
+              </div>
+            </div>
           </div>
         </>
       )}
