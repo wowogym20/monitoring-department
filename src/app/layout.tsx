@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { TopProgressBar } from "@/components/layout/top-progress-bar";
 import { PwaRegister } from "@/components/pwa/pwa-register";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -128,6 +129,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <SpeedInsights />
             <Toaster richColors position="top-right" />
             <PwaRegister />
           </ThemeProvider>
