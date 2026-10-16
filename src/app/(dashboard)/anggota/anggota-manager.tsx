@@ -503,8 +503,8 @@ export function AnggotaManager({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="active">Hanya Aktif</SelectItem>
-                  <SelectItem value="inactive">Hanya Nonaktif</SelectItem>
+                  <SelectItem value="active">Aktif</SelectItem>
+                  <SelectItem value="inactive">Nonaktif</SelectItem>
                 </SelectContent>
               </Select>
             </div>
