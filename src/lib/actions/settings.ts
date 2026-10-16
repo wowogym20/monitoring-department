@@ -1,8 +1,20 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag, updateTag, unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+
+function invalidateSystemSettingsCache() {
+  try {
+    updateTag("system-settings")
+  } catch {
+    try {
+      revalidateTag("system-settings", { expire: 0 })
+    } catch {
+      // Fallback jika dipanggil di luar konteks static/server action runtime
+    }
+  }
+}
 import { requireRole } from "@/lib/auth"
 import { Json } from "@/types/database"
 import {
@@ -37,14 +49,13 @@ export type ActionResult<T = unknown> =
   | { success: false; message: string; error?: string }
 
 /**
- * Mengambil seluruh pengaturan sistem dari Supabase dengan fallback ke nilai default aman.
- * Dapat dipanggil oleh semua role terautentikasi (untuk membaca branding, announcement, maintenance).
+ * Fungsi internal pengambil pengaturan sistem menggunakan admin client untuk Data Cache.
  */
-export async function getSystemSettingsAction(): Promise<AllSystemSettings> {
+async function fetchSystemSettingsInternal(): Promise<AllSystemSettings> {
   try {
-    const supabase = await createClient()
+    const admin = createAdminClient()
 
-    const { data, error } = await supabase
+    const { data, error } = await admin
       .from("system_settings")
       .select("key, value, updated_at, updated_by")
 
@@ -72,7 +83,7 @@ export async function getSystemSettingsAction(): Promise<AllSystemSettings> {
     let updatedByName: string | undefined
     const lastRow = data[0]
     if (lastRow?.updated_by) {
-      const { data: profile } = await supabase
+      const { data: profile } = await admin
         .from("profiles")
         .select("nama")
         .eq("id", lastRow.updated_by)
@@ -136,6 +147,21 @@ export async function getSystemSettingsAction(): Promise<AllSystemSettings> {
   }
 }
 
+const getCachedSystemSettings = unstable_cache(
+  fetchSystemSettingsInternal,
+  ["system_settings_cache"],
+  { tags: ["system-settings"], revalidate: 300 }
+)
+
+/**
+ * Mengambil seluruh pengaturan sistem dari Supabase dengan fallback ke nilai default aman.
+ * Menggunakan unstable_cache untuk meniadakan query berulang ke Supabase pada setiap navigasi halaman.
+ * Dapat dipanggil oleh semua role terautentikasi (untuk membaca branding, announcement, maintenance).
+ */
+export async function getSystemSettingsAction(): Promise<AllSystemSettings> {
+  return getCachedSystemSettings()
+}
+
 /**
  * Menyimpan Pengaturan Identitas & Branding (Khusus Super Admin)
  */
@@ -170,6 +196,7 @@ export async function saveGeneralSettingsAction(
       return { success: false, message: `Gagal menyimpan: ${error.message}` }
     }
 
+    invalidateSystemSettingsCache()
     revalidatePath("/", "layout")
     return {
       success: true,
@@ -215,6 +242,7 @@ export async function saveContentSettingsAction(
       return { success: false, message: `Gagal menyimpan: ${error.message}` }
     }
 
+    invalidateSystemSettingsCache()
     revalidatePath("/", "layout")
     revalidatePath("/dashboard")
     return {
@@ -261,6 +289,7 @@ export async function saveScoringSettingsAction(
       return { success: false, message: `Gagal menyimpan: ${error.message}` }
     }
 
+    invalidateSystemSettingsCache()
     revalidatePath("/penilaian")
     revalidatePath("/rekap")
     revalidatePath("/dashboard")
@@ -308,6 +337,7 @@ export async function saveSystemSettingsAction(
       return { success: false, message: `Gagal menyimpan: ${error.message}` }
     }
 
+    invalidateSystemSettingsCache()
     revalidatePath("/", "layout")
     return {
       success: true,
@@ -353,6 +383,7 @@ export async function saveNotificationSettingsAction(
       return { success: false, message: `Gagal menyimpan: ${error.message}` }
     }
 
+    invalidateSystemSettingsCache()
     revalidatePath("/", "layout")
     return {
       success: true,
@@ -445,6 +476,7 @@ export async function uploadLogoAction(
       { onConflict: "key" }
     )
 
+    invalidateSystemSettingsCache()
     revalidatePath("/", "layout")
     return {
       success: true,
@@ -507,6 +539,7 @@ export async function resetSettingsAction(
       )
     }
 
+    invalidateSystemSettingsCache()
     revalidatePath("/", "layout")
     revalidatePath("/dashboard")
     return {
@@ -620,6 +653,7 @@ export async function importSettingsJsonAction(jsonString: string): Promise<Acti
       )
     }
 
+    invalidateSystemSettingsCache()
     revalidatePath("/", "layout")
     revalidatePath("/dashboard")
     return {

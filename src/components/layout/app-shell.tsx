@@ -153,6 +153,7 @@ export function AppShell({
                     <Link
                       key={item.href}
                       href={item.href}
+                      prefetch={true}
                       onClick={() => setMobileOpen(false)}
                       title={item.title}
                       className={cn(
@@ -326,6 +327,7 @@ export function AppShell({
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={true}
                     onClick={() => {
                       if (isTabletPortrait) setTabletOpen(false)
                     }}

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { navigationItems } from "@/components/layout/nav-items"
 import { UserRole } from "@/types/database"
 import { logoutAction } from "@/lib/actions/auth"
+import { clearAppClientCache } from "@/components/providers/query-provider"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -296,7 +297,13 @@ export function Header({ user, onMobileMenuToggle }: HeaderProps) {
             <DropdownMenuSeparator />
 
             {/* Tombol Logout */}
-            <form action={logoutAction} className="w-full">
+            <form
+              action={logoutAction}
+              onSubmit={() => {
+                clearAppClientCache()
+              }}
+              className="w-full"
+            >
               <button
                 type="submit"
                 className="w-full text-left px-2.5 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md flex items-center gap-2.5 transition-colors cursor-pointer font-medium"

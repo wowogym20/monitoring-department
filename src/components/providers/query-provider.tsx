@@ -7,8 +7,11 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // 1 menit
+        staleTime: 3 * 60 * 1000, // 3 menit
+        gcTime: 10 * 60 * 1000,    // 10 menit
         refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
+        retry: 1,
       },
     },
   })
@@ -24,6 +27,16 @@ function getQueryClient() {
     // Browser: reuse client across renders
     if (!browserQueryClient) browserQueryClient = makeQueryClient()
     return browserQueryClient
+  }
+}
+
+/**
+ * Membersihkan seluruh cache TanStack Query dari memori browser klien.
+ * Dipanggil saat pengguna logout untuk menjamin tidak ada kebocoran data sensitif antar sesi.
+ */
+export function clearAppClientCache() {
+  if (browserQueryClient) {
+    browserQueryClient.clear()
   }
 }
 

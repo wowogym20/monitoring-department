@@ -48,6 +48,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: {
+    staleTimes: {
+      dynamic: 180, // Simpan halaman dinamis di Router Cache selama 3 menit (180 detik)
+      static: 300,  // Simpan halaman statis di Router Cache selama 5 menit (300 detik)
+    },
+  },
   env: {
     NEXT_PUBLIC_APP_VERSION:
       process.env.NEXT_PUBLIC_APP_VERSION || packageJson.version || "1.0",
