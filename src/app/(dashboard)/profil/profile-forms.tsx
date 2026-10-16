@@ -307,7 +307,7 @@ export function AccountProfileCard({
                   <Building2 className="size-3 text-primary shrink-0" />
                   <span>Departemen yang Dipimpin</span>
                 </span>
-                <div className="p-2 px-2.5 rounded-md bg-muted/40 border border-border/60">
+                <div className="mt-1.5 p-2 px-2.5 rounded-md bg-muted/40 border border-border/60">
                   <p className="text-xs sm:text-sm font-semibold text-foreground">
                     {departmentNama || "Belum ditugaskan ke departemen"}
                   </p>
