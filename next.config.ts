@@ -86,6 +86,16 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        source:
+          "/:path(dashboard|penilaian|rekap|anggota|departemen|aspek|periode|profil|pengguna|ekspor|panduan){/:rest*}?",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "private, no-cache, no-transform",
+          },
+        ],
+      },
+      {
         source: "/(.*)",
         headers: securityHeaders,
       },

@@ -12,10 +12,33 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react"
+import dynamic from "next/dynamic"
 import { KpiCard } from "@/components/dashboard/kpi-card"
 import { ProgressCard } from "@/components/dashboard/progress-card"
-import { DeptScoreChart } from "@/components/dashboard/dept-score-chart"
-import { CompletionChart } from "@/components/dashboard/completion-chart"
+
+const DeptScoreChart = dynamic(
+  () => import("@/components/dashboard/dept-score-chart").then((mod) => mod.DeptScoreChart),
+  {
+    loading: () => (
+      <div className="h-[350px] w-full rounded-xl border bg-card p-6 flex items-center justify-center text-muted-foreground animate-pulse text-sm">
+        Memuat grafik skor departemen...
+      </div>
+    ),
+    ssr: false,
+  }
+)
+
+const CompletionChart = dynamic(
+  () => import("@/components/dashboard/completion-chart").then((mod) => mod.CompletionChart),
+  {
+    loading: () => (
+      <div className="h-[350px] w-full rounded-xl border bg-card p-6 flex items-center justify-center text-muted-foreground animate-pulse text-sm">
+        Memuat grafik kelengkapan penilaian...
+      </div>
+    ),
+    ssr: false,
+  }
+)
 import { AttentionList } from "@/components/dashboard/attention-list"
 import { ScoreDistribution } from "@/components/dashboard/score-distribution"
 import { PeriodSelector } from "@/components/dashboard/period-selector"

@@ -8,6 +8,7 @@ import {
 } from "@/components/layout/sidebar-context"
 import { getSystemSettingsAction } from "@/lib/actions/settings"
 import { MaintenanceBanner } from "@/components/system/maintenance-banner"
+import { QueryPersister } from "@/components/providers/query-persister"
 
 export default async function DashboardLayout({
   children,
@@ -45,6 +46,7 @@ export default async function DashboardLayout({
         appTagline={settings.general.appTagline}
         logoUrl={settings.general.logoUrl}
       >
+        <QueryPersister userId={currentUser.id} />
         <MaintenanceBanner
           isActive={settings.system.maintenance.isActive}
           message={settings.system.maintenance.message}

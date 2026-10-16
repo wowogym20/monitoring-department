@@ -31,12 +31,28 @@ function getQueryClient() {
 }
 
 /**
- * Membersihkan seluruh cache TanStack Query dari memori browser klien.
- * Dipanggil saat pengguna logout untuk menjamin tidak ada kebocoran data sensitif antar sesi.
+ * Membersihkan seluruh cache TanStack Query dan penyimpanan lokal (localStorage)
+ * yang terkait data pengguna. Dipanggil saat logout untuk menjamin tidak ada
+ * kebocoran data sensitif antar sesi di perangkat yang sama.
  */
 export function clearAppClientCache() {
   if (browserQueryClient) {
     browserQueryClient.clear()
+  }
+
+  if (typeof localStorage !== "undefined") {
+    try {
+      const keysToRemove: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith("tazakka_qc_")) {
+          keysToRemove.push(key)
+        }
+      }
+      keysToRemove.forEach((k) => localStorage.removeItem(k))
+    } catch (e) {
+      console.warn("Gagal membersihkan cache lokal:", e)
+    }
   }
 }
 
