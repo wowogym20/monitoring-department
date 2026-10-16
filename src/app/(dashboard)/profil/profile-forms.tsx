@@ -62,12 +62,14 @@ export function AccountProfileCard({
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(initialFotoUrl)
+  const [prevInitialFotoUrl, setPrevInitialFotoUrl] = React.useState(initialFotoUrl)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
-  // Sinkronisasi previewUrl bila initialFotoUrl diperbarui dari server
-  React.useEffect(() => {
+  // Sinkronisasi previewUrl bila initialFotoUrl diperbarui dari server (pola resmi React tanpa useEffect)
+  if (initialFotoUrl !== prevInitialFotoUrl) {
+    setPrevInitialFotoUrl(initialFotoUrl)
     setPreviewUrl(initialFotoUrl)
-  }, [initialFotoUrl])
+  }
 
   const initials = nama
     ? nama

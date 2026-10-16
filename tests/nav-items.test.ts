@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { navigationItems, NAV_SECTION_LABELS, NavSection } from "@/components/layout/nav-items"
+import { navigationItems, NAV_SECTION_LABELS } from "@/components/layout/nav-items"
 
 describe("Navigasi Role & Pemisahan Menu Main vs Menu Admin", () => {
   it("memiliki label section yang terdefinisi dengan benar", () => {

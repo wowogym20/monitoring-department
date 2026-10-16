@@ -54,10 +54,16 @@ export function DepartmentCombobox({
   const [searchQuery, setSearchQuery] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen)
+    if (isOpen) {
+      setSearchQuery("")
+    }
+  }
+
   // Auto-focus keyboard saat popover dibuka
   useEffect(() => {
     if (open) {
-      setSearchQuery("")
       const timer = setTimeout(() => {
         inputRef.current?.focus()
       }, 50)
@@ -110,7 +116,7 @@ export function DepartmentCombobox({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           type="button"

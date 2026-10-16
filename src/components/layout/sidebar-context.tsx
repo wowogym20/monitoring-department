@@ -41,7 +41,20 @@ export function SidebarProvider({
 }: SidebarProviderProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(initialCollapsed)
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const [isTabletPortrait, setIsTabletPortrait] = React.useState(false)
+  // Deteksi Viewport Tablet Portrait (768px - 1024px, orientation: portrait) via useSyncExternalStore
+  const isTabletPortrait = React.useSyncExternalStore(
+    (callback) => {
+      if (typeof window === "undefined" || !window.matchMedia) return () => {}
+      const mediaQuery = window.matchMedia(TABLET_PORTRAIT_QUERY)
+      mediaQuery.addEventListener("change", callback)
+      return () => mediaQuery.removeEventListener("change", callback)
+    },
+    () => {
+      if (typeof window === "undefined" || !window.matchMedia) return false
+      return window.matchMedia(TABLET_PORTRAIT_QUERY).matches
+    },
+    () => false
+  )
   const [tabletOpen, setTabletOpen] = React.useState(false)
   const hasUserPrefRef = React.useRef(initialHasUserPreference)
 
@@ -64,19 +77,12 @@ export function SidebarProvider({
     }
   }, []) // Hanya dieksekusi sekali saat client mount
 
-  // Deteksi & Tangani Viewport Tablet Portrait (768px - 1024px, orientation: portrait)
+  // Tangani rotasi perangkat ke Tablet Portrait: otomatis tutup drawer
   React.useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return
 
     const mediaQuery = window.matchMedia(TABLET_PORTRAIT_QUERY)
-    setIsTabletPortrait(mediaQuery.matches)
-    if (mediaQuery.matches) {
-      // Pada orientasi tablet portrait, sidebar selalu tertutup secara default
-      setTabletOpen(false)
-    }
-
     const handleChange = (e: MediaQueryListEvent) => {
-      setIsTabletPortrait(e.matches)
       if (e.matches) {
         // Saat perangkat berotasi ke tablet portrait, otomatis tertutup secara default
         setTabletOpen(false)

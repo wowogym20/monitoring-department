@@ -2,12 +2,6 @@ import { describe, it, expect } from "vitest"
 import { UserRole } from "@/types/database"
 
 describe("Logika Filter Departemen pada Halaman Penilaian (/penilaian)", () => {
-  interface DepartmentOption {
-    id: string
-    nama: string
-    kode: string
-  }
-
   interface MockMember {
     id: string
     nama: string
@@ -16,12 +10,6 @@ describe("Logika Filter Departemen pada Halaman Penilaian (/penilaian)", () => {
     department_id: string
     status: string
   }
-
-  const mockDepartments: DepartmentOption[] = [
-    { id: "dept-1", nama: "Teknologi Informasi", kode: "TI" },
-    { id: "dept-2", nama: "Sumber Daya Manusia", kode: "SDM" },
-    { id: "dept-3", nama: "Sarana & Prasarana", kode: "SARPRAS" },
-  ]
 
   const mockMembers: MockMember[] = [
     { id: "m-1", nama: "Ahmad", nip: "101", jabatan: "Staff", department_id: "dept-1", status: "unassessed" },

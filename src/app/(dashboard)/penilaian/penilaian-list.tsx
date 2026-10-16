@@ -99,6 +99,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
   }
 
   const handleDepartmentChange = (deptId: string) => {
+    setCurrentPage(1)
     startTransition(() => {
       const params = new URLSearchParams(searchParams.toString())
       if (deptId === "all") {
@@ -108,6 +109,16 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
       }
       router.push(`/penilaian?${params.toString()}`)
     })
+  }
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val)
+    setCurrentPage(1)
+  }
+
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status)
+    setCurrentPage(1)
   }
 
   // Cek apakah ada filter aktif selain nilai default
@@ -124,11 +135,6 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
       handleDepartmentChange("all")
     }
   }
-
-  // Reset pagination ke halaman 1 jika filter atau pencarian berubah
-  React.useEffect(() => {
-    setCurrentPage(1)
-  }, [searchQuery, statusFilter, selectedDepartmentId])
 
   // Filter dan sortir anggota berdasarkan pencarian, status, dan kolom yang dipilih
   const filteredMembers = React.useMemo(() => {
@@ -433,13 +439,13 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
                 id="search-penilaian-toolbar"
                 placeholder="Cari nama, NIG, atau jabatan..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-9 pr-8 text-xs h-9.5 bg-background w-full"
               />
               {searchQuery && (
                 <button
                   type="button"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => handleSearchChange("")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                   aria-label="Hapus kata kunci pencarian"
                   title="Hapus pencarian"
@@ -489,7 +495,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
           <Button
             size="sm"
             variant={statusFilter === "all" ? "default" : "outline"}
-            onClick={() => setStatusFilter("all")}
+            onClick={() => handleStatusFilterChange("all")}
             className={cn(
               "h-8 text-xs shrink-0 rounded-lg",
               statusFilter === "all" && "bg-primary text-primary-foreground font-semibold"
@@ -500,7 +506,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
           <Button
             size="sm"
             variant={statusFilter === "unassessed" ? "default" : "outline"}
-            onClick={() => setStatusFilter("unassessed")}
+            onClick={() => handleStatusFilterChange("unassessed")}
             className={cn(
               "h-8 text-xs shrink-0 rounded-lg",
               statusFilter === "unassessed" && "bg-amber-600 hover:bg-amber-700 text-white font-semibold"
@@ -511,7 +517,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
           <Button
             size="sm"
             variant={statusFilter === "draft" ? "default" : "outline"}
-            onClick={() => setStatusFilter("draft")}
+            onClick={() => handleStatusFilterChange("draft")}
             className={cn(
               "h-8 text-xs shrink-0 rounded-lg",
               statusFilter === "draft" && "bg-slate-700 hover:bg-slate-800 text-white font-semibold"
@@ -522,7 +528,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
           <Button
             size="sm"
             variant={statusFilter === "assessed_all" ? "default" : "outline"}
-            onClick={() => setStatusFilter("assessed_all")}
+            onClick={() => handleStatusFilterChange("assessed_all")}
             className={cn(
               "h-8 text-xs shrink-0 rounded-lg",
               statusFilter === "assessed_all" && "bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
@@ -533,7 +539,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
           <Button
             size="sm"
             variant={statusFilter === "submitted" ? "default" : "outline"}
-            onClick={() => setStatusFilter("submitted")}
+            onClick={() => handleStatusFilterChange("submitted")}
             className={cn(
               "h-8 text-xs shrink-0 rounded-lg",
               statusFilter === "submitted" && "bg-blue-600 hover:bg-blue-700 text-white font-semibold"
@@ -544,7 +550,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
           <Button
             size="sm"
             variant={statusFilter === "approved" ? "default" : "outline"}
-            onClick={() => setStatusFilter("approved")}
+            onClick={() => handleStatusFilterChange("approved")}
             className={cn(
               "h-8 text-xs shrink-0 rounded-lg",
               statusFilter === "approved" && "bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
@@ -556,7 +562,7 @@ export function PenilaianList({ initialData }: PenilaianListProps) {
             <Button
               size="sm"
               variant={statusFilter === "revision_requested" ? "default" : "outline"}
-              onClick={() => setStatusFilter("revision_requested")}
+              onClick={() => handleStatusFilterChange("revision_requested")}
               className={cn(
                 "h-8 text-xs shrink-0 rounded-lg",
                 statusFilter === "revision_requested" && "bg-orange-600 hover:bg-orange-700 text-white font-semibold"
