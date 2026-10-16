@@ -349,7 +349,18 @@ export function EditProfileForm({
   initialNama,
   initialNoHp,
 }: EditProfileFormProps) {
+  const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
+  const [baseline, setBaseline] = React.useState({
+    nama: initialNama,
+    no_hp: initialNoHp || "",
+  })
+
+  const [prevProps, setPrevProps] = React.useState({ initialNama, initialNoHp })
+  if (prevProps.initialNama !== initialNama || prevProps.initialNoHp !== initialNoHp) {
+    setPrevProps({ initialNama, initialNoHp })
+    setBaseline({ nama: initialNama, no_hp: initialNoHp || "" })
+  }
 
   const {
     register,
@@ -364,11 +375,25 @@ export function EditProfileForm({
   })
 
   function onSubmit(data: UpdateProfileInput) {
+    const isUnchanged =
+      data.nama.trim() === baseline.nama.trim() &&
+      (data.no_hp || "").trim() === baseline.no_hp.trim()
+
+    if (isUnchanged) {
+      toast.info("Tidak ada perubahan pada data profil.")
+      return
+    }
+
     startTransition(async () => {
       try {
         const result = await updateProfileAction(data)
         if (result.success) {
+          setBaseline({
+            nama: data.nama,
+            no_hp: data.no_hp || "",
+          })
           toast.success(result.message || "Profil berhasil diperbarui")
+          router.refresh()
         } else {
           toast.error(result.error || "Gagal memperbarui profil")
         }

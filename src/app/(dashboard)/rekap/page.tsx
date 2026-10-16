@@ -48,7 +48,10 @@ export default async function RekapPage({
       </div>
 
       {/* 2. Ringkasan per Departemen di atas tabel (US-10 penanda oren bila belum selesai) */}
-      <RekapSummaryCards summaries={rekapData.summaries} />
+      <RekapSummaryCards
+        summaries={rekapData.summaries}
+        userRole={rekapData.userRole}
+      />
 
       {/* 1. Tabel TanStack Table Lintas Departemen / Departemen Sendiri */}
       <RekapTable

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { SkorBadge } from "@/components/penilaian/skor-badge"
 import { DepartmentRekapSummary } from "@/lib/actions/rekap"
+import { UserRole } from "@/types/database"
 import {
   AlertCircle,
   CheckCircle2,
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils"
 
 interface RekapSummaryCardsProps {
   summaries: DepartmentRekapSummary[]
+  userRole?: UserRole
 }
 
 /**
@@ -28,7 +30,7 @@ interface RekapSummaryCardsProps {
  * - Kartu Departemen dengan penanda oren jika belum selesai menilai (US-10)
  * - Tampilan rapi, mobile-friendly (360px), dan collapsible
  */
-export function RekapSummaryCards({ summaries }: RekapSummaryCardsProps) {
+export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   if (!summaries || summaries.length === 0) {
@@ -180,131 +182,135 @@ export function RekapSummaryCards({ summaries }: RekapSummaryCardsProps) {
         </Card>
       </div>
 
-      {/* 2. Header Kontrol Rincian Departemen (Bisa di-toggle agar tidak memenuhi layar) */}
-      <div className="flex items-center justify-between pt-1">
-        <div className="flex items-center gap-2">
-          <Building2 className="size-4 text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">
-            Ringkasan Progres per Departemen
-          </h2>
-          <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
-            {summaries.length}
-          </Badge>
-        </div>
+      {/* 2. Header Kontrol Rincian Departemen & Grid (Hanya untuk Admin & Super Admin; dihilangkan untuk role user) */}
+      {userRole !== "user" && (
+        <>
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2">
+              <Building2 className="size-4 text-primary" />
+              <h2 className="text-sm font-semibold text-foreground">
+                Ringkasan Progres per Departemen
+              </h2>
+              <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
+                {summaries.length}
+              </Badge>
+            </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1"
-        >
-          <span>{isExpanded ? "Sembunyikan Rincian" : "Lihat Semua Departemen"}</span>
-          {isExpanded ? (
-            <ChevronUp className="size-3.5" />
-          ) : (
-            <ChevronDown className="size-3.5" />
-          )}
-        </Button>
-      </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1"
+            >
+              <span>{isExpanded ? "Sembunyikan Rincian" : "Lihat Semua Departemen"}</span>
+              {isExpanded ? (
+                <ChevronUp className="size-3.5" />
+              ) : (
+                <ChevronDown className="size-3.5" />
+              )}
+            </Button>
+          </div>
 
-      {/* 3. Grid Rincian Tiap Departemen (Tampil saat expanded atau jika departemen <= 3) */}
-      {(isExpanded || summaries.length <= 3) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 animate-in fade-in-50 duration-200">
-          {summaries.map((dept) => {
-            const percentage =
-              dept.total_members > 0
-                ? Math.round((dept.assessed_count / dept.total_members) * 100)
-                : 0
+          {/* 3. Grid Rincian Tiap Departemen (Tampil saat expanded atau jika departemen <= 3) */}
+          {(isExpanded || summaries.length <= 3) && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 animate-in fade-in-50 duration-200">
+              {summaries.map((dept) => {
+                const percentage =
+                  dept.total_members > 0
+                    ? Math.round((dept.assessed_count / dept.total_members) * 100)
+                    : 0
 
-            return (
-              <Card
-                key={dept.id}
-                className={cn(
-                  "transition-all duration-200 shadow-2xs border bg-card/90 relative overflow-hidden",
-                  dept.is_incomplete
-                    ? "border-orange-300 dark:border-orange-800/80 bg-orange-50/20 dark:bg-orange-950/20"
-                    : "border-border hover:border-emerald-500/50"
-                )}
-              >
-                {/* Aksen garis atas subtle sesuai PRD 10.1.D */}
-                <div
-                  className={cn(
-                    "absolute top-0 inset-x-0 h-0.5",
-                    dept.is_incomplete
-                      ? "bg-orange-500"
-                      : "bg-emerald-500"
-                  )}
-                />
-
-                <CardHeader className="p-3.5 pb-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle className="text-sm font-bold truncate leading-tight text-foreground">
-                        {dept.nama}
-                      </CardTitle>
-                      <span className="text-[10px] font-mono text-muted-foreground">
-                        Kode: {dept.kode}
-                      </span>
-                    </div>
-
-                    {dept.is_incomplete ? (
-                      <Badge
-                        className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-semibold gap-1 shrink-0 shadow-2xs px-2 py-0.5"
-                        title="Departemen ini belum selesai menilai seluruh anggotanya (US-10)"
-                      >
-                        <AlertCircle className="size-3" />
-                        Belum Selesai
-                      </Badge>
-                    ) : (
-                      <Badge
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold gap-1 shrink-0 shadow-2xs px-2 py-0.5"
-                      >
-                        <CheckCircle2 className="size-3" />
-                        Selesai
-                      </Badge>
+                return (
+                  <Card
+                    key={dept.id}
+                    className={cn(
+                      "transition-all duration-200 shadow-2xs border bg-card/90 relative overflow-hidden",
+                      dept.is_incomplete
+                        ? "border-orange-300 dark:border-orange-800/80 bg-orange-50/20 dark:bg-orange-950/20"
+                        : "border-border hover:border-emerald-500/50"
                     )}
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-3.5 pt-0 space-y-2.5">
-                  {/* Progres Anggota */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
-                        <Users className="size-3 text-muted-foreground" />
-                        Dinilai:
-                      </span>
-                      <span className="font-semibold text-foreground text-[11px]">
-                        {dept.assessed_count} / {dept.total_members} ({percentage}%)
-                      </span>
-                    </div>
-                    <Progress
-                      value={percentage}
+                  >
+                    {/* Aksen garis atas subtle sesuai PRD 10.1.D */}
+                    <div
                       className={cn(
-                        "h-1.5",
+                        "absolute top-0 inset-x-0 h-0.5",
                         dept.is_incomplete
-                          ? "[&>div]:bg-orange-500"
-                          : "[&>div]:bg-emerald-600"
+                          ? "bg-orange-500"
+                          : "bg-emerald-500"
                       )}
                     />
-                  </div>
 
-                  {/* Skor Rata-rata */}
-                  <div className="pt-2 border-t border-border/50 flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">Rata-rata Skor:</span>
-                    {dept.average_score !== null ? (
-                      <SkorBadge skor={dept.average_score} showScore={true} />
-                    ) : (
-                      <span className="text-[11px] text-muted-foreground italic">
-                        Belum ada nilai
-                      </span>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
+                    <CardHeader className="p-3.5 pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <CardTitle className="text-sm font-bold truncate leading-tight text-foreground">
+                            {dept.nama}
+                          </CardTitle>
+                          <span className="text-[10px] font-mono text-muted-foreground">
+                            Kode: {dept.kode}
+                          </span>
+                        </div>
+
+                        {dept.is_incomplete ? (
+                          <Badge
+                            className="bg-orange-500 hover:bg-orange-600 text-white text-[10px] font-semibold gap-1 shrink-0 shadow-2xs px-2 py-0.5"
+                            title="Departemen ini belum selesai menilai seluruh anggotanya (US-10)"
+                          >
+                            <AlertCircle className="size-3" />
+                            Belum Selesai
+                          </Badge>
+                        ) : (
+                          <Badge
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold gap-1 shrink-0 shadow-2xs px-2 py-0.5"
+                          >
+                            <CheckCircle2 className="size-3" />
+                            Selesai
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="p-3.5 pt-0 space-y-2.5">
+                      {/* Progres Anggota */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground flex items-center gap-1.5 text-[11px]">
+                            <Users className="size-3 text-muted-foreground" />
+                            Dinilai:
+                          </span>
+                          <span className="font-semibold text-foreground text-[11px]">
+                            {dept.assessed_count} / {dept.total_members} ({percentage}%)
+                          </span>
+                        </div>
+                        <Progress
+                          value={percentage}
+                          className={cn(
+                            "h-1.5",
+                            dept.is_incomplete
+                              ? "[&>div]:bg-orange-500"
+                              : "[&>div]:bg-emerald-600"
+                          )}
+                        />
+                      </div>
+
+                      {/* Skor Rata-rata */}
+                      <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                        <span className="text-[11px] text-muted-foreground">Rata-rata Skor:</span>
+                        {dept.average_score !== null ? (
+                          <SkorBadge skor={dept.average_score} showScore={true} />
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground italic">
+                            Belum ada nilai
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          )}
+        </>
       )}
     </div>
   )
