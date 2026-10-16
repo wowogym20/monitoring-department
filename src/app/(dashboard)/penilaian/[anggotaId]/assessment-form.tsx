@@ -162,7 +162,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
   }
 
   return (
-    <div className="space-y-6 pb-28 sm:pb-12 max-w-4xl mx-auto">
+    <div className="space-y-6 pb-32 sm:pb-12 max-w-4xl mx-auto">
       {/* 1. Header Navigasi & Identitas Anggota */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
@@ -255,14 +255,14 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
         <CardHeader className="py-3 px-4 sm:px-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
-              <Calendar className="size-4 text-primary" />
+              <Calendar className="size-4 text-primary shrink-0" />
               <span className="text-xs font-semibold text-foreground">
                 Periode: {periode.nama}
               </span>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right">
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+              <div className="text-left sm:text-right">
                 <span className="text-[11px] text-muted-foreground block">
                   Pratinjau Skor ({scoredCount}/{totalAspects} terisi):
                 </span>
@@ -369,7 +369,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
                           isReadOnly && "cursor-not-allowed opacity-75"
                         )}
                       >
-                        <div className="flex items-center gap-2 sm:flex-col sm:gap-1 sm:text-center w-full">
+                        <div className="flex items-center gap-2.5 sm:flex-col sm:gap-1 sm:text-center flex-1 sm:w-full min-w-0 pr-2">
                           <span
                             className={cn(
                               "size-6 rounded-full inline-flex items-center justify-center text-xs font-bold shrink-0 transition-colors",
@@ -522,14 +522,14 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
       {/* 6. Sticky Bottom Action Bar (Mobile 360px & Desktop Responsive) */}
       <div
         className={cn(
-          "fixed bottom-0 left-0 right-0 p-3 bg-background/95 backdrop-blur-md border-t border-border z-30 shadow-lg",
+          "fixed bottom-0 left-0 right-0 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-background/95 backdrop-blur-md border-t border-border z-30 shadow-lg",
           "sm:static sm:p-0 sm:bg-transparent sm:border-0 sm:shadow-none"
         )}
       >
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3">
           {/* Sisi Kiri: Tombol Hapus (jika ada penilaian dan periode masih open) */}
-          <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2">
-            {assessment && !isReadOnly ? (
+          {assessment && !isReadOnly ? (
+            <div className="w-full sm:w-auto flex items-center justify-center sm:justify-start">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button
@@ -537,7 +537,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
                     variant="ghost"
                     size="sm"
                     disabled={isDeleting || isSubmitting}
-                    className="text-xs text-destructive hover:bg-destructive/10 hover:text-destructive h-9 px-3"
+                    className="text-xs text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2 sm:h-9 sm:px-3 w-full sm:w-auto justify-center"
                     id="btn-hapus-penilaian"
                   >
                     {isDeleting ? (
@@ -568,24 +568,26 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            ) : (
-              <span className="text-[11px] text-muted-foreground hidden sm:inline">
+            </div>
+          ) : (
+            <div className="hidden sm:flex sm:w-auto items-center">
+              <span className="text-[11px] text-muted-foreground">
                 * Skor resmi dan riwayat audit dihitung otomatis oleh trigger basis data saat disimpan.
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Sisi Kanan: Aksi Simpan Draf & Kirim */}
-          <div className="w-full sm:w-auto flex items-center justify-end gap-2">
+          {/* Sisi Kanan: Aksi Simpan Draf (Kiri) & Kirim Penilaian (Kanan) */}
+          <div className="w-full sm:w-auto grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end">
             {isReadOnly ? (
-              <Button asChild variant="outline" size="sm" className="w-full sm:w-auto text-xs h-9">
+              <Button asChild variant="outline" size="sm" className="col-span-2 sm:col-span-1 w-full sm:w-auto text-xs h-9">
                 <Link href={`/penilaian?periodeId=${periode.id}`}>
                   Kembali ke Daftar
                 </Link>
               </Button>
             ) : (
               <>
-                {/* Simpan Draf */}
+                {/* Tombol Kiri: Simpan Draf */}
                 <Button
                   type="button"
                   variant="outline"
@@ -603,7 +605,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
                   Simpan Draf
                 </Button>
 
-                {/* Kirim Penilaian */}
+                {/* Tombol Kanan: Kirim Penilaian */}
                 <Button
                   type="button"
                   size="sm"
