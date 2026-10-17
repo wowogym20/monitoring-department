@@ -12,6 +12,7 @@ import {
   BookOpen,
   Settings,
   UsersRound,
+  FileText,
   type LucideIcon,
 } from "lucide-react"
 import { UserRole } from "@/types/database"
@@ -60,6 +61,13 @@ export const navigationItems: NavItem[] = [
     title: "Rekap Penilaian",
     href: "/rekap",
     icon: BarChart3,
+    roles: ["super_admin", "admin", "user"],
+    section: "main",
+  },
+  {
+    title: "Laporan Kerja Anggota",
+    href: "/laporan-kerja",
+    icon: FileText,
     roles: ["super_admin", "admin", "user"],
     section: "main",
   },
