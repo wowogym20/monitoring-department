@@ -87,7 +87,7 @@ export function LaporanFormDialog({
     e.preventDefault()
 
     if (!isEdit && !nip.trim()) {
-      toast.error("NIP pegawai wajib diisi")
+      toast.error("NIG wajib diisi")
       return
     }
     if (!nama.trim()) {
@@ -159,7 +159,7 @@ export function LaporanFormDialog({
           <div className="space-y-1.5">
             <Label htmlFor="nip" className="text-xs font-semibold flex items-center gap-1.5">
               <User className="size-3.5 text-primary" />
-              NIP Pegawai
+              Nomor Induk Guru
             </Label>
             <Input
               id="nip"
