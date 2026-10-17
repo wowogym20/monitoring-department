@@ -116,7 +116,7 @@ export function LaporanDetailDialog({
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <IdCard className="size-3.5 shrink-0" />
-              <span>NIP: {item.nip ? item.nip : "-"}</span>
+              <span>NIG: {item.nip ? item.nip : "-"}</span>
             </div>
           </div>
 
