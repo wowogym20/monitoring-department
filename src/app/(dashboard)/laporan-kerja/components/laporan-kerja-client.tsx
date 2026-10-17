@@ -65,6 +65,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { SortableHeader } from "@/components/ui/sortable-header"
 
 import {
   deleteLaporanKerjaAction,
@@ -74,6 +75,9 @@ import {
 } from "@/lib/actions/laporan-kerja"
 import { LaporanDetailDialog } from "./laporan-detail-dialog"
 import { LaporanFormDialog } from "./laporan-form-dialog"
+
+type SortField = "tanggal" | "nama_guru" | "judul" | "status"
+type SortOrder = "asc" | "desc"
 
 interface LaporanKerjaClientProps {
   initialData: LaporanKerjaApiResponse
@@ -115,6 +119,10 @@ export function LaporanKerjaClient({
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
   const [currentPage, setCurrentPage] = React.useState(1)
   const [pageSize, setPageSize] = React.useState(10)
+
+  // State untuk pengurutan kolom tabel (default: tanggal terbaru/descending)
+  const [sortField, setSortField] = React.useState<SortField>("tanggal")
+  const [sortOrder, setSortOrder] = React.useState<SortOrder>("desc")
 
   // State dialog detail
   const [selectedItem, setSelectedItem] = React.useState<LaporanKerjaItem | null>(null)
@@ -172,6 +180,50 @@ export function LaporanKerjaClient({
     })
   }, [items, statusFilter, searchQuery])
 
+  // Handler pergantian pengurutan kolom
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    } else {
+      setSortField(field)
+      setSortOrder(field === "tanggal" ? "desc" : "asc")
+    }
+  }
+
+  // Urutkan data berdasarkan kolom dan arah yang aktif
+  const sortedItems = React.useMemo(() => {
+    return [...filteredItems].sort((a, b) => {
+      let cmp = 0
+      if (sortField === "tanggal") {
+        const dateTimeA = `${a.tanggal || ""} ${a.jam || ""}`
+        const dateTimeB = `${b.tanggal || ""} ${b.jam || ""}`
+        cmp = dateTimeA.localeCompare(dateTimeB)
+      } else if (sortField === "nama_guru") {
+        const nameA = a.nama_pegawai || ""
+        const nameB = b.nama_pegawai || ""
+        cmp = nameA.localeCompare(nameB, "id", { sensitivity: "base" })
+        if (cmp === 0) {
+          cmp = (a.nip || "").localeCompare(b.nip || "")
+        }
+      } else if (sortField === "judul") {
+        const titleA = a.judul || ""
+        const titleB = b.judul || ""
+        cmp = titleA.localeCompare(titleB, "id", { sensitivity: "base" })
+      } else if (sortField === "status") {
+        const statusWeight: Record<string, number> = {
+          Y: 1,
+          PENDING: 2,
+          N: 3,
+        }
+        const weightA = statusWeight[a.status] ?? 99
+        const weightB = statusWeight[b.status] ?? 99
+        cmp = weightA - weightB
+      }
+
+      return sortOrder === "asc" ? cmp : -cmp
+    })
+  }, [filteredItems, sortField, sortOrder])
+
   // Pagination kalkulasi
   const totalFiltered = filteredItems.length
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize))
@@ -184,8 +236,8 @@ export function LaporanKerjaClient({
 
   const paginatedItems = React.useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return filteredItems.slice(start, start + pageSize)
-  }, [filteredItems, currentPage, pageSize])
+    return sortedItems.slice(start, start + pageSize)
+  }, [sortedItems, currentPage, pageSize])
 
   const handleRefresh = () => {
     startTransition(() => {
@@ -219,7 +271,7 @@ export function LaporanKerjaClient({
     try {
       const res = await deleteLaporanKerjaAction(itemToDelete.id)
       if (res.success) {
-        toast.success(res.message)
+        toast.error(res.message)
         setDeleteDialogOpen(false)
         setItemToDelete(null)
         handleRefresh()
@@ -238,7 +290,13 @@ export function LaporanKerjaClient({
     try {
       const res = await updateStatusLaporanKerjaAction(id, status)
       if (res.success) {
-        toast.success(res.message)
+        if (status === "N") {
+          toast.error(res.message)
+        } else if (status === "PENDING") {
+          toast.warning(res.message)
+        } else {
+          toast.success(res.message)
+        }
         handleRefresh()
       } else {
         toast.error(res.message)
@@ -253,6 +311,8 @@ export function LaporanKerjaClient({
   const handleResetFilter = () => {
     setSearchQuery("")
     setStatusFilter("all")
+    setSortField("tanggal")
+    setSortOrder("desc")
     setCurrentPage(1)
   }
 
@@ -368,7 +428,7 @@ export function LaporanKerjaClient({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
-              placeholder="Cari nama pegawai, NIP, atau judul laporan..."
+              placeholder="Cari nama guru, NIP, atau judul laporan..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -409,7 +469,7 @@ export function LaporanKerjaClient({
           </div>
 
           {/* Reset Filter jika aktif */}
-          {(searchQuery || statusFilter !== "all") && (
+          {(searchQuery || statusFilter !== "all" || sortField !== "tanggal" || sortOrder !== "desc") && (
             <Button
               variant="ghost"
               size="sm"
@@ -431,11 +491,41 @@ export function LaporanKerjaClient({
             <TableHeader className="bg-muted/40">
               <TableRow>
                 <TableHead className="w-12 text-center text-xs font-semibold">No</TableHead>
-                <TableHead className="w-40 text-xs font-semibold">Tanggal & Waktu</TableHead>
-                <TableHead className="w-56 text-xs font-semibold">Pegawai</TableHead>
-                <TableHead className="text-xs font-semibold">Judul & Uraian</TableHead>
+                <TableHead className="w-44 text-xs font-semibold">
+                  <SortableHeader
+                    label="Tanggal & Waktu"
+                    type="date"
+                    direction={sortField === "tanggal" ? sortOrder : false}
+                    onToggle={() => handleSort("tanggal")}
+                  />
+                </TableHead>
+                <TableHead className="w-56 text-xs font-semibold">
+                  <SortableHeader
+                    label="Nama Guru"
+                    type="alpha"
+                    direction={sortField === "nama_guru" ? sortOrder : false}
+                    onToggle={() => handleSort("nama_guru")}
+                  />
+                </TableHead>
+                <TableHead className="text-xs font-semibold">
+                  <SortableHeader
+                    label="Judul & Uraian"
+                    type="alpha"
+                    direction={sortField === "judul" ? sortOrder : false}
+                    onToggle={() => handleSort("judul")}
+                  />
+                </TableHead>
                 <TableHead className="w-20 text-center text-xs font-semibold">Foto</TableHead>
-                <TableHead className="w-28 text-center text-xs font-semibold">Status</TableHead>
+                <TableHead className="w-28 text-center text-xs font-semibold">
+                  <div className="flex justify-center">
+                    <SortableHeader
+                      label="Status"
+                      type="general"
+                      direction={sortField === "status" ? sortOrder : false}
+                      onToggle={() => handleSort("status")}
+                    />
+                  </div>
+                </TableHead>
                 <TableHead className="w-32 text-center text-xs font-semibold">Aksi</TableHead>
               </TableRow>
             </TableHeader>

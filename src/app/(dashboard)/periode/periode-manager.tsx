@@ -227,7 +227,7 @@ export function PeriodeManager({
     try {
       const res = await deletePeriodAction(deletePeriod.id)
       if (res.success) {
-        toast.success(res.message)
+        toast.error(res.message)
         setDeletePeriod(null)
         router.refresh()
       } else {

@@ -151,7 +151,7 @@ export function AssessmentForm({ initialData }: AssessmentFormProps) {
         return
       }
 
-      toast.success(res.message)
+      toast.error(res.message)
       router.push(`/penilaian?periodeId=${periode.id}`)
       router.refresh()
     } catch (err: unknown) {

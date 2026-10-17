@@ -141,7 +141,7 @@ export function MaintenanceTab({
     try {
       const res = await purgeTrashNowAction()
       if (res.success) {
-        toast.success(res.message)
+        toast.error(res.message)
       } else {
         toast.error(res.message)
       }

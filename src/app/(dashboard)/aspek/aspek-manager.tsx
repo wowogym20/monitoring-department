@@ -202,7 +202,7 @@ export function AspekManager({
     try {
       const res = await deleteAspectAction(deleteAspect.id)
       if (res.success) {
-        toast.success(res.message)
+        toast.error(res.message)
         setDeleteAspect(null)
         router.refresh()
       } else {

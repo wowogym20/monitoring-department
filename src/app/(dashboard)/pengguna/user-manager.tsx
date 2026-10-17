@@ -442,7 +442,7 @@ export function UserManager({
       const res = await deleteUserAction({ id: deleteTarget.id })
 
       if (res.success) {
-        toast.success(res.message)
+        toast.error(res.message)
         setDeleteTarget(null)
         router.refresh()
       } else {

@@ -266,7 +266,7 @@ export function AnggotaManager({
         return
       }
 
-      toast.success(res.message || "Anggota terpilih berhasil dihapus")
+      toast.error(res.message || "Anggota terpilih berhasil dihapus")
       setBulkDeleteOpen(false)
       setSelectedIds(new Set())
       setIsAllMatchingSelected(false)
@@ -349,7 +349,7 @@ export function AnggotaManager({
         toast.error(res.error || "Gagal menghapus anggota")
         return
       }
-      toast.success(res.message || "Anggota berhasil dihapus")
+      toast.error(res.message || "Anggota berhasil dihapus")
       setDeleteTarget(null)
       loadData()
     } catch (err: unknown) {

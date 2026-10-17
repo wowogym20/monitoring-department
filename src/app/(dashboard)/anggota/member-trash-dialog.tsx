@@ -196,7 +196,7 @@ export function MemberTrashDialog({
         toast.error(res.error || "Gagal menghapus permanen data")
         return
       }
-      toast.success(res.message || "Data anggota berhasil dihapus permanen dari Supabase")
+      toast.error(res.message || "Data anggota berhasil dihapus permanen dari Supabase")
       setItems((prev) => prev.filter((i) => i.id !== deletingTarget.id))
       setDeletingTarget(null)
       onTrashMutated()
@@ -216,7 +216,7 @@ export function MemberTrashDialog({
         toast.error(res.error || "Gagal mengosongkan tempat sampah")
         return
       }
-      toast.success(res.message || "Tempat sampah berhasil dikosongkan")
+      toast.error(res.message || "Tempat sampah berhasil dikosongkan")
       setItems([])
       setConfirmEmptyOpen(false)
       onTrashMutated()

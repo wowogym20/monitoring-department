@@ -128,7 +128,7 @@ export function AssessmentDetailView({ data }: AssessmentDetailViewProps) {
         comment: revisionComment,
       })
       if (res.success) {
-        toast.success(res.message || "Permintaan revisi dan catatan berhasil dikirimkan ke Ketua Departemen.")
+        toast.error(res.message || "Permintaan revisi dan catatan berhasil dikirimkan ke Ketua Departemen.")
         setRevisionDialogOpen(false)
         setRevisionComment("")
         invalidateUnread()

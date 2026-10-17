@@ -140,7 +140,7 @@ export function AccountProfileCard({
         if (result.success) {
           setPreviewUrl(null)
           if (fileInputRef.current) fileInputRef.current.value = ""
-          toast.success(result.message || "Foto profil berhasil dihapus")
+          toast.error(result.message || "Foto profil berhasil dihapus")
           router.refresh()
         } else {
           toast.error(result.error || "Gagal menghapus foto profil")

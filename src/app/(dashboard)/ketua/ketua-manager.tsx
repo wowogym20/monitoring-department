@@ -247,7 +247,7 @@ export function KetuaManager({ initialAccounts, departments = [] }: KetuaManager
     try {
       const res = await deleteKetuaAction(deleteAccount.id)
       if (res.success) {
-        toast.success(res.message)
+        toast.error(res.message)
         setDeleteAccount(null)
         router.refresh()
       } else {

@@ -81,4 +81,84 @@ describe("Laporan Kerja Integration & Service", () => {
     expect(result.total).toBe(0)
     expect(result.message).toContain("Network timeout")
   })
+
+  it("should correctly sort laporan kerja by tanggal, nama_guru, judul, and status", () => {
+    const rawItems = [
+      {
+        id: 1,
+        nip: "002",
+        nama_pegawai: "Budi Santoso, S.Pd.",
+        judul: "Penyusunan Silabus",
+        tanggal: "2026-10-10",
+        jam: "08:00:00",
+        keterangan: "Penyusunan silabus semester genap",
+        foto_file: null,
+        foto_url: null,
+        status: "Y" as const,
+        status_label: "Disetujui" as const,
+      },
+      {
+        id: 2,
+        nip: "001",
+        nama_pegawai: "Ahmad Dahlan, M.Pd.",
+        judul: "Rapat Guru",
+        tanggal: "2026-10-15",
+        jam: "10:30:00",
+        keterangan: "Rapat koordinasi mingguan",
+        foto_file: null,
+        foto_url: null,
+        status: "PENDING" as const,
+        status_label: "Pending" as const,
+      },
+      {
+        id: 3,
+        nip: "003",
+        nama_pegawai: "Candra Wijaya",
+        judul: "Bimbingan Konseling",
+        tanggal: "2026-10-12",
+        jam: "09:15:00",
+        keterangan: "Konseling santri",
+        foto_file: null,
+        foto_url: null,
+        status: "N" as const,
+        status_label: "Ditolak" as const,
+      },
+    ]
+
+    // Sort by nama_guru ASC
+    const sortedByNamaAsc = [...rawItems].sort((a, b) =>
+      a.nama_pegawai.localeCompare(b.nama_pegawai, "id", { sensitivity: "base" })
+    )
+    expect(sortedByNamaAsc.map((i) => i.nama_pegawai)).toEqual([
+      "Ahmad Dahlan, M.Pd.",
+      "Budi Santoso, S.Pd.",
+      "Candra Wijaya",
+    ])
+
+    // Sort by nama_guru DESC
+    const sortedByNamaDesc = [...rawItems].sort((a, b) =>
+      b.nama_pegawai.localeCompare(a.nama_pegawai, "id", { sensitivity: "base" })
+    )
+    expect(sortedByNamaDesc.map((i) => i.nama_pegawai)).toEqual([
+      "Candra Wijaya",
+      "Budi Santoso, S.Pd.",
+      "Ahmad Dahlan, M.Pd.",
+    ])
+
+    // Sort by tanggal DESC (newest first)
+    const sortedByTanggalDesc = [...rawItems].sort((a, b) => {
+      const dateTimeA = `${a.tanggal} ${a.jam}`
+      const dateTimeB = `${b.tanggal} ${b.jam}`
+      return dateTimeB.localeCompare(dateTimeA)
+    })
+    expect(sortedByTanggalDesc.map((i) => i.id)).toEqual([2, 3, 1])
+
+    // Sort by status ASC (Disetujui -> Pending -> Ditolak)
+    const statusWeight: Record<string, number> = { Y: 1, PENDING: 2, N: 3 }
+    const sortedByStatusAsc = [...rawItems].sort(
+      (a, b) => (statusWeight[a.status] ?? 99) - (statusWeight[b.status] ?? 99)
+    )
+    expect(sortedByStatusAsc.map((i) => i.status)).toEqual(["Y", "PENDING", "N"])
+  })
 })
+

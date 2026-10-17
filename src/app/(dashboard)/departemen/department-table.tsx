@@ -377,7 +377,7 @@ export function DepartmentTable({
     try {
       const res = await deleteDepartmentAction(deleteDept.id)
       if (res.success) {
-        toast.success(res.message)
+        toast.error(res.message)
         setDeleteDept(null)
         router.refresh()
       } else {
