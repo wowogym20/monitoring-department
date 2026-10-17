@@ -103,4 +103,23 @@ describe("Revisi Halaman /rekap: Kontrol Visibilitas Bagian Ringkasan Progres pe
     expect(completedDepts).toBe(1)
     expect(incompleteDepts).toBe(1)
   })
+
+  it("menangani nama departemen yang panjang dan berkarakter khusus tanpa error data", () => {
+    const longNamedDept: DepartmentRekapSummary = {
+      id: "dept-long",
+      nama: "Dept. Penelitian dan Pengembangan Akademik (Majelis Guru & Pengasuhan)",
+      kode: "LITBANG-GURU-PENGASUHAN",
+      total_members: 25,
+      assessed_count: 20,
+      draft_count: 5,
+      average_score: 4.65,
+      is_incomplete: true,
+    }
+
+    const percentage = Math.round((longNamedDept.assessed_count / longNamedDept.total_members) * 100)
+    expect(percentage).toBe(80)
+    expect(longNamedDept.nama.length).toBeGreaterThan(40)
+    expect(longNamedDept.is_incomplete).toBe(true)
+  })
 })
+

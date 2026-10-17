@@ -67,9 +67,9 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
   return (
     <div className="space-y-4">
       {/* 1. Baris Kartu KPI Global Agregat */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full min-w-0">
         {/* KPI 1: Total Anggota & Progres */}
-        <Card className="border border-border/80 shadow-2xs bg-card/60 relative overflow-hidden">
+        <Card className="min-w-0 border border-border/80 shadow-2xs bg-card/60 relative overflow-hidden">
           <div className="absolute top-0 inset-x-0 h-1 bg-primary" />
           <CardHeader className="p-3.5 sm:p-4 pb-1">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -90,7 +90,7 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
         </Card>
 
         {/* KPI 2: Departemen Selesai */}
-        <Card className="border border-border/80 shadow-2xs bg-card/60 relative overflow-hidden">
+        <Card className="min-w-0 border border-border/80 shadow-2xs bg-card/60 relative overflow-hidden">
           <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500" />
           <CardHeader className="p-3.5 sm:p-4 pb-1">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -113,7 +113,7 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
         {/* KPI 3: Penanda Belum Selesai (US-10) */}
         <Card
           className={cn(
-            "border shadow-2xs bg-card/60 relative overflow-hidden",
+            "min-w-0 border shadow-2xs bg-card/60 relative overflow-hidden",
             incompleteDepts > 0
               ? "border-orange-300 dark:border-orange-800 bg-orange-50/20 dark:bg-orange-950/20"
               : "border-border/80"
@@ -159,7 +159,7 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
         </Card>
 
         {/* KPI 4: Rata-rata Skor Global */}
-        <Card className="border border-border/80 shadow-2xs bg-card/60 relative overflow-hidden">
+        <Card className="min-w-0 border border-border/80 shadow-2xs bg-card/60 relative overflow-hidden">
           <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 to-orange-500" />
           <CardHeader className="p-3.5 sm:p-4 pb-1">
             <div className="flex items-center justify-between text-muted-foreground">
@@ -185,13 +185,13 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
       {/* 2. Header Kontrol Rincian Departemen & Grid (Hanya untuk Admin & Super Admin; dihilangkan untuk role user) */}
       {userRole !== "user" && (
         <>
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
-              <Building2 className="size-4 text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div className="flex items-center gap-2 min-w-0">
+              <Building2 className="size-4 text-primary shrink-0" />
+              <h2 className="text-sm font-semibold text-foreground truncate">
                 Ringkasan Progres per Departemen
               </h2>
-              <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
+              <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0 shrink-0">
                 {summaries.length}
               </Badge>
             </div>
@@ -200,7 +200,7 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
               variant="ghost"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground gap-1 shrink-0"
             >
               <span>{isExpanded ? "Sembunyikan Rincian" : "Lihat Semua Departemen"}</span>
               {isExpanded ? (
@@ -213,7 +213,7 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
 
           {/* 3. Grid Rincian Tiap Departemen (Tampil saat expanded atau jika departemen <= 3) */}
           {(isExpanded || summaries.length <= 3) && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 animate-in fade-in-50 duration-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 w-full min-w-0 animate-in fade-in-50 duration-200">
               {summaries.map((dept) => {
                 const percentage =
                   dept.total_members > 0
@@ -224,7 +224,7 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
                   <Card
                     key={dept.id}
                     className={cn(
-                      "transition-all duration-200 shadow-2xs border bg-card/90 relative overflow-hidden",
+                      "min-w-0 w-full transition-all duration-200 shadow-2xs border bg-card/90 relative overflow-hidden py-0 gap-0",
                       dept.is_incomplete
                         ? "border-orange-300 dark:border-orange-800/80 bg-orange-50/20 dark:bg-orange-950/20"
                         : "border-border hover:border-emerald-500/50"
@@ -240,13 +240,16 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
                       )}
                     />
 
-                    <CardHeader className="p-3.5 pb-2">
-                      <div className="flex items-start justify-between gap-2">
+                    <CardHeader className="p-3.5 pb-2 w-full min-w-0">
+                      <div className="flex items-start justify-between gap-2 w-full min-w-0">
                         <div className="min-w-0 flex-1">
-                          <CardTitle className="text-sm font-bold truncate leading-tight text-foreground">
+                          <CardTitle
+                            className="text-sm font-bold leading-snug text-foreground line-clamp-2 break-words"
+                            title={dept.nama}
+                          >
                             {dept.nama}
                           </CardTitle>
-                          <span className="text-[10px] font-mono text-muted-foreground">
+                          <span className="text-[10px] font-mono text-muted-foreground block truncate">
                             Kode: {dept.kode}
                           </span>
                         </div>
@@ -270,7 +273,7 @@ export function RekapSummaryCards({ summaries, userRole }: RekapSummaryCardsProp
                       </div>
                     </CardHeader>
 
-                    <CardContent className="p-3.5 pt-0 space-y-2.5">
+                    <CardContent className="p-3.5 pt-0 space-y-2.5 w-full min-w-0">
                       {/* Progres Anggota */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
