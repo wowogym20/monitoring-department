@@ -428,7 +428,7 @@ export function LaporanKerjaClient({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
               type="text"
-              placeholder="Cari nama guru, NIP, atau judul laporan..."
+              placeholder="Cari nama guru, NIG, atau judul laporan..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value)
@@ -578,7 +578,7 @@ export function LaporanKerjaClient({
                               variant="outline"
                               className="text-[10px] px-1.5 py-0 font-mono text-muted-foreground bg-muted/30"
                             >
-                              NIP: {item.nip || "-"}
+                              NIG: {item.nip || "-"}
                             </Badge>
                           </div>
                         </div>
