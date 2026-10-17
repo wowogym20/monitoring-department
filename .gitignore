@@ -47,5 +47,6 @@ next-env.d.ts
 *.orig.*
 
 # local reference and legacy scripts
-/api/
+/api/*
+!/api/laporan-kerja.php
 /tazakka/

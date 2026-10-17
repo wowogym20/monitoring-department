@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 import { ImageResponse } from "next/og"
 import fs from "fs"
 import path from "path"
@@ -71,6 +70,7 @@ export default async function Image() {
               border: "2px solid rgba(16, 185, 129, 0.5)",
             }}
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logoDataUrl}
               alt="Logo Tazakka"
