@@ -328,7 +328,7 @@ export function LaporanKerjaClient({
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl">
-            Pusat pemantauan dan pengelolaan laporan kegiatan pegawai terhubung langsung dengan sistem absensi Tazakka.
+            Pusat pemantauan dan pengelolaan laporan kegiatan guru terhubung langsung dengan sistem Absensi Tazakka v2.0.
           </p>
         </div>
 
