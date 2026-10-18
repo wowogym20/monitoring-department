@@ -58,6 +58,30 @@ function getApiConfig() {
   return { apiKey, apiBase }
 }
 
+function formatMutationError(
+  error: unknown,
+  defaultMessage = "Terjadi kesalahan saat menghubungi API Tazakka"
+): string {
+  if (
+    error instanceof Error &&
+    (error.name === "AbortError" ||
+      error.name === "TimeoutError" ||
+      error.message.toLowerCase().includes("aborted"))
+  ) {
+    return "Koneksi ke server API Tazakka mengalami timeout (melebihi batas waktu)"
+  }
+  return error instanceof Error ? error.message : defaultMessage
+}
+
+function createTimeoutSignal(timeoutMs = 15000) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  return {
+    signal: controller.signal,
+    cleanup: () => clearTimeout(timeoutId),
+  }
+}
+
 /**
  * Mengambil data laporan kerja dari API Tazakka secara efisien.
  * Menggunakan Next.js Data Cache dengan revalidasi berkala (60 detik)
@@ -83,10 +107,11 @@ export async function getLaporanKerjaServer(
     url.searchParams.set("limit", "100")
   }
 
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
+  const timeoutMs = Number(process.env.TAZAKKA_API_TIMEOUT_MS) || 10000
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
+  try {
     const response = await fetch(url.toString(), {
       method: "GET",
       headers: {
@@ -98,8 +123,6 @@ export async function getLaporanKerjaServer(
       },
       signal: controller.signal,
     })
-
-    clearTimeout(timeoutId)
 
     if (!response.ok) {
       throw new Error(`API error: ${response.status} ${response.statusText}`)
@@ -115,7 +138,21 @@ export async function getLaporanKerjaServer(
       data: Array.isArray(json.data) ? json.data : [],
     }
   } catch (error) {
-    console.error("[getLaporanKerjaServer] Error fetching laporan kerja:", error)
+    const isAbort =
+      error instanceof Error &&
+      (error.name === "AbortError" ||
+        error.name === "TimeoutError" ||
+        error.message.toLowerCase().includes("aborted"))
+
+    const message = isAbort
+      ? "Koneksi ke server API Tazakka mengalami batas waktu (timeout). Server absensi saat ini tidak merespons atau sedang offline."
+      : error instanceof Error
+        ? error.message
+        : "Gagal memuat data dari server API Tazakka"
+
+    // Gunakan console.warn string agar Turbopack (Next.js 16) tidak mencegat sebagai unhandled console error overlay
+    console.warn(`[getLaporanKerjaServer] ${isAbort ? "Timeout" : "Gagal memuat data"}: ${message}`)
+
     return {
       status: "error",
       total: 0,
@@ -123,11 +160,10 @@ export async function getLaporanKerjaServer(
       limit: 50,
       total_pages: 0,
       data: [],
-      message:
-        error instanceof Error
-          ? error.message
-          : "Gagal memuat data dari server API Tazakka",
+      message,
     }
+  } finally {
+    clearTimeout(timeoutId)
   }
 }
 
@@ -159,6 +195,8 @@ export async function createLaporanKerjaAction(
   url.searchParams.set("api_key", apiKey)
   url.searchParams.set("action", "add")
 
+  const { signal, cleanup } = createTimeoutSignal(15000)
+
   try {
     const response = await fetch(url.toString(), {
       method: "POST",
@@ -166,6 +204,7 @@ export async function createLaporanKerjaAction(
         "X-Api-Key": apiKey,
       },
       body: formData,
+      signal,
     })
 
     const result = await response.json()
@@ -187,11 +226,10 @@ export async function createLaporanKerjaAction(
   } catch (error) {
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menghubungi API Tazakka",
+      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
     }
+  } finally {
+    cleanup()
   }
 }
 
@@ -225,6 +263,8 @@ export async function updateLaporanKerjaAction(
   url.searchParams.set("action", "update")
   formData.set("id", id.toString())
 
+  const { signal, cleanup } = createTimeoutSignal(15000)
+
   try {
     const response = await fetch(url.toString(), {
       method: "POST",
@@ -232,6 +272,7 @@ export async function updateLaporanKerjaAction(
         "X-Api-Key": apiKey,
       },
       body: formData,
+      signal,
     })
 
     const result = await response.json()
@@ -252,11 +293,10 @@ export async function updateLaporanKerjaAction(
   } catch (error) {
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menghubungi API Tazakka",
+      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
     }
+  } finally {
+    cleanup()
   }
 }
 
@@ -283,6 +323,8 @@ export async function updateStatusLaporanKerjaAction(
   url.searchParams.set("api_key", apiKey)
   url.searchParams.set("action", "status")
 
+  const { signal, cleanup } = createTimeoutSignal(15000)
+
   try {
     const response = await fetch(url.toString(), {
       method: "POST",
@@ -291,6 +333,7 @@ export async function updateStatusLaporanKerjaAction(
         "X-Api-Key": apiKey,
       },
       body: JSON.stringify({ id, status }),
+      signal,
     })
 
     const result = await response.json()
@@ -312,11 +355,10 @@ export async function updateStatusLaporanKerjaAction(
   } catch (error) {
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menghubungi API Tazakka",
+      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
     }
+  } finally {
+    cleanup()
   }
 }
 
@@ -336,6 +378,8 @@ export async function deleteLaporanKerjaAction(id: number): Promise<MutationResu
   url.searchParams.set("api_key", apiKey)
   url.searchParams.set("action", "delete")
 
+  const { signal, cleanup } = createTimeoutSignal(15000)
+
   try {
     const response = await fetch(url.toString(), {
       method: "POST",
@@ -344,6 +388,7 @@ export async function deleteLaporanKerjaAction(id: number): Promise<MutationResu
         "X-Api-Key": apiKey,
       },
       body: JSON.stringify({ id }),
+      signal,
     })
 
     const result = await response.json()
@@ -364,11 +409,10 @@ export async function deleteLaporanKerjaAction(id: number): Promise<MutationResu
   } catch (error) {
     return {
       success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat menghubungi API Tazakka",
+      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
     }
+  } finally {
+    cleanup()
   }
 }
 
@@ -405,31 +449,38 @@ export async function bulkUpdateStatusLaporanKerjaAction(
   url.searchParams.set("api_key", apiKey)
   url.searchParams.set("action", "status")
 
+  const { signal, cleanup } = createTimeoutSignal(15000)
+
   let successCount = 0
   let failureCount = 0
 
-  await Promise.all(
-    ids.map(async (id) => {
-      try {
-        const response = await fetch(url.toString(), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Api-Key": apiKey,
-          },
-          body: JSON.stringify({ id, status }),
-        })
-        const result = await response.json()
-        if (response.ok && result.status === "success") {
-          successCount++
-        } else {
+  try {
+    await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const response = await fetch(url.toString(), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Api-Key": apiKey,
+            },
+            body: JSON.stringify({ id, status }),
+            signal,
+          })
+          const result = await response.json()
+          if (response.ok && result.status === "success") {
+            successCount++
+          } else {
+            failureCount++
+          }
+        } catch {
           failureCount++
         }
-      } catch {
-        failureCount++
-      }
-    })
-  )
+      })
+    )
+  } finally {
+    cleanup()
+  }
 
   revalidateTag("laporan-kerja", "default")
   revalidatePath("/laporan-kerja")
@@ -472,31 +523,38 @@ export async function bulkDeleteLaporanKerjaAction(
   url.searchParams.set("api_key", apiKey)
   url.searchParams.set("action", "delete")
 
+  const { signal, cleanup } = createTimeoutSignal(15000)
+
   let successCount = 0
   let failureCount = 0
 
-  await Promise.all(
-    ids.map(async (id) => {
-      try {
-        const response = await fetch(url.toString(), {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Api-Key": apiKey,
-          },
-          body: JSON.stringify({ id }),
-        })
-        const result = await response.json()
-        if (response.ok && result.status === "success") {
-          successCount++
-        } else {
+  try {
+    await Promise.all(
+      ids.map(async (id) => {
+        try {
+          const response = await fetch(url.toString(), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Api-Key": apiKey,
+            },
+            body: JSON.stringify({ id }),
+            signal,
+          })
+          const result = await response.json()
+          if (response.ok && result.status === "success") {
+            successCount++
+          } else {
+            failureCount++
+          }
+        } catch {
           failureCount++
         }
-      } catch {
-        failureCount++
-      }
-    })
-  )
+      })
+    )
+  } finally {
+    cleanup()
+  }
 
   revalidateTag("laporan-kerja", "default")
   revalidatePath("/laporan-kerja")

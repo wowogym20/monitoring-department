@@ -82,6 +82,19 @@ describe("Laporan Kerja Integration & Service", () => {
     expect(result.message).toContain("Network timeout")
   })
 
+  it("should handle AbortError gracefully with friendly timeout message", async () => {
+    const abortErr = new Error("This operation was aborted")
+    abortErr.name = "AbortError"
+    global.fetch = vi.fn().mockRejectedValue(abortErr)
+
+    const result = await getLaporanKerjaServer()
+
+    expect(result.status).toBe("error")
+    expect(result.data).toEqual([])
+    expect(result.total).toBe(0)
+    expect(result.message).toContain("timeout")
+  })
+
   it("should correctly sort laporan kerja by tanggal, nama_guru, judul, and status", () => {
     const rawItems = [
       {

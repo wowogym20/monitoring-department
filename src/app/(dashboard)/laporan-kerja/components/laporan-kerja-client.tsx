@@ -28,6 +28,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
+  AlertCircle,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -537,6 +538,33 @@ export function LaporanKerjaClient({
         </div>
       </div>
 
+      {/* Alert Banner jika koneksi ke server API Tazakka mengalami gangguan / timeout */}
+      {initialData.status === "error" && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-xs sm:text-sm">
+          <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+            <AlertCircle className="size-5 shrink-0 mt-0.5 sm:mt-0 text-destructive" />
+            <div className="space-y-0.5 min-w-0">
+              <p className="font-semibold text-destructive">
+                Gagal Menghubungkan ke Server Tazakka
+              </p>
+              <p className="text-xs text-destructive/90 leading-relaxed">
+                {initialData.message || "Koneksi ke server API Tazakka mengalami batas waktu (timeout)."}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isPending}
+            className="h-8 text-xs shrink-0 cursor-pointer border-destructive/40 text-destructive hover:bg-destructive/10 self-start sm:self-auto"
+          >
+            <RefreshCw className={`size-3.5 mr-1.5 ${isPending ? "animate-spin" : ""}`} />
+            <span>Coba Lagi</span>
+          </Button>
+        </div>
+      )}
+
       {/* Ringkasan KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="shadow-xs border-border/80">
@@ -742,12 +770,16 @@ export function LaporanKerjaClient({
           <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
             <FileText className="size-9 stroke-1 text-muted-foreground/60" />
             <p className="text-sm font-medium text-foreground">
-              Tidak ada laporan kerja yang ditemukan
+              {initialData.status === "error"
+                ? "Tidak dapat memuat data laporan"
+                : "Tidak ada laporan kerja yang ditemukan"}
             </p>
             <p className="text-xs text-muted-foreground max-w-sm">
-              {searchQuery || statusFilter !== "all"
-                ? "Coba sesuaikan kata kunci pencarian atau ganti filter status."
-                : "Belum ada catatan laporan kerja yang tersedia."}
+              {initialData.status === "error"
+                ? "Server API Tazakka saat ini tidak dapat dijangkau. Silakan klik tombol 'Coba Lagi' di atas atau coba beberapa saat lagi."
+                : searchQuery || statusFilter !== "all"
+                  ? "Coba sesuaikan kata kunci pencarian atau ganti filter status."
+                  : "Belum ada catatan laporan kerja yang tersedia."}
             </p>
           </div>
         </Card>
