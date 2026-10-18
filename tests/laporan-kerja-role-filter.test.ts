@@ -90,7 +90,7 @@ describe("Laporan Kerja Role User Department Filtering", () => {
   })
 
   it("allows super_admin and admin to view all 4 reports across departments", () => {
-    const userRole = "super_admin"
+    const userRole: string = "super_admin"
     let displayReports: LaporanKerjaItem[] = []
 
     if (userRole === "user") {
