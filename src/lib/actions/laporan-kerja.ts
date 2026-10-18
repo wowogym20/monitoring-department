@@ -7,6 +7,7 @@ import {
   updateStatusLaporanSchema,
 } from "@/lib/validations/laporan-kerja"
 import { requireRole } from "@/lib/auth"
+import { createClient } from "@/lib/supabase/server"
 
 export interface LaporanKerjaItem {
   id: number
@@ -359,6 +360,46 @@ async function executeTazakkaMutation(
   }
 }
 
+async function validateUserDepartmentMember(
+  currentUser: Awaited<ReturnType<typeof requireRole>> | null | undefined,
+  nip: string
+): Promise<{ allowed: boolean; message?: string }> {
+  if (!currentUser || currentUser.role !== "user" || !currentUser.department?.id) {
+    return { allowed: true }
+  }
+
+  try {
+    const supabase = await createClient()
+    const { data: members, error } = await supabase
+      .from("members")
+      .select("id, nip")
+      .eq("department_id", currentUser.department.id)
+      .is("deleted_at", null)
+
+    if (error || !members || members.length === 0) {
+      return { allowed: true }
+    }
+
+    const cleanNip = nip.trim().toLowerCase()
+    const isMatch = members.some(
+      (m) =>
+        (m.nip && m.nip.trim().toLowerCase() === cleanNip) ||
+        m.id.toLowerCase() === cleanNip
+    )
+
+    if (!isMatch) {
+      return {
+        allowed: false,
+        message: "Anda hanya berhak menambahkan laporan kerja untuk anggota di departemen Anda",
+      }
+    }
+  } catch {
+    return { allowed: true }
+  }
+
+  return { allowed: true }
+}
+
 /**
  * CREATE: Menambahkan Laporan Kerja baru ke server Tazakka via API.
  * Terbuka untuk seluruh role: Super Admin, Admin, dan User.
@@ -366,7 +407,7 @@ async function executeTazakkaMutation(
 export async function createLaporanKerjaAction(
   formData: FormData
 ): Promise<MutationResult> {
-  await requireRole("super_admin", "admin", "user")
+  const currentUser = await requireRole("super_admin", "admin", "user")
 
   const rawData = {
     nip: (formData.get("nip") as string) || "",
@@ -380,6 +421,14 @@ export async function createLaporanKerjaAction(
     return {
       success: false,
       message: validated.error.issues[0]?.message || "Validasi data gagal",
+    }
+  }
+
+  const deptCheck = await validateUserDepartmentMember(currentUser, rawData.nip)
+  if (!deptCheck.allowed) {
+    return {
+      success: false,
+      message: deptCheck.message || "Akses ditolak",
     }
   }
 

@@ -21,11 +21,13 @@ import {
   updateLaporanKerjaAction,
   type LaporanKerjaItem,
 } from "@/lib/actions/laporan-kerja"
+import type { DepartmentMemberOption } from "./laporan-kerja-client"
 
 interface LaporanFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   item?: LaporanKerjaItem | null
+  departmentMembers?: DepartmentMemberOption[]
   onSuccess?: () => void
 }
 
@@ -33,6 +35,7 @@ export function LaporanFormDialog({
   open,
   onOpenChange,
   item,
+  departmentMembers = [],
   onSuccess,
 }: LaporanFormDialogProps) {
   const isEdit = Boolean(item)
@@ -159,8 +162,35 @@ export function LaporanFormDialog({
           <div className="space-y-1.5">
             <Label htmlFor="nip" className="text-xs font-semibold flex items-center gap-1.5">
               <User className="size-3.5 text-primary" />
-              Nomor Induk Guru
+              Nomor Induk Guru (NIG)
             </Label>
+
+            {!isEdit && departmentMembers && departmentMembers.length > 0 && (
+              <div className="mb-1.5">
+                <select
+                  id="select-member"
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                  onChange={(e) => {
+                    const selectedVal = e.target.value
+                    if (selectedVal) {
+                      setNip(selectedVal)
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    -- Pilih Anggota Departemen --
+                  </option>
+                  {departmentMembers.map((m) => (
+                    <option key={m.id} value={m.nip || m.id}>
+                      {m.nama} {m.nip ? `(NIG: ${m.nip})` : ""} - {m.jabatan}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <Input
               id="nip"
               placeholder="Contoh: 066"
@@ -170,11 +200,15 @@ export function LaporanFormDialog({
               className="h-9 text-sm"
               required
             />
-            {isEdit && (
+            {isEdit ? (
               <p className="text-[11px] text-muted-foreground">
-                NIP tidak dapat diubah setelah laporan dibuat.
+                NIP/NIG tidak dapat diubah setelah laporan dibuat.
               </p>
-            )}
+            ) : departmentMembers && departmentMembers.length > 0 ? (
+              <p className="text-[11px] text-muted-foreground">
+                Pilih anggota dari menu di atas atau ketik langsung Nomor Induk Guru (NIG).
+              </p>
+            ) : null}
           </div>
 
           {/* Judul Laporan */}

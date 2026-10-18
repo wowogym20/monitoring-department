@@ -87,10 +87,18 @@ import { LaporanFormDialog } from "./laporan-form-dialog"
 type SortField = "tanggal" | "nama_guru" | "judul" | "status"
 type SortOrder = "asc" | "desc"
 
+export interface DepartmentMemberOption {
+  id: string
+  nip: string | null
+  nama: string
+  jabatan: string
+}
+
 interface LaporanKerjaClientProps {
   initialData: LaporanKerjaApiResponse
   userRole: string
   departmentName?: string | null
+  departmentMembers?: DepartmentMemberOption[]
 }
 
 export interface UserLaporanGroup {
@@ -130,6 +138,7 @@ export function LaporanKerjaClient({
   initialData,
   userRole,
   departmentName,
+  departmentMembers = [],
 }: LaporanKerjaClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
@@ -1377,6 +1386,7 @@ export function LaporanKerjaClient({
         open={formDialogOpen}
         onOpenChange={setFormDialogOpen}
         item={itemToEdit}
+        departmentMembers={departmentMembers}
         onSuccess={handleRefresh}
       />
 
