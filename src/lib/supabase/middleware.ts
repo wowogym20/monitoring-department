@@ -162,10 +162,9 @@ export async function updateSession(request: NextRequest) {
 
     // Role-based route guard sesuai matriks PRD bagian 10:
 
-    // A. Khusus Super Admin: /ketua, /pengguna, /panduan, dan /pengaturan (Pengaturan Sistem)
+    // A. Khusus Super Admin: /pengguna, /panduan, dan /pengaturan (Pengaturan Sistem)
     if (
-      (pathname.startsWith("/ketua") ||
-        pathname.startsWith("/pengguna") ||
+      (pathname.startsWith("/pengguna") ||
         pathname.startsWith("/panduan") ||
         pathname.startsWith("/pengaturan")) &&
       role !== "super_admin"
@@ -179,20 +178,11 @@ export async function updateSession(request: NextRequest) {
       }
     }
 
-    // B. Super Admin & Admin: /aspek (Ketua / user ditolak)
-    if (pathname.startsWith("/aspek") && role === "user") {
-      const url = request.nextUrl.clone()
-      url.pathname = "/dashboard"
-      return {
-        supabaseResponse: createSafeRedirect(url, request, supabaseResponse),
-        user,
-        role,
-      }
-    }
-
-    // B. Super Admin & Admin: /departemen, /periode, /ekspor (Ditolak untuk Ketua / user)
+    // B. Super Admin & Admin: /ketua, /aspek, /departemen, /periode, /ekspor (Ketua / user ditolak)
     if (
-      (pathname.startsWith("/departemen") ||
+      (pathname.startsWith("/ketua") ||
+        pathname.startsWith("/aspek") ||
+        pathname.startsWith("/departemen") ||
         pathname.startsWith("/periode") ||
         pathname.startsWith("/ekspor")) &&
       role === "user"

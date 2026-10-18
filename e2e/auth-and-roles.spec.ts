@@ -56,15 +56,20 @@ test.describe("Proteksi Otorisasi & Menu Navigasi Berbasis Role", () => {
 
     // Menu admin diizinkan di sidebar
     await expect(page.locator('aside a[href="/departemen"]')).toBeVisible()
+    await expect(page.locator('aside a[href="/ketua"]')).toBeVisible()
     await expect(page.locator('aside a[href="/periode"]')).toBeVisible()
     await expect(page.locator('aside a[href="/aspek"]')).toBeVisible()
     await expect(page.locator('aside a[href="/ekspor"]')).toBeVisible()
 
     // Menu khusus super admin TIDAK boleh terlihat oleh admin di sidebar
-    await expect(page.locator('aside a[href="/ketua"]')).toHaveCount(0)
+    await expect(page.locator('aside a[href="/pengguna"]')).toHaveCount(0)
 
-    // Akses URL terlarang (/ketua) harus dialihkan ke /dashboard
+    // Akses URL /ketua diizinkan untuk admin
     await page.goto("/ketua")
+    await page.waitForURL("**/ketua")
+
+    // Akses URL terlarang (/pengguna) harus dialihkan ke /dashboard
+    await page.goto("/pengguna")
     await page.waitForURL("**/dashboard")
 
     // Akses form penilaian anggota (/penilaian/[anggotaId]) harus ditolak untuk admin

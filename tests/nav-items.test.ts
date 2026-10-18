@@ -16,7 +16,7 @@ describe("Navigasi Role & Pemisahan Menu Main vs Menu Admin", () => {
     })
   })
 
-  it("menu admin khusus super_admin mencakup pengguna, ketua, panduan, dan pengaturan", () => {
+  it("menu admin mencakup pengguna, ketua, panduan, dan pengaturan dengan hak akses yang tepat", () => {
     const adminItems = navigationItems.filter((item) => item.section === "admin")
     const adminHrefs = adminItems.map((item) => item.href)
 
@@ -25,8 +25,15 @@ describe("Navigasi Role & Pemisahan Menu Main vs Menu Admin", () => {
     expect(adminHrefs).toContain("/panduan")
     expect(adminHrefs).toContain("/pengaturan")
 
-    // Seluruh item di section admin HANYA boleh diakses super_admin
-    adminItems.forEach((item) => {
+    // /ketua dapat diakses oleh super_admin dan admin
+    const ketuaItem = adminItems.find((item) => item.href === "/ketua")
+    expect(ketuaItem?.roles).toContain("super_admin")
+    expect(ketuaItem?.roles).toContain("admin")
+    expect(ketuaItem?.roles).not.toContain("user")
+
+    // /pengguna, /panduan, /pengaturan HANYA boleh diakses super_admin
+    const strictSuperAdminItems = adminItems.filter((item) => item.href !== "/ketua")
+    strictSuperAdminItems.forEach((item) => {
       expect(item.roles).toEqual(["super_admin"])
       expect(item.roles.includes("admin")).toBe(false)
       expect(item.roles.includes("user")).toBe(false)
@@ -60,16 +67,17 @@ describe("Navigasi Role & Pemisahan Menu Main vs Menu Admin", () => {
     expect(adminCount).toBe(4) // /pengguna, /ketua, /panduan, /pengaturan
   })
 
-  it("memastikan role admin (Koordinator) dan user (Kepala Departemen) HANYA mendapatkan section Main", () => {
+  it("memastikan role admin dapat mengakses /ketua di Menu Admin, sedangkan role user HANYA mendapatkan section Main", () => {
     const adminItems = navigationItems.filter((item) => item.roles.includes("admin"))
     const userItems = navigationItems.filter((item) => item.roles.includes("user"))
 
-    // Tidak boleh ada satupun item admin yang lolos untuk role admin dan user
-    expect(adminItems.filter((item) => item.section === "admin").length).toBe(0)
-    expect(userItems.filter((item) => item.section === "admin").length).toBe(0)
+    // Role admin berhak mengakses /ketua di section admin
+    const adminSectionItems = adminItems.filter((item) => item.section === "admin")
+    expect(adminSectionItems.length).toBe(1)
+    expect(adminSectionItems[0].href).toBe("/ketua")
 
-    // Seluruh item yang didapat harus berada di section main
-    adminItems.forEach((item) => expect(item.section).toBe("main"))
+    // Role user tidak boleh mendapatkan satupun item di section admin
+    expect(userItems.filter((item) => item.section === "admin").length).toBe(0)
     userItems.forEach((item) => expect(item.section).toBe("main"))
   })
 })

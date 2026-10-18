@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
 import { requireRole } from "@/lib/auth"
 import {
   createKetuaSchema,
@@ -40,16 +39,15 @@ export interface KetuaAccountItem {
 
 /**
  * Mengambil daftar seluruh akun ketua departemen (role: user) beserta informasi departemen yang dipimpin.
- * Khusus Super Admin.
+ * Super Admin & Admin.
  */
 export async function getKetuaAccountsServer(): Promise<KetuaAccountItem[]> {
-  await requireRole("super_admin")
+  await requireRole("super_admin", "admin")
 
-  const supabase = await createClient()
   const adminClient = createAdminClient()
 
   // 1. Ambil data profil role user beserta departemen yang dipimpin
-  const { data: profiles, error: profileErr } = await supabase
+  const { data: profiles, error: profileErr } = await adminClient
     .from("profiles")
     .select(
       `
@@ -108,13 +106,13 @@ export async function getKetuaAccountsServer(): Promise<KetuaAccountItem[]> {
 
 /**
  * Mengambil daftar seluruh departemen aktif untuk opsi dropdown penetapan ketua.
- * Khusus Super Admin.
+ * Super Admin & Admin.
  */
 export async function getDepartmentOptionsServer(): Promise<DepartmentOption[]> {
-  await requireRole("super_admin")
-  const supabase = await createClient()
+  await requireRole("super_admin", "admin")
+  const adminClient = createAdminClient()
 
-  const { data, error } = await supabase
+  const { data, error } = await adminClient
     .from("departments")
     .select("id, nama, kode, ketua_id")
     .eq("is_active", true)
@@ -129,21 +127,20 @@ export async function getDepartmentOptionsServer(): Promise<DepartmentOption[]> 
 }
 
 /**
- * Server Action: Buat Akun Ketua Baru (Khusus Super Admin)
+ * Server Action: Buat Akun Ketua Baru (Super Admin & Admin)
  * Menggunakan admin client (service role) untuk membuat auth.users,
  * kemudian membuat baris public.profiles dengan role 'user', dan opsional menetapkan departemen.
  */
 export async function createKetuaAction(input: CreateKetuaInput) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = createKetuaSchema.parse(input)
     const adminClient = createAdminClient()
-    const supabase = await createClient()
 
     // 1. Cek jika department_id dipilih, apakah sudah memiliki ketua
     if (validated.department_id) {
-      const { data: targetDept } = await supabase
+      const { data: targetDept } = await adminClient
         .from("departments")
         .select("id, nama, ketua_id")
         .eq("id", validated.department_id)
@@ -213,7 +210,7 @@ export async function createKetuaAction(input: CreateKetuaInput) {
 
     // 5. Jika memilih departemen, tetapkan ke departemen tersebut
     if (validated.department_id) {
-      const { error: assignError } = await supabase
+      const { error: assignError } = await adminClient
         .from("departments")
         .update({
           ketua_id: userId,
@@ -239,14 +236,13 @@ export async function createKetuaAction(input: CreateKetuaInput) {
 }
 
 /**
- * Server Action: Ubah Data Profil & Penugasan Departemen Ketua (Khusus Super Admin)
+ * Server Action: Ubah Data Profil & Penugasan Departemen Ketua (Super Admin & Admin)
  */
 export async function updateKetuaAction(input: UpdateKetuaInput) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = updateKetuaSchema.parse(input)
-    const supabase = await createClient()
     const adminClient = createAdminClient()
 
     // 1. Ambil data user auth saat ini
@@ -291,7 +287,7 @@ export async function updateKetuaAction(input: UpdateKetuaInput) {
     }
 
     // 3. Update profil di public.profiles
-    const { error: profileErr } = await supabase
+    const { error: profileErr } = await adminClient
       .from("profiles")
       .update({
         nama: validated.nama,
@@ -307,7 +303,7 @@ export async function updateKetuaAction(input: UpdateKetuaInput) {
 
     // 4. Update penugasan departemen
     // Cari departemen lama yang saat ini dipimpin oleh ketua ini
-    const { data: oldDept } = await supabase
+    const { data: oldDept } = await adminClient
       .from("departments")
       .select("id, nama")
       .eq("ketua_id", validated.id)
@@ -319,7 +315,7 @@ export async function updateKetuaAction(input: UpdateKetuaInput) {
     if (oldDeptId !== newDeptId) {
       // Jika sebelumnya memimpin departemen dan sekarang dipindah / dikosongkan
       if (oldDeptId) {
-        await supabase
+        await adminClient
           .from("departments")
           .update({ ketua_id: null, updated_at: new Date().toISOString() })
           .eq("id", oldDeptId)
@@ -328,7 +324,7 @@ export async function updateKetuaAction(input: UpdateKetuaInput) {
       // Jika ada departemen baru yang dipilih
       if (newDeptId) {
         // Pastikan departemen baru belum dipimpin orang lain
-        const { data: targetDept } = await supabase
+        const { data: targetDept } = await adminClient
           .from("departments")
           .select("id, nama, ketua_id")
           .eq("id", newDeptId)
@@ -341,7 +337,7 @@ export async function updateKetuaAction(input: UpdateKetuaInput) {
           }
         }
 
-        const { error: assignErr } = await supabase
+        const { error: assignErr } = await adminClient
           .from("departments")
           .update({
             ketua_id: validated.id,
@@ -368,7 +364,7 @@ export async function updateKetuaAction(input: UpdateKetuaInput) {
 }
 
 /**
- * Server Action: Hapus Akun Ketua Permanen (Khusus Super Admin)
+ * Server Action: Hapus Akun Ketua Permanen (Super Admin & Admin)
  * Aturan Bisnis:
  * 1. Jika ketua sudah memiliki riwayat penilaian di lembar evaluasi (assessments.evaluator_id),
  *    penghapusan DITOLAK demi integritas riwayat penilaian. Admin disarankan menonaktifkan akun.
@@ -376,14 +372,13 @@ export async function updateKetuaAction(input: UpdateKetuaInput) {
  */
 export async function deleteKetuaAction(id: string) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = deleteKetuaSchema.parse({ id })
-    const supabase = await createClient()
     const adminClient = createAdminClient()
 
     // 1. Periksa riwayat penilaian ketua ini
-    const { count: assessmentCount, error: countErr } = await supabase
+    const { count: assessmentCount, error: countErr } = await adminClient
       .from("assessments")
       .select("*", { count: "exact", head: true })
       .eq("evaluator_id", validated.id)
@@ -400,7 +395,7 @@ export async function deleteKetuaAction(id: string) {
     }
 
     // 2. Lepaskan penugasan departemen jika masih memimpin departemen
-    const { error: unassignErr } = await supabase
+    const { error: unassignErr } = await adminClient
       .from("departments")
       .update({ ketua_id: null, updated_at: new Date().toISOString() })
       .eq("ketua_id", validated.id)
@@ -410,7 +405,7 @@ export async function deleteKetuaAction(id: string) {
     }
 
     // 3. Hapus profil dari public.profiles
-    const { error: deleteProfileErr } = await supabase
+    const { error: deleteProfileErr } = await adminClient
       .from("profiles")
       .delete()
       .eq("id", validated.id)
@@ -438,16 +433,16 @@ export async function deleteKetuaAction(id: string) {
 }
 
 /**
- * Server Action: Aktifkan / Nonaktifkan Akun Ketua (Khusus Super Admin)
+ * Server Action: Aktifkan / Nonaktifkan Akun Ketua (Super Admin & Admin)
  */
 export async function toggleKetuaStatusAction(input: ToggleKetuaStatusInput) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = toggleKetuaStatusSchema.parse(input)
-    const supabase = await createClient()
+    const adminClient = createAdminClient()
 
-    const { error } = await supabase
+    const { error } = await adminClient
       .from("profiles")
       .update({ is_active: validated.is_active })
       .eq("id", validated.id)
@@ -470,11 +465,11 @@ export async function toggleKetuaStatusAction(input: ToggleKetuaStatusInput) {
 }
 
 /**
- * Server Action: Reset Password Akun Ketua (Khusus Super Admin)
+ * Server Action: Reset Password Akun Ketua (Super Admin & Admin)
  */
 export async function resetKetuaPasswordAction(input: ResetKetuaPasswordInput) {
   try {
-    await requireRole("super_admin")
+    await requireRole("super_admin", "admin")
 
     const validated = resetKetuaPasswordSchema.parse(input)
     const adminClient = createAdminClient()
@@ -497,4 +492,3 @@ export async function resetKetuaPasswordAction(input: ResetKetuaPasswordInput) {
     return { success: false, error: errorMsg }
   }
 }
-
