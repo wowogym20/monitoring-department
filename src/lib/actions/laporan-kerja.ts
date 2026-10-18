@@ -370,3 +370,144 @@ export async function deleteLaporanKerjaAction(id: number): Promise<MutationResu
     }
   }
 }
+
+export interface BulkMutationResult {
+  success: boolean
+  message: string
+  totalRequested: number
+  successCount: number
+  failureCount: number
+}
+
+/**
+ * BULK STATUS: Memperbarui status persetujuan banyak laporan kerja sekaligus.
+ * Khusus Super Admin & Admin.
+ */
+export async function bulkUpdateStatusLaporanKerjaAction(
+  ids: number[],
+  status: "Y" | "N" | "PENDING"
+): Promise<BulkMutationResult> {
+  await requireRole("super_admin", "admin")
+
+  if (!ids || ids.length === 0) {
+    return {
+      success: false,
+      message: "Tidak ada data laporan kerja yang dipilih",
+      totalRequested: 0,
+      successCount: 0,
+      failureCount: 0,
+    }
+  }
+
+  const { apiKey, apiBase } = getApiConfig()
+  const url = new URL(apiBase)
+  url.searchParams.set("api_key", apiKey)
+  url.searchParams.set("action", "status")
+
+  let successCount = 0
+  let failureCount = 0
+
+  await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const response = await fetch(url.toString(), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": apiKey,
+          },
+          body: JSON.stringify({ id, status }),
+        })
+        const result = await response.json()
+        if (response.ok && result.status === "success") {
+          successCount++
+        } else {
+          failureCount++
+        }
+      } catch {
+        failureCount++
+      }
+    })
+  )
+
+  revalidateTag("laporan-kerja", "default")
+  revalidatePath("/laporan-kerja")
+
+  const statusLabel =
+    status === "Y" ? "disetujui" : status === "N" ? "ditolak" : "diubah ke pending"
+
+  return {
+    success: successCount > 0,
+    message: `${successCount} dari ${ids.length} laporan berhasil ${statusLabel}${
+      failureCount > 0 ? ` (${failureCount} gagal)` : ""
+    }`,
+    totalRequested: ids.length,
+    successCount,
+    failureCount,
+  }
+}
+
+/**
+ * BULK DELETE: Menghapus banyak laporan kerja dari server Tazakka sekaligus.
+ * Khusus Super Admin & Admin.
+ */
+export async function bulkDeleteLaporanKerjaAction(
+  ids: number[]
+): Promise<BulkMutationResult> {
+  await requireRole("super_admin", "admin")
+
+  if (!ids || ids.length === 0) {
+    return {
+      success: false,
+      message: "Tidak ada data laporan kerja yang dipilih",
+      totalRequested: 0,
+      successCount: 0,
+      failureCount: 0,
+    }
+  }
+
+  const { apiKey, apiBase } = getApiConfig()
+  const url = new URL(apiBase)
+  url.searchParams.set("api_key", apiKey)
+  url.searchParams.set("action", "delete")
+
+  let successCount = 0
+  let failureCount = 0
+
+  await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const response = await fetch(url.toString(), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Api-Key": apiKey,
+          },
+          body: JSON.stringify({ id }),
+        })
+        const result = await response.json()
+        if (response.ok && result.status === "success") {
+          successCount++
+        } else {
+          failureCount++
+        }
+      } catch {
+        failureCount++
+      }
+    })
+  )
+
+  revalidateTag("laporan-kerja", "default")
+  revalidatePath("/laporan-kerja")
+
+  return {
+    success: successCount > 0,
+    message: `${successCount} dari ${ids.length} laporan kerja berhasil dihapus${
+      failureCount > 0 ? ` (${failureCount} gagal)` : ""
+    }`,
+    totalRequested: ids.length,
+    successCount,
+    failureCount,
+  }
+}
+
