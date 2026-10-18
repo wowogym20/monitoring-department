@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 }
 
 export default async function LaporanKerjaPage() {
-  // Akses terbuka untuk seluruh role resmi terautentikasi (read-only)
+  // Akses terbuka untuk seluruh role resmi terautentikasi (super_admin, admin, user): CRUD, bulk action, approval
   const currentUser = await requireRole("super_admin", "admin", "user")
 
   // Ambil data laporan kerja dari API Tazakka via Server Action ber-cache

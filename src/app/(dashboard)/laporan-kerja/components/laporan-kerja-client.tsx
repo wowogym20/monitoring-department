@@ -132,7 +132,7 @@ export function LaporanKerjaClient({
 }: LaporanKerjaClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
-  const isSuperAdminOrAdmin = userRole === "super_admin" || userRole === "admin"
+  const canManage = ["super_admin", "admin", "user"].includes(userRole)
 
   // State untuk filter dan pencarian
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -388,7 +388,7 @@ export function LaporanKerjaClient({
     try {
       const res = await deleteLaporanKerjaAction(itemToDelete.id)
       if (res.success) {
-        toast.error(res.message)
+        toast.success(res.message || "Laporan kerja berhasil dihapus")
         setDeleteDialogOpen(false)
         setItemToDelete(null)
         setSelectedIds((prev) => {
@@ -398,7 +398,7 @@ export function LaporanKerjaClient({
         })
         handleRefresh()
       } else {
-        toast.error(res.message)
+        toast.error(res.message || "Gagal menghapus laporan")
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal menghapus laporan")
@@ -412,16 +412,10 @@ export function LaporanKerjaClient({
     try {
       const res = await updateStatusLaporanKerjaAction(id, status)
       if (res.success) {
-        if (status === "N") {
-          toast.error(res.message)
-        } else if (status === "PENDING") {
-          toast.warning(res.message)
-        } else {
-          toast.success(res.message)
-        }
+        toast.success(res.message)
         handleRefresh()
       } else {
-        toast.error(res.message)
+        toast.error(res.message || "Gagal memperbarui status")
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal memperbarui status")
@@ -437,14 +431,11 @@ export function LaporanKerjaClient({
     try {
       const res = await bulkUpdateStatusLaporanKerjaAction(Array.from(selectedIds), status)
       if (res.success) {
-        if (status === "Y") toast.success(res.message)
-        else if (status === "N") toast.error(res.message)
-        else toast.warning(res.message)
-
+        toast.success(res.message)
         setSelectedIds(new Set())
         handleRefresh()
       } else {
-        toast.error(res.message)
+        toast.error(res.message || "Gagal memperbarui status secara massal")
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal memperbarui status secara massal")
@@ -459,12 +450,12 @@ export function LaporanKerjaClient({
     try {
       const res = await bulkDeleteLaporanKerjaAction(Array.from(selectedIds))
       if (res.success) {
-        toast.success(res.message)
+        toast.success(res.message || "Laporan kerja terpilih berhasil dihapus")
         setBulkDeleteDialogOpen(false)
         setSelectedIds(new Set())
         handleRefresh()
       } else {
-        toast.error(res.message)
+        toast.error(res.message || "Gagal menghapus laporan terpilih")
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Gagal menghapus laporan terpilih")
@@ -673,13 +664,13 @@ export function LaporanKerjaClient({
         onClearSelection={() => setSelectedIds(new Set())}
         onDelete={() => setBulkDeleteDialogOpen(true)}
         onExport={handleBulkExport}
-        canDelete={isSuperAdminOrAdmin}
+        canDelete={canManage}
         canExport={true}
         isDeleting={isBulkDeleting}
         isUpdating={isBulkUpdating}
         isExporting={isBulkExporting}
         customActions={
-          isSuperAdminOrAdmin ? (
+          canManage ? (
             <div className="flex items-center gap-1.5">
               <Button
                 type="button"
@@ -1046,7 +1037,7 @@ export function LaporanKerjaClient({
                                           <Pencil className="size-3.5 mr-2" /> Ubah Laporan
                                         </DropdownMenuItem>
 
-                                        {isSuperAdminOrAdmin && (
+                                        {canManage && (
                                           <>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuLabel className="text-[10px] text-muted-foreground">
@@ -1230,7 +1221,7 @@ export function LaporanKerjaClient({
                                       Ubah Laporan
                                     </DropdownMenuItem>
 
-                                    {isSuperAdminOrAdmin && (
+                                    {canManage && (
                                       <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuLabel className="text-[10px] text-muted-foreground">

@@ -5,6 +5,7 @@ import {
   type LaporanKerjaItem,
 } from "@/lib/actions/laporan-kerja"
 import { exportSelectedLaporanKerjaToExcel } from "@/lib/export/laporan-kerja-export"
+import { requireRole } from "@/lib/auth"
 
 // Mock next/cache
 vi.mock("next/cache", () => ({
@@ -16,8 +17,8 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/auth", () => ({
   requireRole: vi.fn().mockResolvedValue({
     id: "user-123",
-    role: "super_admin",
-    nama: "Super Admin",
+    role: "user",
+    nama: "User Anggota",
   }),
 }))
 
@@ -135,7 +136,7 @@ describe("Laporan Kerja - Bulk Actions & User Grouping Logic", () => {
     expect(selectedIds.size).toBe(0)
   })
 
-  it("should call bulkUpdateStatusLaporanKerjaAction successfully", async () => {
+  it("should call bulkUpdateStatusLaporanKerjaAction successfully for all roles", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ status: "success", message: "Status diperbarui" }),
@@ -143,6 +144,7 @@ describe("Laporan Kerja - Bulk Actions & User Grouping Logic", () => {
 
     const res = await bulkUpdateStatusLaporanKerjaAction([101, 102], "Y")
 
+    expect(requireRole).toHaveBeenCalledWith("super_admin", "admin", "user")
     expect(res.success).toBe(true)
     expect(res.totalRequested).toBe(2)
     expect(res.successCount).toBe(2)
@@ -152,11 +154,12 @@ describe("Laporan Kerja - Bulk Actions & User Grouping Logic", () => {
 
   it("should handle bulkDeleteLaporanKerjaAction with empty array gracefully", async () => {
     const res = await bulkDeleteLaporanKerjaAction([])
+    expect(requireRole).toHaveBeenCalledWith("super_admin", "admin", "user")
     expect(res.success).toBe(false)
     expect(res.message).toContain("Tidak ada data laporan kerja yang dipilih")
   })
 
-  it("should call bulkDeleteLaporanKerjaAction and report successes", async () => {
+  it("should call bulkDeleteLaporanKerjaAction and report successes for all roles", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ status: "success", message: "Dihapus" }),
@@ -164,6 +167,7 @@ describe("Laporan Kerja - Bulk Actions & User Grouping Logic", () => {
 
     const res = await bulkDeleteLaporanKerjaAction([101, 103])
 
+    expect(requireRole).toHaveBeenCalledWith("super_admin", "admin", "user")
     expect(res.success).toBe(true)
     expect(res.totalRequested).toBe(2)
     expect(res.successCount).toBe(2)

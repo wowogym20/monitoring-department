@@ -262,13 +262,13 @@ export async function updateLaporanKerjaAction(
 
 /**
  * STATUS / APPROVAL: Mengubah status persetujuan laporan kerja.
- * Khusus Super Admin & Admin.
+ * Terbuka untuk seluruh role: Super Admin, Admin, dan User.
  */
 export async function updateStatusLaporanKerjaAction(
   id: number,
   status: "Y" | "N" | "PENDING"
 ): Promise<MutationResult> {
-  await requireRole("super_admin", "admin")
+  await requireRole("super_admin", "admin", "user")
 
   const validated = updateStatusLaporanSchema.safeParse({ id, status })
   if (!validated.success) {
@@ -322,9 +322,10 @@ export async function updateStatusLaporanKerjaAction(
 
 /**
  * DELETE: Menghapus laporan kerja dari server Tazakka via API.
+ * Terbuka untuk seluruh role: Super Admin, Admin, dan User.
  */
 export async function deleteLaporanKerjaAction(id: number): Promise<MutationResult> {
-  await requireRole("super_admin", "admin")
+  await requireRole("super_admin", "admin", "user")
 
   if (!id || id <= 0) {
     return { success: false, message: "ID laporan kerja tidak valid" }
@@ -381,13 +382,13 @@ export interface BulkMutationResult {
 
 /**
  * BULK STATUS: Memperbarui status persetujuan banyak laporan kerja sekaligus.
- * Khusus Super Admin & Admin.
+ * Terbuka untuk seluruh role: Super Admin, Admin, dan User.
  */
 export async function bulkUpdateStatusLaporanKerjaAction(
   ids: number[],
   status: "Y" | "N" | "PENDING"
 ): Promise<BulkMutationResult> {
-  await requireRole("super_admin", "admin")
+  await requireRole("super_admin", "admin", "user")
 
   if (!ids || ids.length === 0) {
     return {
@@ -449,12 +450,12 @@ export async function bulkUpdateStatusLaporanKerjaAction(
 
 /**
  * BULK DELETE: Menghapus banyak laporan kerja dari server Tazakka sekaligus.
- * Khusus Super Admin & Admin.
+ * Terbuka untuk seluruh role: Super Admin, Admin, dan User.
  */
 export async function bulkDeleteLaporanKerjaAction(
   ids: number[]
 ): Promise<BulkMutationResult> {
-  await requireRole("super_admin", "admin")
+  await requireRole("super_admin", "admin", "user")
 
   if (!ids || ids.length === 0) {
     return {

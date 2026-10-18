@@ -10,6 +10,7 @@ import {
   updateStatusLaporanKerjaAction,
   deleteLaporanKerjaAction,
 } from "@/lib/actions/laporan-kerja"
+import { requireRole } from "@/lib/auth"
 
 // Mock next/cache
 vi.mock("next/cache", () => ({
@@ -21,8 +22,8 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/auth", () => ({
   requireRole: vi.fn().mockResolvedValue({
     id: "user-123",
-    role: "super_admin",
-    nama: "Super Admin",
+    role: "user",
+    nama: "User Guru",
   }),
 }))
 
@@ -97,24 +98,26 @@ describe("Laporan Kerja CRUD Validations & Actions", () => {
       expect(res.message).toBe("Laporan kerja berhasil diperbarui")
     })
 
-    it("updateStatusLaporanKerjaAction should approve report with status Y", async () => {
+    it("updateStatusLaporanKerjaAction should approve report with status Y for all roles", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ status: "success", new_status: "Y" }),
       } as Response)
 
       const res = await updateStatusLaporanKerjaAction(23, "Y")
+      expect(requireRole).toHaveBeenCalledWith("super_admin", "admin", "user")
       expect(res.success).toBe(true)
       expect(res.message).toBe("Laporan kerja berhasil disetujui")
     })
 
-    it("deleteLaporanKerjaAction should delete report and return success", async () => {
+    it("deleteLaporanKerjaAction should delete report and return success for all roles", async () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ status: "success", message: "Deleted" }),
       } as Response)
 
       const res = await deleteLaporanKerjaAction(23)
+      expect(requireRole).toHaveBeenCalledWith("super_admin", "admin", "user")
       expect(res.success).toBe(true)
       expect(res.message).toBe("Laporan kerja berhasil dihapus")
     })
