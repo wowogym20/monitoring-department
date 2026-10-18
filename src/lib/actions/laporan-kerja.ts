@@ -167,8 +167,201 @@ export async function getLaporanKerjaServer(
   }
 }
 
+interface MutationRequestOptions {
+  action: "add" | "update" | "status" | "delete"
+  method?: "POST" | "PUT" | "PATCH" | "DELETE"
+  body?: FormData | Record<string, unknown>
+  queryParams?: Record<string, string | number | undefined | null>
+}
+
+interface MutationResponse {
+  success: boolean
+  message: string
+  id?: number
+  new_status?: string
+}
+
+/**
+ * Helper terpusat untuk memproses mutasi ke API Tazakka.
+ * Mendukung metode HTTP POST serta fallback otomatis ke HTTP GET
+ * jika server Tazakka merespons 405 Method Not Allowed ("Hanya metode GET yang didukung").
+ */
+async function executeTazakkaMutation(
+  options: MutationRequestOptions
+): Promise<MutationResponse> {
+  const { apiKey, apiBase } = getApiConfig()
+  const { signal, cleanup } = createTimeoutSignal(15000)
+
+  try {
+    // 1. Coba request via POST / metode utama terlebih dahulu
+    const postUrl = new URL(apiBase)
+    postUrl.searchParams.set("api_key", apiKey)
+    postUrl.searchParams.set("action", options.action)
+
+    if (options.queryParams) {
+      for (const [k, v] of Object.entries(options.queryParams)) {
+        if (v !== undefined && v !== null) postUrl.searchParams.set(k, String(v))
+      }
+    }
+
+    const headers: Record<string, string> = {
+      "X-Api-Key": apiKey,
+      Accept: "application/json",
+    }
+
+    let postBody: BodyInit | undefined = undefined
+    if (options.body instanceof FormData) {
+      postBody = options.body
+    } else if (options.body && typeof options.body === "object") {
+      headers["Content-Type"] = "application/json"
+      postBody = JSON.stringify(options.body)
+    }
+
+    let response: Response | null = null
+    let responseText = ""
+    let result: Record<string, unknown> | null = null
+    let isMethodNotAllowed = false
+
+    try {
+      response = await fetch(postUrl.toString(), {
+        method: options.method || "POST",
+        headers,
+        body: postBody,
+        signal,
+      })
+
+      if (typeof response.text === "function") {
+        responseText = await response.text()
+        try {
+          result = JSON.parse(responseText)
+        } catch {
+          result = null
+        }
+      } else if (typeof response.json === "function") {
+        result = (await response.json()) as Record<string, unknown>
+        responseText = JSON.stringify(result)
+      }
+
+      const resMessage = String(result?.message || responseText || "")
+      if (
+        response.status === 405 ||
+        resMessage.includes("Method Not Allowed") ||
+        resMessage.toLowerCase().includes("hanya metode get")
+      ) {
+        isMethodNotAllowed = true
+      }
+    } catch (postErr) {
+      const errMsg = postErr instanceof Error ? postErr.message : String(postErr)
+      if (errMsg.toLowerCase().includes("405") || errMsg.toLowerCase().includes("method not allowed")) {
+        isMethodNotAllowed = true
+      } else {
+        throw postErr
+      }
+    }
+
+    // Jika POST berhasil dan response OK
+    if (!isMethodNotAllowed && response && response.ok && result?.status === "success") {
+      return {
+        success: true,
+        message: (result.message as string) || "Operasi berhasil",
+        id: result.id as number | undefined,
+        new_status: result.new_status as string | undefined,
+      }
+    }
+
+    // 2. Fallback otomatis ke HTTP GET jika metode non-GET ditolak
+    if (isMethodNotAllowed || (!response?.ok && response?.status === 405)) {
+      const getUrl = new URL(apiBase)
+      getUrl.searchParams.set("api_key", apiKey)
+      getUrl.searchParams.set("action", options.action)
+      getUrl.searchParams.set("_method", options.method || "POST")
+
+      if (options.queryParams) {
+        for (const [k, v] of Object.entries(options.queryParams)) {
+          if (v !== undefined && v !== null) getUrl.searchParams.set(k, String(v))
+        }
+      }
+
+      if (options.body instanceof FormData) {
+        for (const [key, val] of options.body.entries()) {
+          if (typeof val === "string") {
+            getUrl.searchParams.set(key, val)
+          }
+        }
+      } else if (options.body && typeof options.body === "object") {
+        for (const [key, val] of Object.entries(options.body)) {
+          if (val !== undefined && val !== null) {
+            getUrl.searchParams.set(key, String(val))
+          }
+        }
+      }
+
+      const getResponse = await fetch(getUrl.toString(), {
+        method: "GET",
+        headers: {
+          "X-Api-Key": apiKey,
+          Accept: "application/json",
+        },
+        signal,
+      })
+
+      let getRawText = ""
+      let getResult: Record<string, unknown> | null = null
+      if (typeof getResponse.text === "function") {
+        getRawText = await getResponse.text()
+        try {
+          getResult = JSON.parse(getRawText)
+        } catch {
+          getResult = null
+        }
+      } else if (typeof getResponse.json === "function") {
+        getResult = (await getResponse.json()) as Record<string, unknown>
+        getRawText = JSON.stringify(getResult)
+      }
+
+      if (getResponse.ok && getResult?.status === "success") {
+        return {
+          success: true,
+          message: (getResult.message as string) || "Operasi berhasil",
+          id: getResult.id as number | undefined,
+          new_status: getResult.new_status as string | undefined,
+        }
+      }
+
+      const getMsg = String(getResult?.message || getRawText || "")
+      if (getMsg.toLowerCase().includes("hanya metode get") || getMsg.includes("Method Not Allowed")) {
+        return {
+          success: false,
+          message:
+            "Server API Tazakka (absensi.tazakka.or.id) belum mengaktifkan endpoint operasi ini. Silakan perbarui file api/laporan-kerja.php di server Tazakka.",
+        }
+      }
+
+      return {
+        success: false,
+        message: (getResult?.message as string) || "Gagal melakukan operasi di server API Tazakka",
+      }
+    }
+
+    return {
+      success: false,
+      message:
+        (result?.message as string) ||
+        (responseText ? responseText.slice(0, 150) : "Gagal memproses permintaan di server API Tazakka"),
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
+    }
+  } finally {
+    cleanup()
+  }
+}
+
 /**
  * CREATE: Menambahkan Laporan Kerja baru ke server Tazakka via API.
+ * Terbuka untuk seluruh role: Super Admin, Admin, dan User.
  */
 export async function createLaporanKerjaAction(
   formData: FormData
@@ -190,51 +383,34 @@ export async function createLaporanKerjaAction(
     }
   }
 
-  const { apiKey, apiBase } = getApiConfig()
-  const url = new URL(apiBase)
-  url.searchParams.set("api_key", apiKey)
-  url.searchParams.set("action", "add")
+  const res = await executeTazakkaMutation({
+    action: "add",
+    method: "POST",
+    body: formData,
+    queryParams: {
+      nip: rawData.nip,
+      nama: rawData.nama,
+      tanggal: rawData.tanggal,
+    },
+  })
 
-  const { signal, cleanup } = createTimeoutSignal(15000)
+  if (!res.success) {
+    return { success: false, message: res.message }
+  }
 
-  try {
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "X-Api-Key": apiKey,
-      },
-      body: formData,
-      signal,
-    })
+  revalidateTag("laporan-kerja", "default")
+  revalidatePath("/laporan-kerja")
 
-    const result = await response.json()
-    if (!response.ok || result.status !== "success") {
-      return {
-        success: false,
-        message: result.message || "Gagal membuat laporan kerja di server",
-      }
-    }
-
-    revalidateTag("laporan-kerja", "default")
-    revalidatePath("/laporan-kerja")
-
-    return {
-      success: true,
-      message: "Laporan kerja berhasil ditambahkan",
-      id: result.id,
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
-    }
-  } finally {
-    cleanup()
+  return {
+    success: true,
+    message: "Laporan kerja berhasil ditambahkan",
+    id: res.id,
   }
 }
 
 /**
  * UPDATE: Memperbarui Laporan Kerja di server Tazakka via API.
+ * Terbuka untuk seluruh role: Super Admin, Admin, dan User.
  */
 export async function updateLaporanKerjaAction(
   id: number,
@@ -257,46 +433,29 @@ export async function updateLaporanKerjaAction(
     }
   }
 
-  const { apiKey, apiBase } = getApiConfig()
-  const url = new URL(apiBase)
-  url.searchParams.set("api_key", apiKey)
-  url.searchParams.set("action", "update")
   formData.set("id", id.toString())
 
-  const { signal, cleanup } = createTimeoutSignal(15000)
+  const res = await executeTazakkaMutation({
+    action: "update",
+    method: "POST",
+    body: formData,
+    queryParams: {
+      id,
+      nama: rawData.nama,
+      tanggal: rawData.tanggal,
+    },
+  })
 
-  try {
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "X-Api-Key": apiKey,
-      },
-      body: formData,
-      signal,
-    })
+  if (!res.success) {
+    return { success: false, message: res.message }
+  }
 
-    const result = await response.json()
-    if (!response.ok || result.status !== "success") {
-      return {
-        success: false,
-        message: result.message || "Gagal memperbarui laporan kerja",
-      }
-    }
+  revalidateTag("laporan-kerja", "default")
+  revalidatePath("/laporan-kerja")
 
-    revalidateTag("laporan-kerja", "default")
-    revalidatePath("/laporan-kerja")
-
-    return {
-      success: true,
-      message: "Laporan kerja berhasil diperbarui",
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
-    }
-  } finally {
-    cleanup()
+  return {
+    success: true,
+    message: "Laporan kerja berhasil diperbarui",
   }
 }
 
@@ -318,47 +477,24 @@ export async function updateStatusLaporanKerjaAction(
     }
   }
 
-  const { apiKey, apiBase } = getApiConfig()
-  const url = new URL(apiBase)
-  url.searchParams.set("api_key", apiKey)
-  url.searchParams.set("action", "status")
+  const res = await executeTazakkaMutation({
+    action: "status",
+    method: "POST",
+    body: { id, status },
+    queryParams: { id, status },
+  })
 
-  const { signal, cleanup } = createTimeoutSignal(15000)
+  if (!res.success) {
+    return { success: false, message: res.message }
+  }
 
-  try {
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Api-Key": apiKey,
-      },
-      body: JSON.stringify({ id, status }),
-      signal,
-    })
+  revalidateTag("laporan-kerja", "default")
+  revalidatePath("/laporan-kerja")
 
-    const result = await response.json()
-    if (!response.ok || result.status !== "success") {
-      return {
-        success: false,
-        message: result.message || "Gagal memperbarui status laporan",
-      }
-    }
-
-    revalidateTag("laporan-kerja", "default")
-    revalidatePath("/laporan-kerja")
-
-    const label = status === "Y" ? "disetujui" : status === "N" ? "ditolak" : "diubah ke pending"
-    return {
-      success: true,
-      message: `Laporan kerja berhasil ${label}`,
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
-    }
-  } finally {
-    cleanup()
+  const label = status === "Y" ? "disetujui" : status === "N" ? "ditolak" : "diubah ke pending"
+  return {
+    success: true,
+    message: `Laporan kerja berhasil ${label}`,
   }
 }
 
@@ -373,46 +509,23 @@ export async function deleteLaporanKerjaAction(id: number): Promise<MutationResu
     return { success: false, message: "ID laporan kerja tidak valid" }
   }
 
-  const { apiKey, apiBase } = getApiConfig()
-  const url = new URL(apiBase)
-  url.searchParams.set("api_key", apiKey)
-  url.searchParams.set("action", "delete")
+  const res = await executeTazakkaMutation({
+    action: "delete",
+    method: "POST",
+    body: { id },
+    queryParams: { id },
+  })
 
-  const { signal, cleanup } = createTimeoutSignal(15000)
+  if (!res.success) {
+    return { success: false, message: res.message }
+  }
 
-  try {
-    const response = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Api-Key": apiKey,
-      },
-      body: JSON.stringify({ id }),
-      signal,
-    })
+  revalidateTag("laporan-kerja", "default")
+  revalidatePath("/laporan-kerja")
 
-    const result = await response.json()
-    if (!response.ok || result.status !== "success") {
-      return {
-        success: false,
-        message: result.message || "Gagal menghapus laporan kerja",
-      }
-    }
-
-    revalidateTag("laporan-kerja", "default")
-    revalidatePath("/laporan-kerja")
-
-    return {
-      success: true,
-      message: "Laporan kerja berhasil dihapus",
-    }
-  } catch (error) {
-    return {
-      success: false,
-      message: formatMutationError(error, "Terjadi kesalahan saat menghubungi API Tazakka"),
-    }
-  } finally {
-    cleanup()
+  return {
+    success: true,
+    message: "Laporan kerja berhasil dihapus",
   }
 }
 
@@ -444,43 +557,24 @@ export async function bulkUpdateStatusLaporanKerjaAction(
     }
   }
 
-  const { apiKey, apiBase } = getApiConfig()
-  const url = new URL(apiBase)
-  url.searchParams.set("api_key", apiKey)
-  url.searchParams.set("action", "status")
-
-  const { signal, cleanup } = createTimeoutSignal(15000)
-
   let successCount = 0
   let failureCount = 0
 
-  try {
-    await Promise.all(
-      ids.map(async (id) => {
-        try {
-          const response = await fetch(url.toString(), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Api-Key": apiKey,
-            },
-            body: JSON.stringify({ id, status }),
-            signal,
-          })
-          const result = await response.json()
-          if (response.ok && result.status === "success") {
-            successCount++
-          } else {
-            failureCount++
-          }
-        } catch {
-          failureCount++
-        }
+  await Promise.all(
+    ids.map(async (id) => {
+      const res = await executeTazakkaMutation({
+        action: "status",
+        method: "POST",
+        body: { id, status },
+        queryParams: { id, status },
       })
-    )
-  } finally {
-    cleanup()
-  }
+      if (res.success) {
+        successCount++
+      } else {
+        failureCount++
+      }
+    })
+  )
 
   revalidateTag("laporan-kerja", "default")
   revalidatePath("/laporan-kerja")
@@ -518,43 +612,24 @@ export async function bulkDeleteLaporanKerjaAction(
     }
   }
 
-  const { apiKey, apiBase } = getApiConfig()
-  const url = new URL(apiBase)
-  url.searchParams.set("api_key", apiKey)
-  url.searchParams.set("action", "delete")
-
-  const { signal, cleanup } = createTimeoutSignal(15000)
-
   let successCount = 0
   let failureCount = 0
 
-  try {
-    await Promise.all(
-      ids.map(async (id) => {
-        try {
-          const response = await fetch(url.toString(), {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "X-Api-Key": apiKey,
-            },
-            body: JSON.stringify({ id }),
-            signal,
-          })
-          const result = await response.json()
-          if (response.ok && result.status === "success") {
-            successCount++
-          } else {
-            failureCount++
-          }
-        } catch {
-          failureCount++
-        }
+  await Promise.all(
+    ids.map(async (id) => {
+      const res = await executeTazakkaMutation({
+        action: "delete",
+        method: "POST",
+        body: { id },
+        queryParams: { id },
       })
-    )
-  } finally {
-    cleanup()
-  }
+      if (res.success) {
+        successCount++
+      } else {
+        failureCount++
+      }
+    })
+  )
 
   revalidateTag("laporan-kerja", "default")
   revalidatePath("/laporan-kerja")

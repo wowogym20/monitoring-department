@@ -300,9 +300,10 @@ if ($request_method === 'GET' && empty($action_param)) {
 }
 
 // -------------------------------------------------------------------------
-// B. CREATE / TAMBAH LAPORAN KERJA (POST)
+// B. CREATE / TAMBAH LAPORAN KERJA (POST atau GET action=add)
 // -------------------------------------------------------------------------
-if (($request_method === 'POST' && (empty($action_param) || $action_param === 'add')) && empty($method_override)) {
+if ((($request_method === 'POST' && (empty($action_param) || in_array($action_param, ['add', 'create'], true))) ||
+    ($request_method === 'GET' && in_array($action_param, ['add', 'create'], true))) && empty($method_override)) {
     $nip        = get_param('nip');
     $nama       = get_param('nama'); // Judul Laporan
     $tanggal    = get_param('tanggal');
@@ -422,9 +423,9 @@ if (($request_method === 'POST' && (empty($action_param) || $action_param === 'a
 }
 
 // -------------------------------------------------------------------------
-// C. UPDATE / EDIT LAPORAN KERJA (PUT atau POST action=update)
+// C. UPDATE / EDIT LAPORAN KERJA (PUT, POST, atau GET action=update)
 // -------------------------------------------------------------------------
-if ($request_method === 'PUT' || ($request_method === 'POST' && $action_param === 'update')) {
+if ($request_method === 'PUT' || (($request_method === 'POST' || $request_method === 'GET') && $action_param === 'update')) {
     $id         = (int)get_param('id');
     $nama       = get_param('nama');
     $tanggal    = get_param('tanggal');
@@ -493,9 +494,9 @@ if ($request_method === 'PUT' || ($request_method === 'POST' && $action_param ==
 }
 
 // -------------------------------------------------------------------------
-// D. APPROVAL / UBAH STATUS (PATCH atau POST action=status)
+// D. APPROVAL / UBAH STATUS (PATCH, POST, atau GET action=status)
 // -------------------------------------------------------------------------
-if ($request_method === 'PATCH' || ($request_method === 'POST' && $action_param === 'status')) {
+if ($request_method === 'PATCH' || (($request_method === 'POST' || $request_method === 'GET') && $action_param === 'status')) {
     $id     = (int)get_param('id');
     $status = strtoupper(get_param('status'));
 
@@ -534,9 +535,9 @@ if ($request_method === 'PATCH' || ($request_method === 'POST' && $action_param 
 }
 
 // -------------------------------------------------------------------------
-// E. DELETE / HAPUS LAPORAN KERJA (DELETE atau POST action=delete)
+// E. DELETE / HAPUS LAPORAN KERJA (DELETE, POST, atau GET action=delete)
 // -------------------------------------------------------------------------
-if ($request_method === 'DELETE' || ($request_method === 'POST' && $action_param === 'delete')) {
+if ($request_method === 'DELETE' || (($request_method === 'POST' || $request_method === 'GET') && $action_param === 'delete')) {
     $id = (int)get_param('id');
 
     if ($id <= 0) {
@@ -582,10 +583,119 @@ if ($request_method === 'DELETE' || ($request_method === 'POST' && $action_param
     exit;
 }
 
-// Fallback jika metode HTTP tidak dikenali
+// -------------------------------------------------------------------------
+// F. BULK STATUS / UBAH STATUS MASSAL (POST atau GET action=bulk_status)
+// -------------------------------------------------------------------------
+if ($action_param === 'bulk_status') {
+    $ids_param = get_param('ids');
+    $status    = strtoupper(get_param('status'));
+
+    $ids = [];
+    if (is_array($ids_param)) {
+        $ids = array_map('intval', $ids_param);
+    } elseif (is_string($ids_param)) {
+        $ids = array_filter(array_map('intval', explode(',', $ids_param)), fn($i) => $i > 0);
+    }
+
+    if (empty($ids)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Daftar ID laporan kerja tidak boleh kosong'], JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    if (!in_array($status, ['Y', 'N', 'PENDING'], true)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => "Nilai status tidak valid. Gunakan 'Y', 'N', atau 'PENDING'"], JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $types        = str_repeat('i', count($ids));
+    $stmt_bulk    = $connection->prepare("UPDATE uraian_kerja SET status = ? WHERE uraian_kerja_id IN ($placeholders)");
+
+    if ($stmt_bulk) {
+        $stmt_bulk->bind_param('s' . $types, $status, ...$ids);
+        if ($stmt_bulk->execute()) {
+            $affected = $stmt_bulk->affected_rows;
+            $stmt_bulk->close();
+            http_response_code(200);
+            echo json_encode([
+                'status'        => 'success',
+                'message'       => "Status $affected laporan kerja berhasil diperbarui",
+                'affected_rows' => $affected,
+                'new_status'    => $status,
+            ], JSON_UNESCAPED_SLASHES);
+            exit;
+        }
+        $stmt_bulk->close();
+    }
+
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Gagal memperbarui status massal: ' . $connection->error], JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+// -------------------------------------------------------------------------
+// G. BULK DELETE / HAPUS MASSAL (POST atau GET action=bulk_delete)
+// -------------------------------------------------------------------------
+if ($action_param === 'bulk_delete') {
+    $ids_param = get_param('ids');
+
+    $ids = [];
+    if (is_array($ids_param)) {
+        $ids = array_map('intval', $ids_param);
+    } elseif (is_string($ids_param)) {
+        $ids = array_filter(array_map('intval', explode(',', $ids_param)), fn($i) => $i > 0);
+    }
+
+    if (empty($ids)) {
+        http_response_code(400);
+        echo json_encode(['status' => 'error', 'message' => 'Daftar ID laporan kerja tidak boleh kosong'], JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    // Ambil daftar file untuk dihapus
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $types        = str_repeat('i', count($ids));
+    $stmt_files   = $connection->prepare("SELECT files FROM uraian_kerja WHERE uraian_kerja_id IN ($placeholders)");
+    if ($stmt_files) {
+        $stmt_files->bind_param($types, ...$ids);
+        $stmt_files->execute();
+        $res_files = $stmt_files->get_result();
+        while ($rf = $res_files->fetch_assoc()) {
+            if (!empty($rf['files']) && file_exists($upload_dir . $rf['files'])) {
+                @unlink($upload_dir . $rf['files']);
+            }
+        }
+        $stmt_files->close();
+    }
+
+    $stmt_del_bulk = $connection->prepare("DELETE FROM uraian_kerja WHERE uraian_kerja_id IN ($placeholders)");
+    if ($stmt_del_bulk) {
+        $stmt_del_bulk->bind_param($types, ...$ids);
+        if ($stmt_del_bulk->execute()) {
+            $affected = $stmt_del_bulk->affected_rows;
+            $stmt_del_bulk->close();
+            http_response_code(200);
+            echo json_encode([
+                'status'        => 'success',
+                'message'       => "$affected laporan kerja berhasil dihapus",
+                'affected_rows' => $affected,
+            ], JSON_UNESCAPED_SLASHES);
+            exit;
+        }
+        $stmt_del_bulk->close();
+    }
+
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => 'Gagal menghapus data massal: ' . $connection->error], JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+// Fallback jika metode HTTP atau parameter aksi tidak dikenali
 http_response_code(405);
 echo json_encode([
     'status' => 'error',
-    'message' => 'Method Not Allowed'
+    'message' => 'Method Not Allowed atau Action tidak dikenali. Format aksi yang didukung: read (GET), add (POST/GET), update (POST/PUT/GET), status (POST/PATCH/GET), delete (POST/DELETE/GET), bulk_status, bulk_delete.'
 ], JSON_UNESCAPED_SLASHES);
 exit;
