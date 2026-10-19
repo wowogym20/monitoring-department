@@ -221,7 +221,7 @@ export function MaintenanceTab({
                   Dampak Mode Pemeliharaan:
                 </p>
                 <p className="leading-relaxed">
-                  Ketika aktif, seluruh akun Kepala Departemen dan Admin SDM otomatis dialihkan ke status <strong>Baca-Saja (Read-Only)</strong>. Mereka tetap dapat meninjau data dan membaca rekapitulasi, namun tidak dapat menyimpan nilai baru atau mengubah data anggota. <strong>Super Admin tetap memiliki akses penuh</strong> untuk mengelola sistem.
+                  Ketika aktif, seluruh akun Kepala Departemen dan Admin/Koordinator otomatis dialihkan ke status <strong>Baca-Saja (Read-Only)</strong>. Mereka tetap dapat meninjau data dan membaca rekapitulasi, namun tidak dapat menyimpan nilai baru atau mengubah data anggota. <strong>Super Admin tetap memiliki akses penuh</strong> untuk mengelola sistem.
                 </p>
               </div>
             </div>
