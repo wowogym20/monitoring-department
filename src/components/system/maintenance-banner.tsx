@@ -22,7 +22,7 @@ export function MaintenanceBanner({
 
   if (isSuperAdmin) {
     return (
-      <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-3 shadow-2xs">
+      <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-between gap-3 shadow-2xs mb-4">
         <div className="flex items-center gap-2 min-w-0">
           <Wrench className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
           <span className="truncate">
