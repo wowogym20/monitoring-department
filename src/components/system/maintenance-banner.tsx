@@ -41,7 +41,7 @@ export function MaintenanceBanner({
   }
 
   return (
-    <div className="bg-orange-500/15 border-b border-orange-500/30 text-orange-950 dark:text-orange-200 px-4 py-3 text-xs sm:text-sm font-medium flex items-start sm:items-center gap-3 shadow-2xs">
+    <div className="bg-orange-500/15 border-b border-orange-500/30 text-orange-950 dark:text-orange-200 px-4 py-3 text-xs sm:text-sm font-medium flex items-start sm:items-center gap-3 shadow-2xs mb-4">
       <ShieldAlert className="size-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5 sm:mt-0" />
       <div className="flex-1">
         <p className="font-bold tracking-tight">
